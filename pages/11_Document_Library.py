@@ -319,7 +319,7 @@ if drive_config:
                             list_drive_files.clear()
                             st.rerun()
                     elif f.get("webViewLink"):
-                        st.link_button("Open", f["webViewLink"], key=f"drive_{f['id']}")
+                        st.link_button("Open", f["webViewLink"])
 
                 st.markdown(
                     '<div style="border-bottom:1px solid rgba(168,178,209,0.1);margin:4px 0 8px;"></div>',
@@ -385,7 +385,7 @@ else:
                 else:
                     action_cols[0].warning("Missing")
             elif doc["storage"] == "external" and doc.get("external_url"):
-                action_cols[0].link_button("Open", doc["external_url"], key=f"link_{doc['id']}")
+                action_cols[0].link_button("Open", doc["external_url"])
 
             if action_cols[1].button("Delete", key=f"del_{doc['id']}", type="secondary"):
                 st.session_state[f"confirm_delete_{doc['id']}"] = True
