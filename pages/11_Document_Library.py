@@ -191,6 +191,54 @@ def list_drive_files(folder_id: str, _cache_key: str) -> list[dict]:
     return all_files
 
 
+GOOGLE_EXPORT_MIMES = {
+    "application/vnd.google-apps.document": ("application/pdf", ".pdf"),
+    "application/vnd.google-apps.spreadsheet": (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"),
+    "application/vnd.google-apps.presentation": ("application/pdf", ".pdf"),
+}
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def download_drive_file(file_id: str, mime_type: str) -> tuple[bytes, str] | None:
+    """Download a file from Google Drive. Returns (bytes, filename_suffix) or None."""
+    from googleapiclient.discovery import build
+    import io
+
+    config = load_drive_config()
+    if not config:
+        return None
+    creds = get_drive_credentials(config)
+    if not creds:
+        return None
+
+    service = build("drive", "v3", credentials=creds)
+
+    if mime_type in GOOGLE_EXPORT_MIMES:
+        export_mime, ext = GOOGLE_EXPORT_MIMES[mime_type]
+        request = service.files().export_media(fileId=file_id, mimeType=export_mime)
+    else:
+        request = service.files().get_media(fileId=file_id)
+
+    from googleapiclient.http import MediaIoBaseDownload
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while not done:
+        _, done = downloader.next_chunk()
+    return fh.getvalue()
+
+
+def is_previewable(mime_type: str) -> bool:
+    """Check if a file can be previewed inline (PDFs and images)."""
+    return mime_type in (
+        "application/pdf",
+        "application/vnd.google-apps.document",
+        "application/vnd.google-apps.presentation",
+        "image/png", "image/jpeg",
+    )
+
+
 def format_file_size(size_str: str | None) -> str:
     if not size_str:
         return "—"
@@ -294,7 +342,8 @@ if drive_config:
 
             for f in drive_files:
                 is_folder = f.get("mimeType") == "application/vnd.google-apps.folder"
-                file_type = MIME_ICONS.get(f.get("mimeType", ""), "File")
+                mime = f.get("mimeType", "")
+                file_type = MIME_ICONS.get(mime, "File")
                 type_color = "#fcb900" if is_folder else "#0984e3"
 
                 col_info, col_meta, col_action = st.columns([4, 2, 1])
@@ -318,8 +367,51 @@ if drive_config:
                             st.session_state.drive_path.append((f["id"], f["name"]))
                             list_drive_files.clear()
                             st.rerun()
-                    elif f.get("webViewLink"):
-                        st.link_button("Open", f["webViewLink"])
+                    elif not is_folder:
+                        btn_cols = st.columns(2)
+                        # Download button
+                        if btn_cols[0].button("Download", key=f"dl_{f['id']}"):
+                            st.session_state[f"_downloading_{f['id']}"] = True
+                        # Preview button for PDFs and images
+                        if is_previewable(mime):
+                            if btn_cols[1].button("Preview", key=f"pv_{f['id']}"):
+                                st.session_state[f"_preview_{f['id']}"] = not st.session_state.get(f"_preview_{f['id']}", False)
+
+                # Handle download
+                if st.session_state.get(f"_downloading_{f.get('id')}"):
+                    with st.spinner("Downloading..."):
+                        data = download_drive_file(f["id"], mime)
+                    if data:
+                        ext = GOOGLE_EXPORT_MIMES.get(mime, (None, ""))[1] if mime in GOOGLE_EXPORT_MIMES else ""
+                        dl_name = f["name"] + ext if ext and not f["name"].endswith(ext) else f["name"]
+                        st.download_button(
+                            f"Save {dl_name}",
+                            data=data,
+                            file_name=dl_name,
+                            key=f"save_{f['id']}",
+                        )
+                    else:
+                        st.error("Could not download file.")
+                    st.session_state.pop(f"_downloading_{f['id']}", None)
+
+                # Handle preview
+                if st.session_state.get(f"_preview_{f.get('id')}"):
+                    with st.spinner("Loading preview..."):
+                        data = download_drive_file(f["id"], mime)
+                    if data:
+                        if mime in ("image/png", "image/jpeg"):
+                            st.image(data, caption=f["name"])
+                        else:
+                            # PDF preview
+                            import base64
+                            b64 = base64.b64encode(data).decode()
+                            st.markdown(
+                                f'<iframe src="data:application/pdf;base64,{b64}" '
+                                f'width="100%" height="600" type="application/pdf"></iframe>',
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        st.error("Could not load preview.")
 
                 st.markdown(
                     '<div style="border-bottom:1px solid rgba(168,178,209,0.1);margin:4px 0 8px;"></div>',
