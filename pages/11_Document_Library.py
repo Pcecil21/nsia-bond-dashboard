@@ -230,13 +230,8 @@ def download_drive_file(file_id: str, mime_type: str) -> tuple[bytes, str] | Non
 
 
 def is_previewable(mime_type: str) -> bool:
-    """Check if a file can be previewed inline (PDFs and images)."""
-    return mime_type in (
-        "application/pdf",
-        "application/vnd.google-apps.document",
-        "application/vnd.google-apps.presentation",
-        "image/png", "image/jpeg",
-    )
+    """Check if a file can be previewed inline via Google's viewer."""
+    return mime_type != "application/vnd.google-apps.folder"
 
 
 def format_file_size(size_str: str | None) -> str:
@@ -394,24 +389,14 @@ if drive_config:
                         st.error("Could not download file.")
                     st.session_state.pop(f"_downloading_{f['id']}", None)
 
-                # Handle preview
+                # Handle preview — use Google's own viewer for proper formatting
                 if st.session_state.get(f"_preview_{f.get('id')}"):
-                    with st.spinner("Loading preview..."):
-                        data = download_drive_file(f["id"], mime)
-                    if data:
-                        if mime in ("image/png", "image/jpeg"):
-                            st.image(data, caption=f["name"])
-                        else:
-                            # PDF preview
-                            import base64
-                            b64 = base64.b64encode(data).decode()
-                            st.markdown(
-                                f'<iframe src="data:application/pdf;base64,{b64}" '
-                                f'width="100%" height="600" type="application/pdf"></iframe>',
-                                unsafe_allow_html=True,
-                            )
-                    else:
-                        st.error("Could not load preview.")
+                    preview_url = f"https://drive.google.com/file/d/{f['id']}/preview"
+                    st.markdown(
+                        f'<iframe src="{preview_url}" '
+                        f'width="100%" height="700" style="border:none;border-radius:8px;"></iframe>',
+                        unsafe_allow_html=True,
+                    )
 
                 st.markdown(
                     '<div style="border-bottom:1px solid rgba(168,178,209,0.1);margin:4px 0 8px;"></div>',
