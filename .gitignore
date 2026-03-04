@@ -1,2 +1,10 @@
 __pycache__/
 *.pyc
+
+# Google Drive credentials
+data/documents/client_secret.json
+data/documents/service_account.json
+data/documents/token.json
+
+# Streamlit secrets (contains tokens)
+.streamlit/secrets.toml
