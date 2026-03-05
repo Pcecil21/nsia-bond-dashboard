@@ -8,3 +8,24 @@ data/documents/token.json
 
 # Streamlit secrets (contains tokens)
 .streamlit/secrets.toml
+
+# === Two-computer handoff rules (auto-added) ===
+
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
+*.pem
+*.key
+.turbo/
+.cache/
+.pytest_cache/
+.mypy_cache/

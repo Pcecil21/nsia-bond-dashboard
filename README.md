@@ -116,3 +116,27 @@ Weekday and weekend ice allocation by club (current vs. proposed), and Winnetka 
 - **Plotly** — Interactive charts
 - **Pandas** — Data processing
 - **openpyxl** — Excel file reading
+
+## Two-Computer Workflow
+
+> Do NOT develop directly inside OneDrive. Keep repos at `C:\Users\<you>\<repo>` or `C:\dev\<repo>`.
+
+### Stopping work (Computer A)
+```powershell
+.\scripts\handoff.ps1
+```
+This stages all changes, commits (with your message or "wip: progress"), and pushes.
+
+### Starting work (Computer B)
+```powershell
+.\scripts\resume.ps1
+```
+This pulls latest, installs dependencies, and checks for missing env files.
+
+### Troubleshooting
+- **Node version mismatch**: Install the version in `.nvmrc` (`nvm install` / `nvm use`)
+- **Missing env vars**: Copy `.env.example` to `.env.local` and fill in values
+- **Wrong branch**: `git branch` to check, `git checkout <branch>` to switch
+- **Uncommitted changes on other machine**: Run `handoff.ps1` there first, then `resume.ps1` here
+- **Merge conflicts after pull**: Resolve conflicts, then `git add . && git rebase --continue`
+
