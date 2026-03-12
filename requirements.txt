@@ -7,3 +7,5 @@ google-auth
 google-auth-oauthlib
 anthropic
 streamlit-authenticator
+PyYAML
+bcrypt
