@@ -5,43 +5,11 @@ Page 8: Multi-Year Trends
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+from utils.theme import FONT_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="Multi-Year Trends | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-ACCENT_COLORS = ["#64ffda", "#f78da7", "#fcb900", "#7bdcb5", "#00d084",
-                 "#8ed1fc", "#0693e3", "#abb8c3", "#eb144c", "#ff6900"]
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("Multi-Year Trends")
 st.caption("3-year revenue & expense analysis, Form 990 highlights, and payroll benchmarking")

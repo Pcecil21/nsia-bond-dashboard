@@ -6,44 +6,11 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="Financial Overview | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-# ── Shared chart theme ────────────────────────────────────────────────────
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-ACCENT_COLORS = ["#64ffda", "#f78da7", "#fcb900", "#7bdcb5", "#00d084",
-                 "#8ed1fc", "#0693e3", "#abb8c3", "#eb144c", "#ff6900"]
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("Financial Overview")
 st.caption("FY2026 Budget Reconciliation — Approved Proposal vs. CSCG Operational Budget")
@@ -55,15 +22,61 @@ from utils.data_loader import (
     load_expense_flow_summary,
 )
 
+# ── Summary KPIs ─────────────────────────────────────────────────────────
+rev = load_revenue_reconciliation()
+exp = load_expense_reconciliation()
+
+rev_items = rev[~rev["Line Item"].str.startswith("Total")]
+exp_items = exp[~exp["Line Item"].str.startswith("Total")]
+
+rev_ytd_var = rev_items["YTD Variance $"].sum()
+exp_ytd_var = exp_items["YTD Variance $"].sum()
+rev_jan_var = rev_items["Jan Variance $"].sum()
+exp_jan_var = exp_items["Jan Variance $"].sum()
+net_var = rev_ytd_var - exp_ytd_var
+
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("Revenue Variance (YTD)", f"${rev_ytd_var:+,.0f}",
+          delta=f"Jan: ${rev_jan_var:+,.0f}", delta_color="normal" if rev_jan_var >= 0 else "inverse")
+k2.metric("Expense Variance (YTD)", f"${exp_ytd_var:+,.0f}",
+          delta=f"Jan: ${exp_jan_var:+,.0f}", delta_color="inverse" if exp_jan_var > 0 else "normal")
+k3.metric("Net Budget Impact", f"${net_var:+,.0f}",
+          delta="Favorable" if net_var >= 0 else "Unfavorable",
+          delta_color="normal" if net_var >= 0 else "inverse")
+k4.metric("Items w/ Variance", f"{len(rev_items[rev_items['YTD Variance $'].abs() > 0]) + len(exp_items[exp_items['YTD Variance $'].abs() > 0])}",
+          delta=f"of {len(rev_items) + len(exp_items)} total")
+
+st.markdown("---")
+
 # ── Revenue Variance ─────────────────────────────────────────────────────
 st.header("Revenue — Budget vs. CSCG Variance")
 
-rev = load_revenue_reconciliation()
 display_cols = ["Line Item", "Proposal Jan Budget", "CSCG Jan Budget",
                 "Jan Variance $", "Proposal YTD Budget", "CSCG YTD Budget",
                 "YTD Variance $"]
+
+# Add trend indicator column
+rev_display = rev.copy()
+def trend_arrow(row):
+    jan = row.get("Jan Variance $", 0)
+    ytd = row.get("YTD Variance $", 0)
+    if pd.isna(jan) or pd.isna(ytd):
+        return ""
+    # Compare January rate to YTD average rate (7 months)
+    monthly_avg = ytd / 7 if ytd != 0 else 0
+    if abs(jan) < 1 and abs(monthly_avg) < 1:
+        return ""
+    if jan > monthly_avg * 1.1:
+        return "Worsening" if jan > 0 else "Improving"
+    elif jan < monthly_avg * 0.9:
+        return "Improving" if jan > 0 else "Worsening"
+    return "Stable"
+
+rev_display["Trend"] = rev_display.apply(trend_arrow, axis=1)
+display_cols_with_trend = display_cols + ["Trend"]
+
 st.dataframe(
-    rev[display_cols],
+    rev_display[display_cols_with_trend],
     use_container_width=True,
     hide_index=True,
     column_config={
@@ -77,8 +90,7 @@ st.dataframe(
 )
 
 # Revenue YTD variance chart
-rev_chart = rev.dropna(subset=["YTD Variance $"])
-rev_chart = rev_chart[~rev_chart["Line Item"].str.startswith("Total")]
+rev_chart = rev_items.dropna(subset=["YTD Variance $"])
 if not rev_chart.empty:
     colors = ["#00d084" if v >= 0 else "#eb144c" for v in rev_chart["YTD Variance $"]]
     fig_rev = go.Figure(go.Bar(

@@ -1,0 +1,27 @@
+cookie:
+  expiry_days: 30
+  key: nsia_bond_dashboard_auth_key
+  name: nsia_auth
+
+credentials:
+  usernames:
+    admin:
+      email: admin@nsia.org
+      name: NSIA Admin
+      password: $2b$12$S7bpoTB5g9AO2nJ7RTVireremMVrQdSQpvLAUNJaqK5.ZFux0Idyq
+      role: admin
+    board:
+      email: board@nsia.org
+      name: Board Member
+      password: $2b$12$/b9.KLDMg.V.H9Nb13TZb.n6uhTLNOEwZlgFjWgWmOCJWO.fqDNdu
+      role: board
+    winnetka:
+      email: winnetka@nsia.org
+      name: Winnetka Rep
+      password: $2b$12$L6/o.HwzUwURTFrLajOapOjCgxeH90UemKcR58OYZVL.o5PmIxPQ6
+      role: club_rep
+    wilmette:
+      email: wilmette@nsia.org
+      name: Wilmette Rep
+      password: $2b$12$79c2unABduOciINw6a95F.SxlpwWy60YS6dlnKimyMX/ponneCsdi
+      role: club_rep

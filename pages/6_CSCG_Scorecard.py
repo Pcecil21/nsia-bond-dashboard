@@ -5,41 +5,16 @@ Contract compliance checklist, disclosed vs undisclosed payments, and relationsh
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
+from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="CSCG Scorecard | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("CSCG Contract Scorecard")
 st.caption("Management agreement compliance and financial relationship transparency")
@@ -292,6 +267,52 @@ if not mods_filtered.empty:
         st.metric("Net Impact on Board's Budget", f"${net_mod:+,.0f}",
                   delta="Unfavorable" if net_mod < 0 else "Favorable",
                   delta_color="inverse" if net_mod < 0 else "normal")
+
+# ── AI Assessment ─────────────────────────────────────────────────────────
+if ANTHROPIC_AVAILABLE and get_api_key():
+    st.markdown("")
+    if st.button("🤖 AI Assessment — Analyze CSCG Performance", type="primary", use_container_width=True):
+        # Build scorecard data for the agent
+        scorecard_summary = "NSIA CSCG Contract Scorecard — Current Data\n\n"
+        scorecard_summary += "=== CONTRACT COMPLIANCE ===\n"
+        scorecard_summary += scorecard.to_csv(index=False)
+        scorecard_summary += f"\n\nCompliance Rate: {compliance_pct:.0f}%\n"
+        scorecard_summary += f"Compliant: {compliant} | Auto-Pay: {auto_pay} | Minor Variance: {minor} | Non-Compliant: {non_compliant}\n"
+        scorecard_summary += f"\n=== CSCG PAYMENT BREAKDOWN (6 months) ===\n"
+        scorecard_summary += cscg.to_csv(index=False)
+        scorecard_summary += f"\nTotal CSCG Payments: ${total_cscg:,.0f}\n"
+        scorecard_summary += f"Disclosed (Mgmt Fee): ${mgmt_fee:,.0f}\n"
+        scorecard_summary += f"Undisclosed (Auto-Pay): ${undisclosed:,.0f} ({pct_undisclosed:.0f}%)\n"
+        if not mods_filtered.empty:
+            scorecard_summary += f"\n=== UNAUTHORIZED BUDGET MODIFICATIONS ===\n"
+            scorecard_summary += mods_filtered.to_csv(index=False)
+
+        with st.spinner("Running Management Company Performance Scorer analysis..."):
+            result = analyze_document(
+                agent_id="mgmt_scorer",
+                document_content=scorecard_summary,
+                filename="cscg_scorecard_current.csv",
+                additional_context="Evaluate CSCG management company performance against contract terms. "
+                                   "Score their compliance, flag governance concerns, and recommend "
+                                   "specific board actions for the next board meeting.",
+            )
+        if result:
+            st.markdown("---")
+            st.markdown("### 🤖 AI Assessment")
+            red_flags = result.count("🔴")
+            yellow_flags = result.count("🟡")
+            if red_flags > 0:
+                st.error(f"**{red_flags} critical item(s)** require board attention")
+            if yellow_flags > 0:
+                st.warning(f"**{yellow_flags} caution item(s)** flagged for review")
+            st.markdown(result)
+            st.download_button(
+                label="📥 Download AI Assessment",
+                data=result,
+                file_name="nsia_cscg_ai_assessment.md",
+                mime="text/markdown",
+            )
+    st.markdown("")
 
 # ── Governance Recommendations ────────────────────────────────────────────
 st.markdown("---")

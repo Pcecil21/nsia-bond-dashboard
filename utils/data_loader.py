@@ -304,10 +304,35 @@ def load_done_deals_prospects() -> pd.DataFrame:
 
 # ── Hockey Schedule ──────────────────────────────────────────────────────
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_hockey_schedule() -> pd.DataFrame:
-    """Hockey schedule with results."""
-    df = pd.read_csv(_path("hockey_schedule.csv"))
+    """Hockey schedule — all 6 New Trier teams, NSIA home games only."""
+    df = pd.read_csv(_path("nt_hockey_all_teams.csv"))
+    return df
+
+
+# ── Weekend Ice Breakdown ────────────────────────────────────────────────
+
+@st.cache_data
+def load_weekend_ice_breakdown() -> pd.DataFrame:
+    """Weekend ice allocation hours — Wilmette, Winnetka, New Trier (Sep-Mar)."""
+    df = pd.read_csv(_path("weekend_ice_breakdown.csv"))
+    return df
+
+
+@st.cache_data(ttl=60)
+def load_winnetka_nsia_usage() -> pd.DataFrame:
+    """Winnetka Hockey Club weekend NSIA ice usage (scraped schedule)."""
+    df = pd.read_csv(_path("winnetka_weekend_nsia.csv"))
+    df["Date"] = pd.to_datetime(df["Date"])
+    return df
+
+
+@st.cache_data(ttl=60)
+def load_wilmette_nsia_usage() -> pd.DataFrame:
+    """Wilmette Jr. Trevians weekend NSIA ice usage (scraped schedule)."""
+    df = pd.read_csv(_path("wilmette_weekend_nsia.csv"))
+    df["Date"] = pd.to_datetime(df["Date"])
     return df
 
 
@@ -358,6 +383,73 @@ def compute_kpis() -> dict:
         "debt_service": debt_service,
         "net_operating_income": net_operating_income,
     }
+
+
+def compute_board_attention() -> list[dict]:
+    """Generate board attention items based on current KPIs and variance alerts."""
+    kpis = compute_kpis()
+    items = []
+
+    # DSCR warning
+    if kpis["dscr"] < 1.25:
+        severity = "AT RISK" if kpis["dscr"] < 1.0 else "CAUTION"
+        items.append({
+            "icon": "🔴" if kpis["dscr"] < 1.0 else "🟡",
+            "text": f"DSCR at {kpis['dscr']:.2f}x — {severity}",
+            "page": "Variance Alerts",
+        })
+
+    # Hidden cash outflows
+    if kpis["hidden_cash_outflows"] > 500_000:
+        items.append({
+            "icon": "🔴",
+            "text": f"${kpis['hidden_cash_outflows']:,.0f}/yr in hidden cash outflows not on board P&L",
+            "page": "Bond & Debt",
+        })
+
+    # Low board approval percentage
+    if kpis["pct_board_approved"] < 0.50:
+        items.append({
+            "icon": "🟡",
+            "text": f"Only {kpis['pct_board_approved']*100:.1f}% of expenses require board invoice approval",
+            "page": "CSCG Scorecard",
+        })
+
+    # Negative net cash flow
+    if kpis["net_cash_flow"] < 0:
+        items.append({
+            "icon": "🔴",
+            "text": f"Projected negative net cash flow: ${kpis['net_cash_flow']:,.0f}",
+            "page": "Monthly Financials",
+        })
+
+    # RED variance alerts
+    try:
+        alerts = compute_variance_alerts()
+        red_count = len(alerts[alerts["Severity"] == "RED"])
+        if red_count > 0:
+            items.append({
+                "icon": "🔴",
+                "text": f"{red_count} RED variance alert{'s' if red_count > 1 else ''} requiring review",
+                "page": "Variance Alerts",
+            })
+    except Exception:
+        pass
+
+    # CSCG non-compliance
+    try:
+        scorecard = compute_cscg_scorecard()
+        non_compliant = len(scorecard[scorecard["Status"] == "NON-COMPLIANT"])
+        if non_compliant > 0:
+            items.append({
+                "icon": "🟡",
+                "text": f"{non_compliant} CSCG contract term{'s' if non_compliant > 1 else ''} non-compliant",
+                "page": "CSCG Scorecard",
+            })
+    except Exception:
+        pass
+
+    return items
 
 
 # ── Variance Alerts ──────────────────────────────────────────────────────

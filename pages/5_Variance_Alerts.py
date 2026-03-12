@@ -6,41 +6,16 @@ Stoplight system: RED / YELLOW / GREEN with action items view.
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
+from utils.theme import CHART_BG, GRID_COLOR, FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="Variance Alerts | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("Variance Alerts")
 st.caption("Automated monitoring: CSCG operational budget vs. board-approved proposal")
@@ -48,7 +23,21 @@ st.caption("Automated monitoring: CSCG operational budget vs. board-approved pro
 from utils.data_loader import compute_variance_alerts
 
 # ── Controls ──────────────────────────────────────────────────────────────
-threshold = st.sidebar.slider("Variance threshold (%)", 1, 25, 5, 1,
+st.sidebar.markdown("### Threshold Presets")
+preset_col1, preset_col2, preset_col3 = st.sidebar.columns(3)
+if "threshold" not in st.session_state:
+    st.session_state.threshold = 5
+with preset_col1:
+    if st.button("Tight\n3%", use_container_width=True):
+        st.session_state.threshold = 3
+with preset_col2:
+    if st.button("Standard\n5%", use_container_width=True):
+        st.session_state.threshold = 5
+with preset_col3:
+    if st.button("Loose\n10%", use_container_width=True):
+        st.session_state.threshold = 10
+
+threshold = st.sidebar.slider("Variance threshold (%)", 1, 25, st.session_state.threshold, 1,
                                help="Flag line items deviating more than this %") / 100
 
 alerts = compute_variance_alerts(threshold_pct=threshold)
@@ -146,6 +135,50 @@ else:
         },
     )
 
+# ── AI Assessment ─────────────────────────────────────────────────────────
+if ANTHROPIC_AVAILABLE and get_api_key():
+    non_green = alerts[alerts["Severity"] != "GREEN"]
+    if not non_green.empty:
+        st.markdown("")
+        if st.button("🤖 AI Assessment — Analyze Variance Alerts", type="primary", use_container_width=True):
+            # Build a summary of RED and YELLOW alerts for the agent
+            alert_summary = "NSIA Variance Alerts — Current Data\n\n"
+            alert_summary += f"Threshold: {threshold:.0%} | RED: {red_count} | YELLOW: {yellow_count} | GREEN: {green_count}\n\n"
+            alert_summary += "=== RED & YELLOW ALERTS ===\n"
+            alert_summary += non_green[["Category", "Line Item", "Proposal YTD", "CSCG YTD",
+                                         "Variance $", "Variance %", "Severity", "Assessment"]].to_csv(index=False)
+            alert_summary += f"\n\nAggregate Impact:\n"
+            alert_summary += f"- Total Favorable Variances: ${non_green[non_green['Variance $'] > 0]['Variance $'].sum():+,.0f}\n"
+            alert_summary += f"- Total Unfavorable Variances: ${non_green[non_green['Variance $'] < 0]['Variance $'].sum():+,.0f}\n"
+            alert_summary += f"- Net Budget Impact (YTD): ${non_green['Variance $'].sum():+,.0f}\n"
+
+            with st.spinner("Running Alert Monitor analysis..."):
+                result = analyze_document(
+                    agent_id="alert_monitor",
+                    document_content=alert_summary,
+                    filename="variance_alerts_current.csv",
+                    additional_context="Analyze these budget variance alerts for the NSIA board. "
+                                       "Identify the most critical items, recommend board actions, "
+                                       "and flag any patterns across the variances.",
+                )
+            if result:
+                st.markdown("---")
+                st.markdown("### 🤖 AI Assessment")
+                red_flags = result.count("🔴")
+                yellow_flags = result.count("🟡")
+                if red_flags > 0:
+                    st.error(f"**{red_flags} critical item(s)** require board attention")
+                if yellow_flags > 0:
+                    st.warning(f"**{yellow_flags} caution item(s)** flagged for review")
+                st.markdown(result)
+                st.download_button(
+                    label="📥 Download AI Assessment",
+                    data=result,
+                    file_name="nsia_variance_ai_assessment.md",
+                    mime="text/markdown",
+                )
+        st.markdown("")
+
 # ── YELLOW Alerts — Monitor Closely ──────────────────────────────────────
 st.markdown("---")
 st.header("YELLOW Alerts — Monitor Closely")
@@ -185,12 +218,33 @@ else:
         },
     )
 
-# ── GREEN Items — Within Tolerance ────────────────────────────────────────
-with st.expander("GREEN Items — Within Tolerance (click to expand)"):
-    green_alerts = alerts[alerts["Severity"] == "GREEN"].copy()
-    if green_alerts.empty:
-        st.info("No GREEN items.")
-    else:
+# ── GREEN Items — What's Working ──────────────────────────────────────────
+st.markdown("---")
+st.header("GREEN Items — What's Working Well")
+
+green_alerts = alerts[alerts["Severity"] == "GREEN"].copy()
+if green_alerts.empty:
+    st.info("No GREEN items at current threshold.")
+else:
+    # Show top 5 closest-to-budget items as confidence builders
+    green_alerts["Abs Variance"] = green_alerts["Variance $"].abs()
+    top_green = green_alerts.nsmallest(5, "Abs Variance")
+
+    st.markdown(f"**{green_count} line items** are within tolerance. Here are the top performers:")
+
+    for _, row in top_green.iterrows():
+        var_pct = row["Variance %"] * 100 if abs(row["Variance %"]) < 1 else row["Variance %"]
+        st.markdown(
+            f'<div style="padding:8px 14px;margin:4px 0;border-left:3px solid #00d084;'
+            f'background:rgba(0,208,132,0.08);border-radius:4px;">'
+            f'<b style="color:#e6f1ff;">{row["Line Item"]}</b> '
+            f'<span style="color:#a8b2d1;">({row["Category"]})</span> &nbsp; '
+            f'<span style="color:#00d084;font-weight:bold;">${row["Variance $"]:+,.0f} ({var_pct:+.1f}%)</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    with st.expander(f"All {green_count} GREEN items"):
         st.dataframe(
             green_alerts[["Category", "Line Item", "Proposal YTD", "CSCG YTD",
                            "Variance $", "Variance %"]],

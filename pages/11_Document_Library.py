@@ -8,29 +8,24 @@ import json
 import os
 import re
 import uuid
+import sys
 from datetime import date
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.agent_router import (
+    analyze_document,
+    detect_agent,
+    get_api_key,
+    ANTHROPIC_AVAILABLE,
+    AGENT_REGISTRY,
+)
 
 st.set_page_config(page_title="Document Library | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-# ── Theme Constants ──────────────────────────────────────────────────────
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
+from utils.theme import FONT_COLOR, inject_css
 
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
+inject_css()
 
 # ── Constants ────────────────────────────────────────────────────────────
 CATEGORIES = ["Board Governance", "Financial Documents", "Contracts & Agreements"]
@@ -445,6 +440,9 @@ else:
             meta_parts.append(f'Added {doc.get("date_added", "—")}')
             if doc.get("uploaded_by"):
                 meta_parts.append(f'by {doc["uploaded_by"]}')
+            ai_class = doc.get("ai_classification")
+            if ai_class and ai_class.get("agent_name"):
+                meta_parts.append(f'AI: {ai_class["agent_name"]}')
             st.caption(" | ".join(meta_parts))
 
         with col_actions:
@@ -523,6 +521,37 @@ with tab_upload:
                 with open(dest_path, "wb") as f:
                     f.write(file_bytes)
 
+                # AI auto-classification
+                ai_tags = None
+                if ANTHROPIC_AVAILABLE and get_api_key():
+                    ext = os.path.splitext(filename)[1].lower().lstrip(".")
+                    preview = ""
+                    if ext in ("csv", "txt"):
+                        try:
+                            preview = file_bytes.decode("utf-8", errors="replace")[:2000]
+                        except Exception:
+                            pass
+                    elif ext in ("xlsx", "xls"):
+                        try:
+                            import pandas as pd
+                            import io
+                            xls = pd.ExcelFile(io.BytesIO(file_bytes))
+                            sheets_preview = []
+                            for sn in xls.sheet_names[:3]:
+                                df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sn, nrows=10)
+                                sheets_preview.append(f"Sheet: {sn}\n{df.to_csv(index=False)}")
+                            preview = "\n".join(sheets_preview)
+                        except Exception:
+                            pass
+
+                    detected_agent = detect_agent(filename, preview)
+                    agent_name = AGENT_REGISTRY.get(detected_agent, {}).get("name", "")
+                    ai_tags = {
+                        "detected_agent": detected_agent,
+                        "agent_name": agent_name,
+                        "document_type": AGENT_REGISTRY.get(detected_agent, {}).get("description", ""),
+                    }
+
                 entry = {
                     "id": str(uuid.uuid4()),
                     "name": display_name,
@@ -533,10 +562,18 @@ with tab_upload:
                     "storage": "local",
                     "filename": filename,
                     "external_url": None,
+                    "ai_classification": ai_tags,
                 }
+
                 catalog.append(entry)
                 save_catalog(catalog)
-                st.success(f"Uploaded **{display_name}** to {u_category}.")
+                if ai_tags:
+                    st.success(
+                        f"Uploaded **{display_name}** to {u_category}. "
+                        f"AI classified as: **{ai_tags['agent_name']}** document."
+                    )
+                else:
+                    st.success(f"Uploaded **{display_name}** to {u_category}.")
                 st.rerun()
         elif submitted and uploaded_file is None:
             st.warning("Please select a file to upload.")

@@ -5,41 +5,16 @@ Budget vs Actuals, Cash Forecast, and Contract Receivables.
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
+from utils.theme import FONT_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="Monthly Financials | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("Monthly Financials")
 st.caption("Budget vs Actuals, Cash Forecast, and Contract Receivables")
@@ -353,3 +328,58 @@ fig_progress.update_layout(
 )
 style_chart(fig_progress, 380)
 st.plotly_chart(fig_progress, use_container_width=True)
+
+# ══════════════════════════════════════════════════════════════════════════
+# AI Monthly Analysis
+# ══════════════════════════════════════════════════════════════════════════
+if ANTHROPIC_AVAILABLE and get_api_key():
+    st.markdown("---")
+    if st.button("🤖 AI Analysis — Monthly Financial Assessment", type="primary", use_container_width=True):
+        # Compile monthly data for the Financial Health Monitor agent
+        analysis_data = "NSIA Monthly Financials — Current Data\n\n"
+
+        # Budget vs Actuals
+        analysis_data += "=== BUDGET VS ACTUALS ===\n"
+        analysis_data += f"Display Month: {display_month}\n"
+        analysis_data += f"Revenue Actual: ${rev_actual:,.0f} | Budget: ${rev_budget:,.0f} | Var: ${rev_actual - rev_budget:+,.0f}\n"
+        analysis_data += f"Expense Actual: ${exp_actual:,.0f} | Budget: ${exp_budget:,.0f} | Var: ${exp_actual - exp_budget:+,.0f}\n"
+        analysis_data += f"Net Income: ${net_actual:,.0f}\n\n"
+        analysis_data += "Variance Detail:\n"
+        analysis_data += detail.to_csv(index=False)
+
+        # Cash Forecast
+        analysis_data += "\n\n=== CASH FORECAST (12-Month) ===\n"
+        analysis_data += cash.to_csv(index=False)
+        analysis_data += f"\nStarting Cash: ${starting_cash:,.0f}\n"
+        analysis_data += f"Projected Ending: ${ending_cash:,.0f}\n"
+        analysis_data += f"Lowest Point: ${lowest_cash:,.0f} ({lowest_label})\n"
+
+        # Receivables
+        analysis_data += "\n\n=== CONTRACT RECEIVABLES ===\n"
+        analysis_data += recv.to_csv(index=False)
+
+        with st.spinner("Running Financial Health Monitor analysis..."):
+            result = analyze_document(
+                agent_id="financial_health",
+                document_content=analysis_data,
+                filename="monthly_financials_current.csv",
+                additional_context="Provide a plain-language monthly financial assessment for the NSIA board. "
+                                   "Compare this month to budget, assess cash runway, flag any receivables "
+                                   "concerns, and provide early warning flags. Keep it concise and actionable.",
+            )
+        if result:
+            st.markdown("---")
+            st.markdown("### 🤖 AI Monthly Assessment")
+            red_flags = result.count("🔴")
+            yellow_flags = result.count("🟡")
+            if red_flags > 0:
+                st.error(f"**{red_flags} critical item(s)** require board attention")
+            if yellow_flags > 0:
+                st.warning(f"**{yellow_flags} caution item(s)** flagged for review")
+            st.markdown(result)
+            st.download_button(
+                label="📥 Download Monthly Assessment",
+                data=result,
+                file_name="nsia_monthly_ai_assessment.md",
+                mime="text/markdown",
+            )

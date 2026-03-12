@@ -1,65 +1,51 @@
 """
 Page 3: Revenue & Advertising
-Current advertisers, sales pipeline, historical ad revenue, and scoreboard sponsorship model.
+Current advertisers, sales pipeline, historical ad revenue, scoreboard model, and contract receivables.
 """
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime
+from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 
 st.set_page_config(page_title="Revenue & Ads | NSIA", layout="wide", page_icon=":ice_hockey:")
 
-# ── Shared chart theme ────────────────────────────────────────────────────
-CHART_BG = "rgba(0,0,0,0)"
-GRID_COLOR = "rgba(168,178,209,0.15)"
-FONT_COLOR = "#a8b2d1"
-TITLE_COLOR = "#ccd6f6"
-
-st.markdown("""
-<style>
-    [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        border: 1px solid #0f3460;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    [data-testid="stMetric"] label { color: #a8b2d1 !important; }
-    [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #e6f1ff !important; }
-</style>
-""", unsafe_allow_html=True)
-
-def style_chart(fig, height=450):
-    fig.update_layout(
-        height=height,
-        paper_bgcolor=CHART_BG,
-        plot_bgcolor=CHART_BG,
-        font=dict(color=FONT_COLOR, size=12),
-        title_font=dict(color=TITLE_COLOR, size=18),
-        xaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        yaxis=dict(gridcolor=GRID_COLOR, tickfont=dict(color=FONT_COLOR)),
-        legend=dict(font=dict(color=FONT_COLOR)),
-        margin=dict(t=60, b=40),
-    )
-    return fig
+inject_css()
 
 st.title("Revenue & Advertising")
-st.caption("Advertiser tracking, sales pipeline, and historical ad revenue trends")
+st.caption("Advertiser tracking, sales pipeline, contract receivables, and historical trends")
 
 from utils.data_loader import (
     load_current_ads,
     load_done_deals_prospects,
     load_historical_ad_revenue,
     load_scoreboard_10yr,
+    load_contract_receivables,
 )
+
+# ── Pipeline KPIs ────────────────────────────────────────────────────────
+pipeline = load_done_deals_prospects()
+ads = load_current_ads()
+recv = load_contract_receivables()
+
+done = pipeline[pipeline["Pipeline Stage"] == "Done Deal"]
+prospects = pipeline[pipeline["Pipeline Stage"] == "Prospect"]
+done_total = done["Amount"].sum()
+prospect_total = prospects["Amount"].sum()
+total_pipeline = done_total + prospect_total
+
+k1, k2, k3, k4 = st.columns(4)
+k1.metric("Done Deals", f"${done_total:,.0f}", f"{len(done)} deals")
+k2.metric("Prospect Pipeline", f"${prospect_total:,.0f}", f"{len(prospects)} prospects")
+k3.metric("Total Pipeline", f"${total_pipeline:,.0f}", f"{len(pipeline)} total")
+k4.metric("Active Advertisers", len(ads), f"${ads['Cost (Numeric)'].sum():,.0f} contract value")
+
+st.markdown("---")
 
 # ── Current Advertisers ──────────────────────────────────────────────────
 st.header("Current Advertisers")
 
-ads = load_current_ads()
-
-# Add status based on expiration date
 now = pd.Timestamp.now()
 
 def get_status(row):
@@ -84,105 +70,196 @@ def status_style(val):
 
 display_ads = ads[["Customer", "Type", "Location/Notes", "Term", "Expiration Date", "Cost", "Status"]].copy()
 
-st.dataframe(
-    display_ads.style.map(status_style, subset=["Status"]),
-    use_container_width=True,
-    hide_index=True,
-)
+col_table, col_donut = st.columns([2, 1])
 
-# Summary metrics
-col1, col2, col3 = st.columns(3)
-with col1:
-    active_count = len(ads[ads["Status"].isin(["Active", "Expiring Soon"])])
-    st.metric("Active/Expiring Advertisers", active_count)
-with col2:
-    expired_count = len(ads[ads["Status"] == "Expired"])
-    st.metric("Expired Advertisers", expired_count)
-with col3:
-    total_annual = ads["Cost (Numeric)"].sum()
-    st.metric("Total Contract Value", f"${total_annual:,.0f}" if pd.notna(total_annual) else "N/A")
+with col_table:
+    st.dataframe(
+        display_ads.style.map(status_style, subset=["Status"]),
+        use_container_width=True,
+        hide_index=True,
+    )
 
-# Status donut
-status_counts = ads["Status"].value_counts().reset_index()
-status_counts.columns = ["Status", "Count"]
-status_color_map = {"Active": "#00d084", "Expiring Soon": "#fcb900", "Expired": "#eb144c", "TBD": "#b2bec3"}
-fig_status = go.Figure(go.Pie(
-    labels=status_counts["Status"],
-    values=status_counts["Count"],
-    hole=0.55,
-    marker=dict(
-        colors=[status_color_map.get(s, "#abb8c3") for s in status_counts["Status"]],
-        line=dict(color="#0a192f", width=2),
-    ),
-    textinfo="label+value",
-    textfont=dict(size=13, color="#e6f1ff"),
-))
-fig_status.update_layout(
-    title=dict(text="Advertiser Status Breakdown", font=dict(size=16, color=TITLE_COLOR)),
-    showlegend=False,
-)
-style_chart(fig_status, 350)
-st.plotly_chart(fig_status, use_container_width=True)
+with col_donut:
+    status_counts = ads["Status"].value_counts().reset_index()
+    status_counts.columns = ["Status", "Count"]
+    status_color_map = {"Active": "#00d084", "Expiring Soon": "#fcb900", "Expired": "#eb144c", "TBD": "#b2bec3"}
+    fig_status = go.Figure(go.Pie(
+        labels=status_counts["Status"],
+        values=status_counts["Count"],
+        hole=0.55,
+        marker=dict(
+            colors=[status_color_map.get(s, "#abb8c3") for s in status_counts["Status"]],
+            line=dict(color="#0a192f", width=2),
+        ),
+        textinfo="label+value",
+        textfont=dict(size=13, color="#e6f1ff"),
+    ))
+    fig_status.update_layout(
+        title=dict(text="Status Breakdown", font=dict(size=16, color=TITLE_COLOR)),
+        showlegend=False,
+    )
+    style_chart(fig_status, 320)
+    st.plotly_chart(fig_status, use_container_width=True)
+
+    # Action items for expired/expiring
+    expired = ads[ads["Status"] == "Expired"]
+    expiring = ads[ads["Status"] == "Expiring Soon"]
+    if not expired.empty or not expiring.empty:
+        st.markdown(
+            f'<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);'
+            f'border-left:4px solid #fcb900;border-radius:8px;padding:12px 16px;">'
+            f'<b style="color:#fcb900;">Action Needed</b><br>'
+            + (f'<span style="color:#ff6b6b;">{len(expired)} expired</span> — contact for renewal<br>' if not expired.empty else '')
+            + (f'<span style="color:#fcb900;">{len(expiring)} expiring soon</span> — schedule renewal discussion' if not expiring.empty else '')
+            + '</div>',
+            unsafe_allow_html=True,
+        )
+
+st.markdown("---")
 
 # ── Sales Pipeline ────────────────────────────────────────────────────────
 st.header("Sales Pipeline — Done Deals vs. Prospects")
-
-pipeline = load_done_deals_prospects()
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Done Deals")
-    done = pipeline[pipeline["Pipeline Stage"] == "Done Deal"]
-    st.dataframe(
-        done[["Advertiser", "$$", "Term"]],
-        use_container_width=True,
-        hide_index=True,
-    )
-    done_total = done["Amount"].sum()
-    st.metric("Total Done Deals", f"${done_total:,.0f}" if pd.notna(done_total) else "N/A")
+    done_display = done[["Advertiser", "$$", "Term"]].copy()
+    st.dataframe(done_display, use_container_width=True, hide_index=True)
+    st.metric("Total Done Deals", f"${done_total:,.0f}")
 
 with col2:
     st.subheader("Prospects")
-    prospects = pipeline[pipeline["Pipeline Stage"] == "Prospect"]
-    display_prospects = prospects[["Advertiser", "$$", "Term", "Status"]].copy()
-    display_prospects.columns = ["Advertiser", "$$", "Term", "Notes"]
-    st.dataframe(
-        display_prospects,
-        use_container_width=True,
-        hide_index=True,
-    )
-    prospect_total = prospects["Amount"].sum()
-    st.metric("Total Prospect Pipeline", f"${prospect_total:,.0f}" if pd.notna(prospect_total) else "N/A")
+    prospect_display = prospects[["Advertiser", "$$", "Term", "Status"]].copy()
+    prospect_display.columns = ["Advertiser", "$$", "Term", "Notes"]
+    st.dataframe(prospect_display, use_container_width=True, hide_index=True)
+    st.metric("Total Prospect Pipeline", f"${prospect_total:,.0f}")
 
-# Pipeline funnel-style chart
-pipeline_summary = pipeline.groupby("Pipeline Stage")["Amount"].agg(["sum", "count"]).reset_index()
-pipeline_summary.columns = ["Stage", "Total Value", "Count"]
-if not pipeline_summary.empty:
-    fig_pipeline = go.Figure()
-    colors = {"Done Deal": "#00d084", "Prospect": "#0984e3"}
-    for _, row in pipeline_summary.iterrows():
-        fig_pipeline.add_trace(go.Bar(
-            x=[row["Stage"]],
-            y=[row["Total Value"]],
-            name=row["Stage"],
-            marker=dict(
-                color=colors.get(row["Stage"], "#abb8c3"),
-                line=dict(width=1.5, color="rgba(255,255,255,0.3)"),
-            ),
-            text=f"${row['Total Value']:,.0f}<br>({int(row['Count'])} deals)",
-            textposition="inside",
-            textfont=dict(color="#fff", size=14),
-            hovertemplate=f"<b>{row['Stage']}</b><br>${row['Total Value']:,.0f}<br>{int(row['Count'])} deals<extra></extra>",
-        ))
-    fig_pipeline.update_layout(
-        title="Pipeline Value by Stage",
-        yaxis_title="Total Value ($)",
-        showlegend=False,
-        bargap=0.3,
+# Pipeline visualization — by term length
+fig_funnel = go.Figure()
+
+for stage, color in [("Done Deal", "#00d084"), ("Prospect", "#0984e3")]:
+    stage_data = pipeline[pipeline["Pipeline Stage"] == stage]
+    term_groups = stage_data.groupby("Term")["Amount"].agg(["sum", "count"]).reset_index()
+    term_groups.columns = ["Term", "Value", "Count"]
+    term_groups = term_groups.sort_values("Value", ascending=False)
+
+    fig_funnel.add_trace(go.Bar(
+        x=term_groups["Term"],
+        y=term_groups["Value"],
+        name=stage,
+        marker=dict(color=color, line=dict(width=1, color="rgba(255,255,255,0.3)")),
+        text=[f"${v:,.0f} ({c})" for v, c in zip(term_groups["Value"], term_groups["Count"])],
+        textposition="inside",
+        textfont=dict(color="#fff", size=12),
+    ))
+
+fig_funnel.update_layout(
+    title="Pipeline Value by Term Length",
+    barmode="group",
+    yaxis_title="Total Value ($)",
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+    bargap=0.3,
+)
+style_chart(fig_funnel, 380)
+st.plotly_chart(fig_funnel, use_container_width=True)
+
+# Conversion rate insight
+if len(pipeline) > 0:
+    conversion = len(done) / len(pipeline) * 100
+    avg_deal = done_total / len(done) if len(done) > 0 else 0
+    avg_prospect = prospect_total / len(prospects) if len(prospects) > 0 else 0
+    st.info(
+        f"**Conversion rate:** {conversion:.0f}% of pipeline is closed | "
+        f"**Avg deal size:** ${avg_deal:,.0f} (done) vs. ${avg_prospect:,.0f} (prospect) | "
+        f"**If all prospects close:** ${total_pipeline:,.0f} total revenue"
     )
-    style_chart(fig_pipeline, 380)
-    st.plotly_chart(fig_pipeline, use_container_width=True)
+
+st.markdown("---")
+
+# ── Contract Receivables ─────────────────────────────────────────────────
+st.header("Contract Receivables")
+st.caption("Collection progress by major customer — September vs. November snapshots")
+
+recv_data = recv[recv["Customer"] != "Total"].copy()
+
+if not recv_data.empty:
+    # Collection progress chart
+    fig_recv = go.Figure()
+
+    fig_recv.add_trace(go.Bar(
+        x=recv_data["Customer"],
+        y=recv_data["Nov Paid"],
+        name="Paid",
+        marker_color="#00d084",
+        text=[f"${v:,.0f}" for v in recv_data["Nov Paid"]],
+        textposition="inside",
+        textfont=dict(color="#fff", size=11),
+    ))
+    fig_recv.add_trace(go.Bar(
+        x=recv_data["Customer"],
+        y=recv_data["Nov Owed"],
+        name="Outstanding",
+        marker_color="#eb144c",
+        text=[f"${v:,.0f}" for v in recv_data["Nov Owed"]],
+        textposition="inside",
+        textfont=dict(color="#fff", size=11),
+    ))
+
+    fig_recv.update_layout(
+        title="Collection Status by Customer (November)",
+        barmode="stack",
+        yaxis_title="Contract Amount ($)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+    )
+    style_chart(fig_recv, 420)
+    st.plotly_chart(fig_recv, use_container_width=True)
+
+    # Collection rate metrics
+    totals = recv[recv["Customer"] == "Total"]
+    if not totals.empty:
+        t = totals.iloc[0]
+        sept_rate = t["Sept Paid"] / t["Sept Contracted"] * 100 if t["Sept Contracted"] > 0 else 0
+        nov_rate = t["Nov Paid"] / t["Nov Contracted"] * 100 if t["Nov Contracted"] > 0 else 0
+        delta = nov_rate - sept_rate
+
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Total Contracted", f"${t['Nov Contracted']:,.0f}")
+        r2.metric("Total Collected", f"${t['Nov Paid']:,.0f}")
+        r3.metric("Outstanding", f"${t['Nov Owed']:,.0f}")
+        r4.metric("Collection Rate", f"{nov_rate:.1f}%", f"{delta:+.1f}pp vs Sept ({sept_rate:.1f}%)")
+
+    # Sept → Nov collection progress
+    recv_data["Sept Collection %"] = (recv_data["Sept Paid"] / recv_data["Sept Contracted"] * 100).round(1)
+    recv_data["Nov Collection %"] = (recv_data["Nov Paid"] / recv_data["Nov Contracted"] * 100).round(1)
+
+    fig_progress = go.Figure()
+    fig_progress.add_trace(go.Bar(
+        x=recv_data["Customer"],
+        y=recv_data["Sept Collection %"],
+        name="Sept",
+        marker_color="#636e72",
+    ))
+    fig_progress.add_trace(go.Bar(
+        x=recv_data["Customer"],
+        y=recv_data["Nov Collection %"],
+        name="Nov",
+        marker_color="#0984e3",
+        text=[f"{v:.0f}%" for v in recv_data["Nov Collection %"]],
+        textposition="outside",
+        textfont=dict(color=FONT_COLOR, size=11),
+    ))
+    fig_progress.update_layout(
+        title="Collection Rate Progress: September → November",
+        barmode="group",
+        yaxis_title="% Collected",
+        yaxis=dict(range=[0, 105]),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+    )
+    style_chart(fig_progress, 380)
+    st.plotly_chart(fig_progress, use_container_width=True)
+
+st.markdown("---")
 
 # ── Historical Ad Revenue ─────────────────────────────────────────────────
 st.header("Historical Ad Revenue (2014-2024)")
@@ -192,7 +269,6 @@ if not hist.empty:
     avg = hist["Ad Revenue"].mean()
     max_year = int(hist.loc[hist["Ad Revenue"].idxmax(), "Year"])
 
-    # Gradient-colored bars
     colors = []
     for _, row in hist.iterrows():
         if row["Ad Revenue"] >= avg * 1.5:
@@ -224,11 +300,24 @@ if not hist.empty:
     style_chart(fig_hist, 430)
     st.plotly_chart(fig_hist, use_container_width=True)
 
-    st.info(
-        f"**10-year average:** ${avg:,.0f}/year | "
-        f"**Peak:** ${hist['Ad Revenue'].max():,.0f} ({max_year}) | "
-        f"**Current proposal budget:** $12,300/year"
+    # Budget comparison
+    current_budget = 12300
+    gap = avg - current_budget
+    st.markdown(
+        f'<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);'
+        f'border:1px solid #0f3460;border-radius:12px;padding:16px 20px;">'
+        f'<span style="color:#a8b2d1;">10-year average:</span> '
+        f'<b style="color:#e6f1ff;font-size:1.2rem;">${avg:,.0f}/yr</b> &nbsp;|&nbsp; '
+        f'<span style="color:#a8b2d1;">Peak:</span> '
+        f'<b style="color:#00d084;">${hist["Ad Revenue"].max():,.0f}</b> ({max_year}) &nbsp;|&nbsp; '
+        f'<span style="color:#a8b2d1;">Current budget:</span> '
+        f'<b style="color:#fcb900;">${current_budget:,.0f}/yr</b> &nbsp;|&nbsp; '
+        f'<span style="color:#eb144c;">Gap to avg: ${gap:,.0f}</span>'
+        f'</div>',
+        unsafe_allow_html=True,
     )
+
+st.markdown("---")
 
 # ── Scoreboard Sponsorship Model ─────────────────────────────────────────
 st.header("Scoreboard Sponsorship Revenue Model")

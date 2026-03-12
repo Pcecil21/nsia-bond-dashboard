@@ -14,6 +14,28 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Authentication ───────────────────────────────────────────────────────
+from utils.auth import init_authenticator, get_user_role
+
+authenticator = init_authenticator()
+
+authenticator.login(location="sidebar")
+
+authentication_status = st.session_state.get("authentication_status")
+name = st.session_state.get("name", "")
+username = st.session_state.get("username", "")
+
+if authentication_status is False:
+    st.sidebar.error("Username or password is incorrect.")
+elif authentication_status is None:
+    st.sidebar.info("Please log in to access the dashboard.")
+
+if authentication_status:
+    authenticator.logout("Logout", "sidebar")
+    role = get_user_role()
+    st.sidebar.markdown(f"**Logged in as:** {name} (`{role}`)")
+    st.sidebar.markdown("---")
+
 # ── Custom CSS ───────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -75,6 +97,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── Gate content behind login ────────────────────────────────────────────
+if not authentication_status:
+    st.title("North Shore Ice Arena")
+    st.subheader("Bond Dashboard")
+    st.info("Please log in using the sidebar to access the dashboard.")
+    st.stop()
+
 # ── Sidebar ──────────────────────────────────────────────────────────────
 logo_path = os.path.join(os.path.dirname(__file__), "data", "nsia_logo.png")
 if os.path.exists(logo_path):
@@ -99,6 +128,10 @@ st.sidebar.markdown(
 - **Multi-Year Trends** — 3yr Analysis
 - **Reconciliation** — 4-way audit trail
 - **Document Library** — Board documents & files
+
+**🤖 AI Tools**
+- **AI Analysis** — Agent-powered document analysis
+- **Board Report** — One-click board report generator
     """
 )
 st.sidebar.markdown("---")

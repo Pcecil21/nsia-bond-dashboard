@@ -1,0 +1,12 @@
+StartDate,EndDate,Reason,Exclude,Team
+2025-10-11,2025-10-11,Sold Ice to Wilmette,Yes,Winnetka
+2025-10-18,2025-10-19,Fall Tournament Weekend,No,Both
+2025-11-08,2025-11-09,CCM World Invite,Yes,Both
+2025-11-29,2025-11-30,Thanksgiving Weekend,Yes,Both
+2025-12-27,2026-01-04,Holiday Break,Yes,Both
+2025-12-27,2025-12-28,Christmas Break,Yes,Both
+2026-02-07,2026-02-08,Central States Playoffs ,Yes,Both
+2026-02-14,2026-02-15,State Play ins ,Yes,Both
+2026-02-21,2026-02-22,Presidents Day Weekend,No,Both
+2026-02-21,2025-02-22,State Play ins ,Yes,Both
+2026-02-28,2026-03-01,state Round Robin,Yes,Both
