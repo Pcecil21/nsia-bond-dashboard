@@ -11,11 +11,13 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Board Report | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 # ── Dark theme CSS ────────────────────────────────────────────────────────
 inject_css()
+require_auth()
 
 st.markdown("""
 <style>

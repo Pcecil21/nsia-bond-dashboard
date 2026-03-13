@@ -21,7 +21,11 @@ from utils.agent_router import (
     AGENT_REGISTRY,
 )
 
+from utils.auth import require_auth
+
 st.set_page_config(page_title="Document Library | NSIA", layout="wide", page_icon=":ice_hockey:")
+
+require_auth()
 
 from utils.theme import FONT_COLOR, inject_css
 

@@ -12,10 +12,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import CHART_BG, GRID_COLOR, FONT_COLOR, TITLE_COLOR, style_chart, inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Variance Alerts | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 inject_css()
+require_auth()
 
 st.title("Variance Alerts")
 st.caption("Automated monitoring: CSCG operational budget vs. board-approved proposal")

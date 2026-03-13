@@ -6,10 +6,12 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="New Trier | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 inject_css()
+require_auth()
 
 st.title("New Trier Hockey")
 st.caption("NSIA home games for all 6 teams")

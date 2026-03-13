@@ -11,10 +11,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import FONT_COLOR, style_chart, inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Monthly Financials | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 inject_css()
+require_auth()
 
 st.title("Monthly Financials")
 st.caption("Budget vs Actuals, Cash Forecast, and Contract Receivables")

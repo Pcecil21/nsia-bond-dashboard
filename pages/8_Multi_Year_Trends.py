@@ -6,10 +6,12 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, style_chart, inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Multi-Year Trends | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 inject_css()
+require_auth()
 
 st.title("Multi-Year Trends")
 st.caption("3-year revenue & expense analysis, Form 990 highlights, and payroll benchmarking")

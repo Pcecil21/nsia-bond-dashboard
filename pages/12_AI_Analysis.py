@@ -20,6 +20,7 @@ from utils.agent_router import (
     ANTHROPIC_AVAILABLE,
 )
 from utils.theme import style_chart, inject_css
+from utils.auth import require_auth
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -29,6 +30,7 @@ st.set_page_config(page_title="AI Analysis | NSIA", page_icon=":ice_hockey:", la
 
 # ── Dark theme CSS (matches dashboard) ────────────────────────────────────
 inject_css()
+require_auth()
 
 st.markdown("""
 <style>

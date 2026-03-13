@@ -7,10 +7,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Operations | NSIA", layout="wide", page_icon=":ice_hockey:")
 
 inject_css()
+require_auth()
 
 st.title("Operations")
 st.caption("Revenue breakdown, CSCG management relationship, expense oversight, and facility activity")
