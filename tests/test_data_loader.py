@@ -1074,3 +1074,196 @@ class TestComputeCscgScorecard:
         # Management fee should be COMPLIANT (21000 actual vs 21000 expected)
         mgmt = result[result["Contract Term"].str.contains("Management Fee")]
         assert len(mgmt) > 0
+
+
+# ── load_proposed_entries ─────────────────────────────────────────────────
+
+class TestLoadProposedEntries:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_entries(self, monkeypatch):
+        # Columns: 0(spacer), 1(Num), 2(spacer), 3(Date), 4(spacer), 5(Memo),
+        #          6(spacer), 7(Account), 8(spacer), 9(Debit), 10(spacer), 11(Credit)
+        data = {i: [None] * 6 for i in range(12)}
+        # Header rows 0-2
+        data[1][0] = "Num"; data[3][0] = "Date"; data[5][0] = "Memo"
+        data[7][0] = "Account"; data[9][0] = "Debit"; data[11][0] = "Credit"
+        data[1][1] = ""; data[1][2] = ""
+        # Entry 1 line 1 (row 3)
+        data[1][3] = 1; data[3][3] = "2024-07-01"; data[5][3] = "Adj entry"
+        data[7][3] = "Ice Revenue"; data[9][3] = 5000; data[11][3] = 0
+        # Entry 1 line 2 (row 4)
+        data[7][4] = "Accounts Receivable"; data[9][4] = 0; data[11][4] = 5000
+        # Entry 2 (row 5)
+        data[1][5] = 2; data[3][5] = "2024-07-15"; data[5][5] = "Correction"
+        data[7][5] = "Electric"; data[9][5] = 1000; data[11][5] = 0
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_proposed_entries.__wrapped__
+        result = fn()
+        assert len(result) == 3
+        assert "Account" in result.columns
+        # Num should be forward-filled
+        assert result.iloc[1]["Num"] == 1
+
+    def test_excludes_header_echo_rows(self, monkeypatch):
+        data = {i: [None] * 5 for i in range(12)}
+        data[7][0] = "Account"  # header row 0
+        data[7][3] = "Account"  # echoed header
+        data[7][4] = "Revenue"  # actual data
+        data[1][4] = 1; data[3][4] = "2024-07-01"; data[5][4] = "Test"
+        data[9][4] = 100; data[11][4] = 0
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_proposed_entries.__wrapped__
+        result = fn()
+        assert "Account" not in result["Account"].values
+        assert "Revenue" in result["Account"].values
+
+
+# ── load_weekend_ice_summary ─────────────────────────────────────────────
+
+class TestLoadWeekendIceSummary:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_weekend_hours(self, monkeypatch):
+        n_rows = 20
+        data = {i: [None] * n_rows for i in range(17)}
+        data[0][15] = "Hrs/Day"
+        data[0][16] = "Wilmette"
+        # Weekend 1: Sat(1), Sun(2), Total(3)
+        data[1][16] = 4.0; data[2][16] = 3.0; data[3][16] = 7.0
+        # Weekend 2: cols 5,6,7
+        data[5][16] = 5.0; data[6][16] = 4.0; data[7][16] = 9.0
+        # Proposed Weekend 1: cols 10,11,12
+        data[10][16] = 6.0; data[11][16] = 5.0; data[12][16] = 11.0
+        # Proposed Weekend 2: cols 14,15,16
+        data[14][16] = 7.0; data[15][16] = 6.0; data[16][16] = 13.0
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_weekend_ice_summary.__wrapped__
+        result = fn()
+        assert len(result) == 2  # 2 weekends for 1 club
+        assert "Wilmette" in result["Club"].values
+
+    def test_returns_empty_when_no_marker(self, monkeypatch):
+        df = pd.DataFrame({0: ["A"] * 5})
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_weekend_ice_summary.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── load_bills_by_category ────────────────────────────────────────────────
+
+class TestLoadBillsByCategory:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_categories(self, monkeypatch):
+        df = pd.DataFrame({
+            "Category": ["Utilities", "Insurance"],
+            "Total Amount": [45000, 12000],
+            "% of Total": [0.60, 0.16],
+        })
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_bills_by_category.__wrapped__
+        result = fn()
+        assert len(result) == 2
+
+
+# ── load_bills_by_vendor ──────────────────────────────────────────────────
+
+class TestLoadBillsByVendor:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_vendors(self, monkeypatch):
+        df = pd.DataFrame({
+            "Vendor": ["Nicor", "ComEd"],
+            "Total Amount": [3200, 4500],
+        })
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_bills_by_vendor.__wrapped__
+        result = fn()
+        assert len(result) == 2
+
+
+# ── build_reconciliation_master ───────────────────────────────────────────
+
+class TestBuildReconciliationMaster:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_matches_budget_to_flow(self, monkeypatch):
+        budget = pd.DataFrame({
+            "Line Item": ["Electric", "Total Expenses"],
+            "Proposal YTD Budget": [30000, 30000],
+            "CSCG YTD Budget": [30000, 30000],
+            "YTD Variance $": [0, 0],
+            "YTD Variance %": [0, 0],
+            "Assessment": ["OK", ""],
+        })
+        flow = pd.DataFrame({
+            "Expense Category": ["Electric (Engie)"],
+            "YTD per Financials": [31000],
+            "YTD from Invoices": [31000],
+            "Variance": [0],
+            "Approval Method": ["Board Approved"],
+            "Notes": [""],
+        })
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: budget)
+        monkeypatch.setattr(self._dl, "load_expense_flow", lambda: flow)
+        fn = self._dl.build_reconciliation_master.__wrapped__
+        result = fn()
+        assert len(result) > 0
+        assert "Status" in result.columns
+        electric = result[result["Line Item"].str.contains("Electric")]
+        assert len(electric) > 0
+
+    def test_flags_major_variance(self, monkeypatch):
+        budget = pd.DataFrame({
+            "Line Item": ["Electric"],
+            "Proposal YTD Budget": [30000],
+            "CSCG YTD Budget": [30000],
+            "YTD Variance $": [0],
+            "YTD Variance %": [0],
+            "Assessment": [""],
+        })
+        flow = pd.DataFrame({
+            "Expense Category": ["Electric (Engie)"],
+            "YTD per Financials": [40000],
+            "YTD from Invoices": [40000],
+            "Variance": [0],
+            "Approval Method": ["Board"],
+            "Notes": [""],
+        })
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: budget)
+        monkeypatch.setattr(self._dl, "load_expense_flow", lambda: flow)
+        fn = self._dl.build_reconciliation_master.__wrapped__
+        result = fn()
+        electric = result[result["Line Item"].str.contains("Electric")]
+        assert electric.iloc[0]["Status"] == "Major Variance"
+
+    def test_returns_empty_when_no_data(self, monkeypatch):
+        empty_budget = pd.DataFrame(columns=["Line Item", "Proposal YTD Budget", "CSCG YTD Budget",
+                                               "YTD Variance $", "YTD Variance %", "Assessment"])
+        empty_flow = pd.DataFrame(columns=["Expense Category", "YTD per Financials", "YTD from Invoices",
+                                             "Variance", "Approval Method", "Notes"])
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: empty_budget)
+        monkeypatch.setattr(self._dl, "load_expense_flow", lambda: empty_flow)
+        fn = self._dl.build_reconciliation_master.__wrapped__
+        result = fn()
+        assert result.empty

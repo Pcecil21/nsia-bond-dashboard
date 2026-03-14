@@ -10,9 +10,9 @@ The old cookie key (`nsia_bond_dashboard_auth_key`) and bcrypt password hashes a
 ## P2 — Medium Priority
 
 ### Expand test coverage to remaining data loaders
-`tests/test_data_loader.py` now covers helpers, `load_expense_flow_summary`, `compute_board_demands`, `load_fixed_obligations`, `load_scoreboard_10yr`, `load_scoreboard_alternative`, `load_historical_ad_revenue`, and `compute_kpis` (44 tests). Remaining ~30 loader functions have no test coverage.
-- **Effort:** M
-- **Depends on:** Test infrastructure established in prior PRs
+`tests/test_data_loader.py` now has 85 tests covering 31 functions. Remaining ~7 trivial loaders (CSV readers with no parsing logic) have no dedicated tests: `load_hockey_schedule`, `load_weekend_ice_breakdown`, `load_winnetka_nsia_usage`, `load_wilmette_nsia_usage`, `load_monthly_pnl`, `load_cash_forecast`, `load_contract_receivables`.
+- **Effort:** S
+- **Priority:** Low — these are thin wrappers around `pd.read_csv` with minimal logic
 
 ## P3 — Low Priority
 

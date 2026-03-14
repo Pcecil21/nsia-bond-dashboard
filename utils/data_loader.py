@@ -1010,9 +1010,9 @@ def load_proposed_entries() -> pd.DataFrame:
     # Drop rows that echo the header text
     data = data[data["Account"] != "Account"]
     # Forward-fill Num, Date, Memo from the first line of each entry
-    data["Num"] = data["Num"].ffill()
+    data["Num"] = data["Num"].infer_objects(copy=False).ffill()
     data["Date"] = data["Date"].infer_objects(copy=False).ffill()
-    data["Memo"] = data["Memo"].ffill()
+    data["Memo"] = data["Memo"].infer_objects(copy=False).ffill()
     # Convert numerics
     data["Debit"] = pd.to_numeric(data["Debit"], errors="coerce").fillna(0)
     data["Credit"] = pd.to_numeric(data["Credit"], errors="coerce").fillna(0)
@@ -1252,6 +1252,10 @@ def build_reconciliation_master() -> pd.DataFrame:
             })
 
     result = pd.DataFrame(rows)
+    if result.empty:
+        return pd.DataFrame(columns=["Line Item", "Budget Amount", "Financial (Actual)",
+                                      "Invoice Total", "Budget-Actual Variance",
+                                      "Actual-Invoice Variance", "Approval Method", "Status"])
     # Sort by absolute variance descending
     result["_sort"] = result["Budget-Actual Variance"].abs().fillna(0)
     result = result.sort_values("_sort", ascending=False).drop(columns="_sort")
