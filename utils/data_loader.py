@@ -88,13 +88,15 @@ def load_revenue_reconciliation() -> pd.DataFrame:
     """Revenue Reconciliation sheet — row 4 is the header, data starts row 5."""
     df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Revenue Reconciliation", header=None)
-    # Header is in row 4 (0-indexed)
     headers = [
         "Line Item", "Proposal Jan Budget", "CSCG Jan Budget",
         "Jan Variance $", "Jan Variance %",
         "Proposal YTD Budget", "CSCG YTD Budget",
         "YTD Variance $", "YTD Variance %", "Assessment"
     ]
+    if df.empty or len(df) <= 5:
+        logger.warning("Revenue reconciliation: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[5:].copy()
     data.columns = headers[:len(data.columns)]
     # Drop section-header / blank rows
@@ -611,6 +613,9 @@ def compute_variance_alerts(threshold_pct: float = 0.05) -> pd.DataFrame:
             })
 
     result = pd.DataFrame(rows)
+    if result.empty:
+        return pd.DataFrame(columns=["Category", "Line Item", "Proposal YTD", "CSCG YTD",
+                                      "Variance $", "Variance %", "Severity", "Assessment"])
     # Sort: RED first, then YELLOW, then GREEN
     sev_order = {"RED": 0, "YELLOW": 1, "GREEN": 2}
     result["_sort"] = result["Severity"].map(sev_order)

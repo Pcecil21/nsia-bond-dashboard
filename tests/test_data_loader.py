@@ -540,3 +540,252 @@ class TestComputeKpis:
         fn = self._dl.compute_kpis.__wrapped__
         result = fn()
         assert result["pct_board_approved"] == 0.255
+
+
+# ── load_revenue_reconciliation ───────────────────────────────────────────
+
+class TestLoadRevenueReconciliation:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_revenue_data(self, monkeypatch):
+        # Rows 0-4 are headers; data starts at row 5
+        rows = [[None] * 10 for _ in range(5)]
+        rows.append(["Ice Rental", 10000, 10000, 0, 0, 60000, 60000, 0, 0, "On track"])
+        rows.append(["Vending", 500, 500, 0, 0, 3000, 3000, 0, 0, "On track"])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_revenue_reconciliation.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Ice Rental" in result["Line Item"].values
+
+    def test_drops_nan_line_items(self, monkeypatch):
+        rows = [[None] * 10 for _ in range(5)]
+        rows.append(["Revenue A", 1, 1, 0, 0, 5, 5, 0, 0, "OK"])
+        rows.append([None, None, None, None, None, None, None, None, None, None])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_revenue_reconciliation.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+    def test_returns_empty_on_missing_file(self, monkeypatch):
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: pd.DataFrame())
+        fn = self._dl.load_revenue_reconciliation.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── load_hidden_cash_flows ────────────────────────────────────────────────
+
+class TestLoadHiddenCashFlows:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_hidden_flows(self, monkeypatch):
+        rows = [[None] * 4 for _ in range(4)]
+        rows.append(["Bond Principal", 21250, 255000, "Not on P&L"])
+        rows.append(["Bond Interest", 30708, 368500, "Not on P&L"])
+        rows.append(["TOTAL", 51958, 623500, ""])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_hidden_cash_flows.__wrapped__
+        result = fn()
+        assert len(result) == 2  # TOTAL excluded
+        assert "Bond Principal" in result["Item"].values
+        assert result["Annual Impact"].sum() == 623500
+
+    def test_excludes_total_row(self, monkeypatch):
+        rows = [[None] * 4 for _ in range(4)]
+        rows.append(["Item A", 100, 1200, "Note"])
+        rows.append(["TOTAL HIDDEN", 100, 1200, ""])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_hidden_cash_flows.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+
+# ── load_unauthorized_modifications ───────────────────────────────────────
+
+class TestLoadUnauthorizedModifications:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_modifications(self, monkeypatch):
+        rows = [[None] * 7 for _ in range(3)]
+        rows.append(["Ice Rental Revenue", 100000, 80000, -20000, "DECREASE", "HIGH", "Revenue reduction"])
+        rows.append(["Vending Revenue", 5000, 3000, -2000, "DECREASE", "MEDIUM", "Minor change"])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_unauthorized_modifications.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert list(result.columns) == ["Line Item", "Proposal Annual", "CSCG Annual (Implied)",
+                                         "Annual Variance $", "Direction", "Severity", "Board Governance Impact"]
+
+    def test_excludes_section_headers(self, monkeypatch):
+        rows = [[None] * 7 for _ in range(3)]
+        rows.append(["REVENUE MODIFICATIONS", None, None, None, None, None, None])
+        rows.append(["Ice Rental", 100000, 80000, -20000, "DECREASE", "HIGH", "Note"])
+        rows.append(["EXPENSE MODIFICATIONS", None, None, None, None, None, None])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_unauthorized_modifications.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Line Item"] == "Ice Rental"
+
+
+# ── load_cscg_relationship ────────────────────────────────────────────────
+
+class TestLoadCscgRelationship:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_components(self, monkeypatch):
+        rows = [[None] * 4 for _ in range(3)]
+        rows.append(["Management Fee", 21000, "No", "Article 7.1"])
+        rows.append(["Office Payroll", 85000, "No", ""])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_cscg_relationship.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Management Fee" in result["Component"].values
+
+    def test_excludes_totals_and_projections(self, monkeypatch):
+        rows = [[None] * 4 for _ in range(3)]
+        rows.append(["Management Fee", 21000, "No", ""])
+        rows.append(["TOTAL", 150000, "", ""])
+        rows.append(["ANNUALIZED Projection", 300000, "", ""])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_cscg_relationship.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+
+# ── compute_variance_alerts ───────────────────────────────────────────────
+
+class TestComputeVarianceAlerts:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def _mock_recon(self, monkeypatch, rev_items=None, exp_items=None):
+        if rev_items is None:
+            rev_items = []
+        if exp_items is None:
+            exp_items = []
+        rev = pd.DataFrame(rev_items) if rev_items else pd.DataFrame(
+            columns=["Line Item", "Proposal YTD Budget", "CSCG YTD Budget",
+                     "YTD Variance $", "YTD Variance %", "Assessment"])
+        exp = pd.DataFrame(exp_items) if exp_items else pd.DataFrame(
+            columns=["Line Item", "Proposal YTD Budget", "CSCG YTD Budget",
+                     "YTD Variance $", "YTD Variance %", "Assessment"])
+        monkeypatch.setattr(self._dl, "load_revenue_reconciliation", lambda: rev)
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: exp)
+
+    def test_flags_red_on_large_variance(self, monkeypatch):
+        self._mock_recon(monkeypatch, rev_items=[{
+            "Line Item": "Ice Rental", "Proposal YTD Budget": 100000,
+            "CSCG YTD Budget": 50000, "YTD Variance $": -50000,
+            "YTD Variance %": -0.50, "Assessment": "Major drop",
+        }])
+        fn = self._dl.compute_variance_alerts.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Severity"] == "RED"
+
+    def test_flags_yellow_on_moderate_variance(self, monkeypatch):
+        self._mock_recon(monkeypatch, exp_items=[{
+            "Line Item": "Utilities", "Proposal YTD Budget": 10000,
+            "CSCG YTD Budget": 10800, "YTD Variance $": 800,
+            "YTD Variance %": 0.08, "Assessment": "",
+        }])
+        fn = self._dl.compute_variance_alerts.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Severity"] == "YELLOW"
+
+    def test_flags_green_on_small_variance(self, monkeypatch):
+        self._mock_recon(monkeypatch, rev_items=[{
+            "Line Item": "Vending", "Proposal YTD Budget": 5000,
+            "CSCG YTD Budget": 5100, "YTD Variance $": 100,
+            "YTD Variance %": 0.02, "Assessment": "",
+        }])
+        fn = self._dl.compute_variance_alerts.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Severity"] == "GREEN"
+
+    def test_returns_empty_when_no_data(self, monkeypatch):
+        self._mock_recon(monkeypatch)
+        fn = self._dl.compute_variance_alerts.__wrapped__
+        result = fn()
+        assert result.empty
+
+    def test_sorts_red_first(self, monkeypatch):
+        self._mock_recon(monkeypatch, rev_items=[
+            {"Line Item": "A", "Proposal YTD Budget": 100, "CSCG YTD Budget": 100,
+             "YTD Variance $": 1, "YTD Variance %": 0.01, "Assessment": ""},
+            {"Line Item": "B", "Proposal YTD Budget": 100000, "CSCG YTD Budget": 50000,
+             "YTD Variance $": -50000, "YTD Variance %": -0.50, "Assessment": ""},
+        ])
+        fn = self._dl.compute_variance_alerts.__wrapped__
+        result = fn()
+        assert result.iloc[0]["Severity"] == "RED"
+        assert result.iloc[1]["Severity"] == "GREEN"
+
+
+# ── compute_board_attention ───────────────────────────────────────────────
+
+class TestComputeBoardAttention:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_flags_low_dscr(self, monkeypatch):
+        monkeypatch.setattr(self._dl, "compute_kpis", lambda: {
+            "dscr": 0.9, "hidden_cash_outflows": 0, "pct_board_approved": 1.0,
+            "net_cash_flow": 100000,
+        })
+        monkeypatch.setattr(self._dl, "compute_variance_alerts", lambda: pd.DataFrame(columns=["Severity"]))
+        monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: pd.DataFrame(columns=["Status"]))
+        result = self._dl.compute_board_attention()
+        dscr_items = [i for i in result if "DSCR" in i["text"]]
+        assert len(dscr_items) == 1
+        assert "AT RISK" in dscr_items[0]["text"]
+
+    def test_flags_hidden_outflows(self, monkeypatch):
+        monkeypatch.setattr(self._dl, "compute_kpis", lambda: {
+            "dscr": 2.0, "hidden_cash_outflows": 700000, "pct_board_approved": 1.0,
+            "net_cash_flow": 100000,
+        })
+        monkeypatch.setattr(self._dl, "compute_variance_alerts", lambda: pd.DataFrame(columns=["Severity"]))
+        monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: pd.DataFrame(columns=["Status"]))
+        result = self._dl.compute_board_attention()
+        hidden_items = [i for i in result if "hidden" in i["text"]]
+        assert len(hidden_items) == 1
+
+    def test_returns_empty_when_all_healthy(self, monkeypatch):
+        monkeypatch.setattr(self._dl, "compute_kpis", lambda: {
+            "dscr": 2.0, "hidden_cash_outflows": 100000, "pct_board_approved": 0.80,
+            "net_cash_flow": 100000,
+        })
+        monkeypatch.setattr(self._dl, "compute_variance_alerts", lambda: pd.DataFrame(columns=["Severity"]))
+        monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: pd.DataFrame(columns=["Status"]))
+        result = self._dl.compute_board_attention()
+        assert len(result) == 0
