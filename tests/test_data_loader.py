@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 # Import helpers directly — they don't depend on Streamlit at module level
-from utils.data_loader import _find_row, _find_rows_between, _find_row_reverse
+from utils.data_loader import _find_row, _find_rows_between, _find_row_reverse, _clean_dollar
 
 
 # ── _find_row ────────────────────────────────────────────────────────────
@@ -104,6 +104,34 @@ class TestFindRowsBetween:
         df = self._make_df(["START", "SUMMARY"])
         result = _find_rows_between(df, 0, "START", ["SUMMARY"])
         assert len(result) == 0
+
+
+# ── _clean_dollar ─────────────────────────────────────────────────────────
+
+class TestCleanDollar:
+    def test_parses_plain_number(self):
+        assert _clean_dollar("$3,667") == 3667.0
+
+    def test_parses_annotated_dollar(self):
+        assert _clean_dollar("$3,667 ($500 for Dasher Board)") == 3667.0
+
+    def test_parses_no_dollar_sign(self):
+        assert _clean_dollar("5000") == 5000.0
+
+    def test_returns_none_for_nan(self):
+        assert _clean_dollar(float("nan")) is None
+
+    def test_returns_none_for_tbd(self):
+        assert _clean_dollar("TBD") is None
+
+    def test_returns_none_for_empty(self):
+        assert _clean_dollar("") is None
+
+    def test_returns_none_for_monthly_rate(self):
+        assert _clean_dollar("$200/MONTH") is None
+
+    def test_parses_with_decimal(self):
+        assert _clean_dollar("$1,234.56") == 1234.56
 
 
 # ── load_expense_flow_summary (high-risk loader) ────────────────────────

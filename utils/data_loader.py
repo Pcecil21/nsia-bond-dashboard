@@ -68,7 +68,7 @@ def _clean_dollar(val):
     if pd.isna(val):
         return None
     s = str(val).strip()
-    if s.upper() in ("TBD", "", "$200/MONTH", "$200/MONTH"):
+    if s.upper() in ("TBD", "", "$200/MONTH"):
         return None
     # Grab the first dollar-like number
     m = re.match(r"^\$?([\d,]+\.?\d*)", s.replace("$", "", 1) if s.startswith("$") else s)
