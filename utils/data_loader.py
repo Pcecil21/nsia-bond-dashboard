@@ -123,6 +123,9 @@ def load_expense_reconciliation() -> pd.DataFrame:
         "Proposal YTD Budget", "CSCG YTD Budget",
         "YTD Variance $", "YTD Variance %", "Assessment"
     ]
+    if df.empty or len(df) <= 5:
+        logger.warning("Expense reconciliation: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[5:].copy()
     data.columns = headers[:len(data.columns)]
     # Keep only actual line items (exclude repeated sub-headers and blanks)
@@ -143,6 +146,9 @@ def load_unauthorized_modifications() -> pd.DataFrame:
                        sheet_name="Unauthorized Modifications", header=None)
     headers = ["Line Item", "Proposal Annual", "CSCG Annual (Implied)",
                "Annual Variance $", "Direction", "Severity", "Board Governance Impact"]
+    if df.empty or len(df) <= 3:
+        logger.warning("Unauthorized modifications: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[3:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Line Item"])
@@ -162,6 +168,9 @@ def load_hidden_cash_flows() -> pd.DataFrame:
     df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Hidden Cash Flows", header=None)
     headers = ["Item", "Monthly Amount", "Annual Impact", "Governance Concern"]
+    if df.empty or len(df) <= 4:
+        logger.warning("Hidden cash flows: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[4:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Item"])
@@ -182,6 +191,9 @@ def load_expense_flow() -> pd.DataFrame:
                        sheet_name="Expense Flow Analysis", header=None)
     headers = ["Expense Category", "YTD per Financials", "YTD from Invoices",
                "Variance", "Approval Method", "Notes"]
+    if df.empty or len(df) <= 4:
+        logger.warning("Expense flow: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[4:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Expense Category"])
@@ -234,6 +246,9 @@ def load_cscg_relationship() -> pd.DataFrame:
     df = _read_excel(_path("expense_flow.xlsx"),
                        sheet_name="CSCG Relationship", header=None)
     headers = ["Component", "Amount", "Approval Required?", "Contract Reference"]
+    if df.empty or len(df) <= 3:
+        logger.warning("CSCG relationship: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[3:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Component"])
@@ -363,6 +378,9 @@ def load_current_ads() -> pd.DataFrame:
     """Current NSIA advertisers."""
     df = _read_excel(_path("current_ads.xlsx"), header=None)
     headers = ["Customer", "Type", "Location/Notes", "Term", "Expiration Date", "Cost"]
+    if df.empty or len(df) <= 1:
+        logger.warning("Current ads: empty or insufficient data")
+        return pd.DataFrame(columns=headers + ["Cost (Numeric)"])
     data = df.iloc[1:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Customer"])
@@ -379,6 +397,9 @@ def load_done_deals_prospects() -> pd.DataFrame:
     """Done deals and prospects pipeline."""
     df = _read_excel(_path("done_deals_prospects.xlsx"), header=None)
     headers = ["Advertiser", "$$", "Term", "Status", "Notes"]
+    if df.empty or len(df) <= 1:
+        logger.warning("Done deals/prospects: empty or insufficient data")
+        return pd.DataFrame(columns=headers + ["Amount", "Pipeline Stage"])
     data = df.iloc[1:].copy()
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Advertiser"])
@@ -1028,6 +1049,9 @@ def load_general_ledger() -> pd.DataFrame:
                        sheet_name="General_Ledger", header=None)
     headers = ["Date", "GL #", "GL Account Name", "Type", "Bank",
                "Description", "Debit", "Credit", "Payee"]
+    if df.empty or len(df) <= 4:
+        logger.warning("General ledger: empty or insufficient data")
+        return pd.DataFrame(columns=headers)
     data = df.iloc[4:].copy()
     data.columns = headers[:len(data.columns)]
     # Drop the TOTALS row and blanks
