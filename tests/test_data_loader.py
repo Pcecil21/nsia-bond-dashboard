@@ -789,3 +789,288 @@ class TestComputeBoardAttention:
         monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: pd.DataFrame(columns=["Status"]))
         result = self._dl.compute_board_attention()
         assert len(result) == 0
+
+
+# ── load_expense_reconciliation ───────────────────────────────────────────
+
+class TestLoadExpenseReconciliation:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_expense_data(self, monkeypatch):
+        rows = [[None] * 10 for _ in range(5)]
+        rows.append(["Electric", 5000, 5000, 0, 0, 30000, 30000, 0, 0, "OK"])
+        rows.append(["Gas (Nicor)", 2000, 2000, 0, 0, 12000, 12000, 0, 0, "OK"])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_expense_reconciliation.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Electric" in result["Line Item"].values
+
+    def test_excludes_section_headers(self, monkeypatch):
+        rows = [[None] * 10 for _ in range(5)]
+        rows.append(["PAYROLL EXPENSES", None, None, None, None, None, None, None, None, None])
+        rows.append(["Office Payroll", 3000, 3000, 0, 0, 18000, 18000, 0, 0, "OK"])
+        rows.append(["Line Item", None, None, None, None, None, None, None, None, None])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_expense_reconciliation.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Line Item"] == "Office Payroll"
+
+
+# ── load_expense_flow ─────────────────────────────────────────────────────
+
+class TestLoadExpenseFlow:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_expense_flow_rows(self, monkeypatch):
+        rows = [[None] * 6 for _ in range(4)]
+        rows.append(["Electric (Engie)", 30000, 30000, 0, "Board Approved", "Monthly"])
+        rows.append(["Gas (Nicor)", 12000, 12000, 0, "Board Approved", "Monthly"])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_expense_flow.__wrapped__
+        result = fn()
+        assert len(result) == 2
+
+    def test_excludes_section_headers(self, monkeypatch):
+        rows = [[None] * 6 for _ in range(4)]
+        rows.append(["BOARD-APPROVED EXPENSES", None, None, None, None, None])
+        rows.append(["Electric", 30000, 30000, 0, "Board", ""])
+        rows.append(["TOTAL EXPENSES", 30000, 30000, 0, "", ""])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_expense_flow.__wrapped__
+        result = fn()
+        assert len(result) == 1
+        assert result.iloc[0]["Expense Category"] == "Electric"
+
+
+# ── load_current_ads ──────────────────────────────────────────────────────
+
+class TestLoadCurrentAds:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_ad_data(self, monkeypatch):
+        rows = [
+            ["Customer", "Type", "Location", "Term", "Expiration Date", "Cost"],
+            ["Acme Corp", "Banner", "Rink A", "1 year", "2026-12-31", "$3,667"],
+            ["Bob's Shop", "Dasher", "Rink B", "2 year", "2027-06-30", "$2,000"],
+        ]
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_current_ads.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Cost (Numeric)" in result.columns
+        assert result.iloc[0]["Cost (Numeric)"] == 3667.0
+
+    def test_drops_nan_customers(self, monkeypatch):
+        rows = [
+            ["Customer", "Type", "Location", "Term", "Expiration Date", "Cost"],
+            ["Acme Corp", "Banner", "Rink A", "1 year", "2026-12-31", "$1,000"],
+            [None, None, None, None, None, None],
+        ]
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_current_ads.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+
+# ── load_done_deals_prospects ─────────────────────────────────────────────
+
+class TestLoadDoneDealsProspects:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_tags_done_and_prospect(self, monkeypatch):
+        rows = [
+            ["Advertiser", "$$", "Term", "Status", "Notes"],
+            ["Acme Corp", "$5,000", "1 year", "Signed", ""],
+            ["Prospects / Pending", None, None, None, None],
+            ["Future Inc", "$3,000", "1 year", "Pending", ""],
+        ]
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_done_deals_prospects.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert result.iloc[0]["Pipeline Stage"] == "Done Deal"
+        assert result.iloc[1]["Pipeline Stage"] == "Prospect"
+
+    def test_parses_amounts(self, monkeypatch):
+        rows = [
+            ["Advertiser", "$$", "Term", "Status", "Notes"],
+            ["Acme Corp", "$5,000", "1 year", "Signed", ""],
+        ]
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_done_deals_prospects.__wrapped__
+        result = fn()
+        assert result.iloc[0]["Amount"] == 5000.0
+
+
+# ── load_general_ledger ───────────────────────────────────────────────────
+
+class TestLoadGeneralLedger:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_gl_entries(self, monkeypatch):
+        rows = [[None] * 9 for _ in range(4)]
+        rows.append(["2024-07-01", 4100, "Ice Rental Revenue", "Invoice", "Checking",
+                      "Season rental", 15000, 0, "Club A"])
+        rows.append(["2024-07-15", 6100, "Electric", "Bill", "Checking",
+                      "Nicor bill", 0, 3200, "Nicor"])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_general_ledger.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert result.iloc[0]["Debit"] == 15000
+        assert result.iloc[1]["Credit"] == 3200
+
+    def test_excludes_totals(self, monkeypatch):
+        rows = [[None] * 9 for _ in range(4)]
+        rows.append(["2024-07-01", 4100, "Revenue", "Invoice", "Checking", "", 1000, 0, "X"])
+        rows.append([None, None, "TOTAL", None, None, None, 1000, 0, None])
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_general_ledger.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+
+# ── load_gl_account_summary ──────────────────────────────────────────────
+
+class TestLoadGlAccountSummary:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_aggregates_by_account(self, monkeypatch):
+        gl = pd.DataFrame({
+            "GL #": [4100, 4100, 6100],
+            "GL Account Name": ["Revenue", "Revenue", "Electric"],
+            "Type": ["Invoice", "Invoice", "Bill"],
+            "Debit": [10000, 5000, 0],
+            "Credit": [0, 0, 3200],
+        })
+        monkeypatch.setattr(self._dl, "load_general_ledger", lambda: gl)
+        fn = self._dl.load_gl_account_summary.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        rev_row = result[result["GL Account Name"] == "Revenue"]
+        assert rev_row.iloc[0]["Total_Debit"] == 15000
+        assert rev_row.iloc[0]["Net"] == 15000
+
+
+# ── load_bills_summary ────────────────────────────────────────────────────
+
+class TestLoadBillsSummary:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_bills(self, monkeypatch):
+        df = pd.DataFrame({
+            "Vendor": ["Nicor", "ComEd", "TOTAL"],
+            "Date": ["2024-07-01", "2024-07-15", None],
+            "Amount": [3200, 4500, 7700],
+        })
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_bills_summary.__wrapped__
+        result = fn()
+        assert len(result) == 2  # TOTAL excluded
+        assert "Nicor" in result["Vendor"].values
+
+
+# ── load_weekday_ice_summary ─────────────────────────────────────────────
+
+class TestLoadWeekdayIceSummary:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_club_hours(self, monkeypatch):
+        # Build a DF with "Hrs/Day" in the bottom half followed by club data
+        n_rows = 20
+        data = {i: [None] * n_rows for i in range(17)}
+        # Put "Hrs/Day" at row 15 (bottom half of 20)
+        data[0][15] = "Hrs/Day"
+        # Club row at 16
+        data[0][16] = "Winnetka"
+        for j in range(1, 6):   # Current Mon-Fri
+            data[j][16] = 2.0
+        data[6][16] = 10.0      # Current Total
+        for j in range(11, 16): # Proposed Mon-Fri
+            data[j][16] = 3.0
+        data[16][16] = 15.0     # Proposed Total
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_weekday_ice_summary.__wrapped__
+        result = fn()
+        assert len(result) > 0
+        assert "Winnetka" in result["Club"].values
+        totals = result[(result["Club"] == "Winnetka") & (result["Day"] == "Total")]
+        assert totals.iloc[0]["Current Hours"] == 10.0
+
+    def test_returns_empty_when_no_marker(self, monkeypatch):
+        df = pd.DataFrame({0: ["A"] * 5})
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_weekday_ice_summary.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── compute_cscg_scorecard ────────────────────────────────────────────────
+
+class TestComputeCscgScorecard:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_returns_scorecard_with_status(self, monkeypatch):
+        cscg = pd.DataFrame({
+            "Component": ["Management Fee", "Office Payroll"],
+            "Amount": [21000, 85000],
+            "Approval Required?": ["No", "No"],
+            "Contract Reference": ["Article 7.1", ""],
+        })
+        exp = pd.DataFrame({
+            "Line Item": ["Management Fees", "Office Payroll"],
+            "Proposal YTD Budget": [21000, 85000],
+            "CSCG YTD Budget": [21000, 85000],
+            "YTD Variance $": [0, 0],
+            "YTD Variance %": [0, 0],
+            "Assessment": ["OK", "OK"],
+        })
+        monkeypatch.setattr(self._dl, "load_cscg_relationship", lambda: cscg)
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: exp)
+        fn = self._dl.compute_cscg_scorecard.__wrapped__
+        result = fn()
+        assert "Status" in result.columns
+        assert len(result) > 0
+        # Management fee should be COMPLIANT (21000 actual vs 21000 expected)
+        mgmt = result[result["Contract Term"].str.contains("Management Fee")]
+        assert len(mgmt) > 0
