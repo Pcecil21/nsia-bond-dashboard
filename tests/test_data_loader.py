@@ -292,3 +292,251 @@ class TestComputeBoardDemands:
         assert cats["Contract Compliance"] == 3
         assert cats["Operational Transparency"] == 2
         assert cats["Board Communication"] == 2
+
+
+# ── load_fixed_obligations ────────────────────────────────────────────────
+
+class TestLoadFixedObligations:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_fixed_obligations(self, monkeypatch):
+        rows = [
+            ("Other stuff", None, None, None, None, None),
+            ("FIXED OBLIGATIONS", None, None, None, None, None),
+            ("Rent", 50000, 50000, 0, "Board Approved", "Lease"),
+            ("Insurance", 12000, 12000, 0, "Board Approved", "Policy"),
+            ("SUMMARY", None, None, None, None, None),
+        ]
+        df = pd.DataFrame({i: v for i, v in enumerate(zip(*rows))})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_fixed_obligations.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Rent" in result["Expense Category"].values
+        assert "Insurance" in result["Expense Category"].values
+
+    def test_returns_empty_when_no_marker(self, monkeypatch):
+        df = pd.DataFrame({0: ["A", "B"], 1: [1, 2], 2: [1, 2], 3: [0, 0], 4: ["X", "Y"], 5: ["", ""]})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_fixed_obligations.__wrapped__
+        result = fn()
+        assert result.empty
+
+    def test_numeric_columns_coerced(self, monkeypatch):
+        rows = [
+            ("FIXED OBLIGATIONS", None, None, None, None, None),
+            ("Rent", "50,000", "50,000", "0", "Board", ""),
+            ("TOTAL EXPENSES", None, None, None, None, None),
+        ]
+        df = pd.DataFrame({i: v for i, v in enumerate(zip(*rows))})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_fixed_obligations.__wrapped__
+        result = fn()
+        assert len(result) == 1
+
+
+# ── load_scoreboard_10yr ──────────────────────────────────────────────────
+
+class TestLoadScoreboard10yr:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def _make_scoreboard_df(self, label_rows):
+        """Build a DataFrame mimicking scoreboard_economics.xlsx Sheet1.
+        label_rows: list of (label_text, [10 year values], total)
+        """
+        # Column 1 has labels, columns 6-15 have year values, column 17 has total
+        max_cols = 18
+        data = {}
+        for c in range(max_cols):
+            data[c] = [None] * len(label_rows)
+        for i, (label, vals, total) in enumerate(label_rows):
+            data[1][i] = label
+            for j, v in enumerate(vals):
+                data[6 + j][i] = v
+            data[17][i] = total
+        return pd.DataFrame(data)
+
+    def test_extracts_labeled_rows(self, monkeypatch):
+        yr_vals = list(range(10000, 20000, 1000))  # 10 values
+        df = self._make_scoreboard_df([
+            ("Existing Sponsor Revenue", yr_vals, 150000),
+            ("Software License", yr_vals, 150000),
+        ])
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_scoreboard_10yr.__wrapped__
+        result = fn()
+        assert len(result) == 2
+        assert "Existing Sponsor Revenue" in result["Category"].values
+        assert "Software License" in result["Category"].values
+        assert "Year 1" in result.columns
+        assert "10yr Total" in result.columns
+
+    def test_returns_empty_when_no_labels_found(self, monkeypatch):
+        df = pd.DataFrame({i: ["No match"] for i in range(18)})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_scoreboard_10yr.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── load_scoreboard_alternative ───────────────────────────────────────────
+
+class TestLoadScoreboardAlternative:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_alternative_rows(self, monkeypatch):
+        yr_vals = [1000] * 10
+        rows = {i: [None] * 5 for i in range(18)}
+        # Row 0-1: other stuff, Row 2: "Alternative" header, Row 3-4: data
+        rows[1] = ["Other", "Other", "Alternative", "Upfront Cost", "Annual Maintenance"]
+        for j in range(10):
+            rows[6 + j] = [None, None, None, yr_vals[j], yr_vals[j]]
+        rows[17] = [None, None, None, 10000, 10000]
+        df = pd.DataFrame(rows)
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_scoreboard_alternative.__wrapped__
+        result = fn()
+        assert len(result) == 2
+
+    def test_returns_empty_when_no_alternative_section(self, monkeypatch):
+        df = pd.DataFrame({i: ["No match"] for i in range(18)})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_scoreboard_alternative.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── load_historical_ad_revenue ────────────────────────────────────────────
+
+class TestLoadHistoricalAdRevenue:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def test_extracts_ad_revenue(self, monkeypatch):
+        # Need: year row at ad_row - 2, ad revenue row found by _find_row
+        data = {}
+        n_rows = 5
+        for c in range(18):
+            data[c] = [None] * n_rows
+        # Row 2: ad_row - 2 = year headers (columns 7-17)
+        for j in range(11):
+            data[7 + j][2] = 2014 + j
+        # Row 4: "Ad Revenue" in column 4, values in columns 7-17
+        data[4][4] = "Ad Revenue"
+        for j in range(11):
+            data[7 + j][4] = 5000 + j * 100
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_historical_ad_revenue.__wrapped__
+        result = fn()
+        assert len(result) > 0
+        assert "Year" in result.columns
+        assert "Ad Revenue" in result.columns
+
+    def test_returns_empty_when_not_found(self, monkeypatch):
+        df = pd.DataFrame({i: ["Nothing"] * 3 for i in range(18)})
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_historical_ad_revenue.__wrapped__
+        result = fn()
+        assert result.empty
+        assert list(result.columns) == ["Year", "Ad Revenue"]
+
+    def test_returns_empty_when_ad_row_too_close_to_top(self, monkeypatch):
+        data = {i: [None] * 2 for i in range(18)}
+        data[4][0] = "Ad Revenue"  # Row 0 — too close to top
+        df = pd.DataFrame(data)
+        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        fn = self._dl.load_historical_ad_revenue.__wrapped__
+        result = fn()
+        assert result.empty
+
+
+# ── compute_kpis ──────────────────────────────────────────────────────────
+
+class TestComputeKpis:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def _mock_loaders(self, monkeypatch, rev=None, exp=None, hidden=None, expense_summary=None):
+        if rev is None:
+            rev = pd.DataFrame({
+                "Line Item": ["Total Revenue"],
+                "Proposal YTD Budget": [500000],
+            })
+        if exp is None:
+            exp = pd.DataFrame({
+                "Line Item": ["Total Expenses"],
+                "Proposal YTD Budget": [400000],
+            })
+        if hidden is None:
+            hidden = pd.DataFrame({
+                "Item": ["Bond Principal", "Bond Interest"],
+                "Annual Impact": [255000, 368500],
+            })
+        if expense_summary is None:
+            expense_summary = pd.DataFrame({
+                "Approval Method": ["Board Approved"],
+                "YTD Amount": [50000],
+                "% of Total": [0.75],
+            })
+        monkeypatch.setattr(self._dl, "load_revenue_reconciliation", lambda: rev)
+        monkeypatch.setattr(self._dl, "load_expense_reconciliation", lambda: exp)
+        monkeypatch.setattr(self._dl, "load_hidden_cash_flows", lambda: hidden)
+        monkeypatch.setattr(self._dl, "load_expense_flow_summary", lambda: expense_summary)
+
+    def test_returns_dict_with_expected_keys(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_kpis.__wrapped__
+        result = fn()
+        expected_keys = ["total_annual_revenue", "total_annual_expenses", "net_cash_flow",
+                         "hidden_cash_outflows", "pct_board_approved", "dscr",
+                         "debt_service", "net_operating_income"]
+        for key in expected_keys:
+            assert key in result, f"Missing key: {key}"
+
+    def test_annualizes_from_7_months(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_kpis.__wrapped__
+        result = fn()
+        # 500000 * 12/7 ≈ 857142.86
+        assert abs(result["total_annual_revenue"] - 500000 * 12 / 7) < 1
+
+    def test_dscr_calculation(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_kpis.__wrapped__
+        result = fn()
+        annual_rev = 500000 * 12 / 7
+        annual_exp = 400000 * 12 / 7
+        noi = annual_rev - annual_exp
+        debt = 255000 + 368500
+        assert abs(result["dscr"] - noi / debt) < 0.001
+
+    def test_pct_board_approved_from_summary(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_kpis.__wrapped__
+        result = fn()
+        assert result["pct_board_approved"] == 0.75
+
+    def test_pct_board_approved_fallback_on_nan(self, monkeypatch):
+        expense_summary = pd.DataFrame({
+            "Approval Method": ["Board Approved"],
+            "YTD Amount": [50000],
+            "% of Total": [float("nan")],
+        })
+        self._mock_loaders(monkeypatch, expense_summary=expense_summary)
+        fn = self._dl.compute_kpis.__wrapped__
+        result = fn()
+        assert result["pct_board_approved"] == 0.255
