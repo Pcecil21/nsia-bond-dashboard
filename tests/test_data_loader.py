@@ -130,7 +130,7 @@ class TestLoadExpenseFlowSummary:
             ("TOTAL", 110000, 1.0),
         ]
         df = self._make_expense_df(rows)
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         # Clear Streamlit cache decorator — call the underlying function
         fn = self._dl.load_expense_flow_summary.__wrapped__
         result = fn()
@@ -139,7 +139,7 @@ class TestLoadExpenseFlowSummary:
 
     def test_returns_empty_when_no_markers(self, monkeypatch):
         df = pd.DataFrame({0: ["A", "B", "C"], 1: [1, 2, 3], 2: [0.1, 0.2, 0.3]})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_expense_flow_summary.__wrapped__
         result = fn()
         assert result.empty
@@ -311,7 +311,7 @@ class TestLoadFixedObligations:
             ("SUMMARY", None, None, None, None, None),
         ]
         df = pd.DataFrame({i: v for i, v in enumerate(zip(*rows))})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_fixed_obligations.__wrapped__
         result = fn()
         assert len(result) == 2
@@ -320,7 +320,7 @@ class TestLoadFixedObligations:
 
     def test_returns_empty_when_no_marker(self, monkeypatch):
         df = pd.DataFrame({0: ["A", "B"], 1: [1, 2], 2: [1, 2], 3: [0, 0], 4: ["X", "Y"], 5: ["", ""]})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_fixed_obligations.__wrapped__
         result = fn()
         assert result.empty
@@ -332,7 +332,7 @@ class TestLoadFixedObligations:
             ("TOTAL EXPENSES", None, None, None, None, None),
         ]
         df = pd.DataFrame({i: v for i, v in enumerate(zip(*rows))})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_fixed_obligations.__wrapped__
         result = fn()
         assert len(result) == 1
@@ -368,7 +368,7 @@ class TestLoadScoreboard10yr:
             ("Existing Sponsor Revenue", yr_vals, 150000),
             ("Software License", yr_vals, 150000),
         ])
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_scoreboard_10yr.__wrapped__
         result = fn()
         assert len(result) == 2
@@ -379,7 +379,7 @@ class TestLoadScoreboard10yr:
 
     def test_returns_empty_when_no_labels_found(self, monkeypatch):
         df = pd.DataFrame({i: ["No match"] for i in range(18)})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_scoreboard_10yr.__wrapped__
         result = fn()
         assert result.empty
@@ -402,14 +402,14 @@ class TestLoadScoreboardAlternative:
             rows[6 + j] = [None, None, None, yr_vals[j], yr_vals[j]]
         rows[17] = [None, None, None, 10000, 10000]
         df = pd.DataFrame(rows)
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_scoreboard_alternative.__wrapped__
         result = fn()
         assert len(result) == 2
 
     def test_returns_empty_when_no_alternative_section(self, monkeypatch):
         df = pd.DataFrame({i: ["No match"] for i in range(18)})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_scoreboard_alternative.__wrapped__
         result = fn()
         assert result.empty
@@ -437,7 +437,7 @@ class TestLoadHistoricalAdRevenue:
         for j in range(11):
             data[7 + j][4] = 5000 + j * 100
         df = pd.DataFrame(data)
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_historical_ad_revenue.__wrapped__
         result = fn()
         assert len(result) > 0
@@ -446,7 +446,7 @@ class TestLoadHistoricalAdRevenue:
 
     def test_returns_empty_when_not_found(self, monkeypatch):
         df = pd.DataFrame({i: ["Nothing"] * 3 for i in range(18)})
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_historical_ad_revenue.__wrapped__
         result = fn()
         assert result.empty
@@ -456,7 +456,7 @@ class TestLoadHistoricalAdRevenue:
         data = {i: [None] * 2 for i in range(18)}
         data[4][0] = "Ad Revenue"  # Row 0 — too close to top
         df = pd.DataFrame(data)
-        monkeypatch.setattr(self._dl.pd, "read_excel", lambda *a, **kw: df)
+        monkeypatch.setattr(self._dl, "_read_excel", lambda *a, **kw: df)
         fn = self._dl.load_historical_ad_revenue.__wrapped__
         result = fn()
         assert result.empty

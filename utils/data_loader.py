@@ -54,6 +54,15 @@ def _find_rows_between(df, col: int, start_text: str, end_texts: list[str]) -> p
     return df.iloc[start + 1:].copy()
 
 
+def _read_excel(*args, **kwargs) -> pd.DataFrame:
+    """Wrapper around pd.read_excel that returns empty DataFrame if file is missing."""
+    try:
+        return pd.read_excel(*args, **kwargs)
+    except FileNotFoundError:
+        logger.warning("File not found: %s", args[0] if args else kwargs.get("io", "unknown"))
+        return pd.DataFrame()
+
+
 def _clean_dollar(val):
     """Parse dollar values that may contain annotations like '$3,667 ($500 for Dasher Board)'."""
     if pd.isna(val):
@@ -77,7 +86,7 @@ def _clean_dollar(val):
 @st.cache_data
 def load_revenue_reconciliation() -> pd.DataFrame:
     """Revenue Reconciliation sheet — row 4 is the header, data starts row 5."""
-    df = pd.read_excel(_path("budget_reconciliation.xlsx"),
+    df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Revenue Reconciliation", header=None)
     # Header is in row 4 (0-indexed)
     headers = [
@@ -104,7 +113,7 @@ def load_revenue_reconciliation() -> pd.DataFrame:
 @st.cache_data
 def load_expense_reconciliation() -> pd.DataFrame:
     """Expense Reconciliation sheet — multiple header rows at 4, 13, 34."""
-    df = pd.read_excel(_path("budget_reconciliation.xlsx"),
+    df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Expense Reconciliation", header=None)
     headers = [
         "Line Item", "Proposal Jan Budget", "CSCG Jan Budget",
@@ -128,7 +137,7 @@ def load_expense_reconciliation() -> pd.DataFrame:
 @st.cache_data
 def load_unauthorized_modifications() -> pd.DataFrame:
     """Unauthorized Modifications sheet."""
-    df = pd.read_excel(_path("budget_reconciliation.xlsx"),
+    df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Unauthorized Modifications", header=None)
     headers = ["Line Item", "Proposal Annual", "CSCG Annual (Implied)",
                "Annual Variance $", "Direction", "Severity", "Board Governance Impact"]
@@ -148,7 +157,7 @@ def load_unauthorized_modifications() -> pd.DataFrame:
 @st.cache_data
 def load_hidden_cash_flows() -> pd.DataFrame:
     """Hidden Cash Flows sheet."""
-    df = pd.read_excel(_path("budget_reconciliation.xlsx"),
+    df = _read_excel(_path("budget_reconciliation.xlsx"),
                        sheet_name="Hidden Cash Flows", header=None)
     headers = ["Item", "Monthly Amount", "Annual Impact", "Governance Concern"]
     data = df.iloc[4:].copy()
@@ -167,7 +176,7 @@ def load_hidden_cash_flows() -> pd.DataFrame:
 @st.cache_data
 def load_expense_flow() -> pd.DataFrame:
     """Expense Flow Analysis sheet."""
-    df = pd.read_excel(_path("expense_flow.xlsx"),
+    df = _read_excel(_path("expense_flow.xlsx"),
                        sheet_name="Expense Flow Analysis", header=None)
     headers = ["Expense Category", "YTD per Financials", "YTD from Invoices",
                "Variance", "Approval Method", "Notes"]
@@ -186,7 +195,7 @@ def load_expense_flow() -> pd.DataFrame:
 @st.cache_data
 def load_expense_flow_summary() -> pd.DataFrame:
     """Expense approval summary breakdown from Expense Flow Analysis."""
-    df = pd.read_excel(_path("expense_flow.xlsx"),
+    df = _read_excel(_path("expense_flow.xlsx"),
                        sheet_name="Expense Flow Analysis", header=None)
     # Find the summary section by its header marker
     header_idx = _find_row(df, 0, "SUMMARY BY APPROVAL METHOD")
@@ -220,7 +229,7 @@ def load_expense_flow_summary() -> pd.DataFrame:
 @st.cache_data
 def load_cscg_relationship() -> pd.DataFrame:
     """CSCG Relationship sheet."""
-    df = pd.read_excel(_path("expense_flow.xlsx"),
+    df = _read_excel(_path("expense_flow.xlsx"),
                        sheet_name="CSCG Relationship", header=None)
     headers = ["Component", "Amount", "Approval Required?", "Contract Reference"]
     data = df.iloc[3:].copy()
@@ -240,7 +249,7 @@ def load_cscg_relationship() -> pd.DataFrame:
 @st.cache_data
 def load_fixed_obligations() -> pd.DataFrame:
     """Fixed obligations section from Expense Flow Analysis."""
-    df = pd.read_excel(_path("expense_flow.xlsx"),
+    df = _read_excel(_path("expense_flow.xlsx"),
                        sheet_name="Expense Flow Analysis", header=None)
     headers = ["Expense Category", "YTD per Financials", "YTD from Invoices",
                "Variance", "Approval Method", "Notes"]
@@ -262,7 +271,7 @@ def load_fixed_obligations() -> pd.DataFrame:
 @st.cache_data
 def load_scoreboard_10yr() -> pd.DataFrame:
     """10-year scoreboard economics projection (Sheet1)."""
-    df = pd.read_excel(_path("scoreboard_economics.xlsx"),
+    df = _read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet1", header=None)
     years = list(range(1, 11))
     # Search for each row by label text in column 1
@@ -292,7 +301,7 @@ def load_scoreboard_10yr() -> pd.DataFrame:
 @st.cache_data
 def load_scoreboard_alternative() -> pd.DataFrame:
     """Alternative cheaper scoreboard option (Sheet1)."""
-    df = pd.read_excel(_path("scoreboard_economics.xlsx"),
+    df = _read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet1", header=None)
     years = list(range(1, 11))
     # Find the alternative section and its rows by label
@@ -323,7 +332,7 @@ def load_scoreboard_alternative() -> pd.DataFrame:
 @st.cache_data
 def load_historical_ad_revenue() -> pd.DataFrame:
     """Historical ad revenue from Sheet2."""
-    df = pd.read_excel(_path("scoreboard_economics.xlsx"),
+    df = _read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet2", header=None)
     # Find the "Ad Revenue" row and the year header row (2 rows above it)
     ad_row = _find_row(df, 4, "Ad Revenue")
@@ -350,7 +359,7 @@ def load_historical_ad_revenue() -> pd.DataFrame:
 @st.cache_data
 def load_current_ads() -> pd.DataFrame:
     """Current NSIA advertisers."""
-    df = pd.read_excel(_path("current_ads.xlsx"), header=None)
+    df = _read_excel(_path("current_ads.xlsx"), header=None)
     headers = ["Customer", "Type", "Location/Notes", "Term", "Expiration Date", "Cost"]
     data = df.iloc[1:].copy()
     data.columns = headers[:len(data.columns)]
@@ -366,7 +375,7 @@ def load_current_ads() -> pd.DataFrame:
 @st.cache_data
 def load_done_deals_prospects() -> pd.DataFrame:
     """Done deals and prospects pipeline."""
-    df = pd.read_excel(_path("done_deals_prospects.xlsx"), header=None)
+    df = _read_excel(_path("done_deals_prospects.xlsx"), header=None)
     headers = ["Advertiser", "$$", "Term", "Status", "Notes"]
     data = df.iloc[1:].copy()
     data.columns = headers[:len(data.columns)]
@@ -887,7 +896,7 @@ def load_payroll_benchmarks() -> pd.DataFrame:
 @st.cache_data
 def load_weekday_ice_summary() -> pd.DataFrame:
     """Weekday ice allocation summary from Sheet1."""
-    df = pd.read_excel(_path("ice_weekday_breakdown.xlsx"),
+    df = _read_excel(_path("ice_weekday_breakdown.xlsx"),
                        sheet_name="Sheet1", header=None)
     # Find the summary header row ("Hrs/Day") near the bottom of the sheet
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
@@ -925,7 +934,7 @@ def load_weekday_ice_summary() -> pd.DataFrame:
 @st.cache_data
 def load_weekend_ice_summary() -> pd.DataFrame:
     """Weekend ice allocation summary."""
-    df = pd.read_excel(_path("ice_weekend_breakdown.xlsx"), header=None)
+    df = _read_excel(_path("ice_weekend_breakdown.xlsx"), header=None)
     # Find the summary "Hrs/Day" header row near the bottom
     header_idx = _find_row_reverse(df, 0, "hrs/day")
     if header_idx is None:
@@ -964,14 +973,14 @@ def load_weekend_ice_summary() -> pd.DataFrame:
 @st.cache_data
 def load_winnetka_weekend_summary() -> pd.DataFrame:
     """Winnetka usage gaps — weekend summary."""
-    return pd.read_excel(_path("winnetka_usage_gaps.xlsx"),
+    return _read_excel(_path("winnetka_usage_gaps.xlsx"),
                          sheet_name="Weekend_Summary_WithCut")
 
 
 @st.cache_data
 def load_winnetka_day_level_gaps() -> pd.DataFrame:
     """Winnetka usage gaps — day-level detail."""
-    return pd.read_excel(_path("winnetka_usage_gaps.xlsx"),
+    return _read_excel(_path("winnetka_usage_gaps.xlsx"),
                          sheet_name="Day_Level_Gaps_WithCut")
 
 
@@ -983,7 +992,7 @@ def load_proposed_entries() -> pd.DataFrame:
     Layout: cols B(1)/D(3)/F(5)/H(7)/J(9)/L(11) hold data; odd cols are spacers.
     Header rows repeat at 2, 35, 67.
     """
-    df = pd.read_excel(_path("proposed_entries.xlsx"),
+    df = _read_excel(_path("proposed_entries.xlsx"),
                        sheet_name="Proposed Entries", header=None)
     # Use the meaningful columns
     data = df[[1, 3, 5, 7, 9, 11]].copy()
@@ -1010,7 +1019,7 @@ def load_proposed_entries() -> pd.DataFrame:
 @st.cache_data
 def load_general_ledger() -> pd.DataFrame:
     """Read General_Ledger sheet — row 3 = headers, row 4+ = data."""
-    df = pd.read_excel(_path("general_ledger.xlsx"),
+    df = _read_excel(_path("general_ledger.xlsx"),
                        sheet_name="General_Ledger", header=None)
     headers = ["Date", "GL #", "GL Account Name", "Type", "Bank",
                "Description", "Debit", "Credit", "Payee"]
@@ -1043,7 +1052,7 @@ def load_gl_account_summary() -> pd.DataFrame:
 @st.cache_data
 def load_bills_summary() -> pd.DataFrame:
     """Read All Bills sheet — row 0 = header, 111 invoice rows."""
-    df = pd.read_excel(_path("bills_summary.xlsx"),
+    df = _read_excel(_path("bills_summary.xlsx"),
                        sheet_name="All Bills", header=0)
     # Drop the TOTAL row
     df = df.dropna(subset=["Vendor"])
@@ -1057,7 +1066,7 @@ def load_bills_summary() -> pd.DataFrame:
 @st.cache_data
 def load_bills_by_category() -> pd.DataFrame:
     """Read Category Summary sheet — 7 categories."""
-    df = pd.read_excel(_path("bills_summary.xlsx"),
+    df = _read_excel(_path("bills_summary.xlsx"),
                        sheet_name="Category Summary", header=0)
     df = df.dropna(subset=["Category"])
     df["Total Amount"] = pd.to_numeric(df["Total Amount"], errors="coerce")
@@ -1069,7 +1078,7 @@ def load_bills_by_category() -> pd.DataFrame:
 @st.cache_data
 def load_bills_by_vendor() -> pd.DataFrame:
     """Read Vendor Summary sheet — 28 vendors."""
-    df = pd.read_excel(_path("bills_summary.xlsx"),
+    df = _read_excel(_path("bills_summary.xlsx"),
                        sheet_name="Vendor Summary", header=0)
     df = df.dropna(subset=["Vendor"])
     df["Total Amount"] = pd.to_numeric(df["Total Amount"], errors="coerce")

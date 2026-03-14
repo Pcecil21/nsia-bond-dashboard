@@ -9,10 +9,10 @@ The old cookie key (`nsia_bond_dashboard_auth_key`) and bcrypt password hashes a
 
 ## P2 — Medium Priority
 
-### Expand test coverage to all data loaders
-`tests/test_data_loader.py` covers `_find_row`, `_find_rows_between`, `_find_row_reverse`, and `load_expense_flow_summary`. Remaining ~35 loader functions have no test coverage. Priority loaders: `load_fixed_obligations`, `load_scoreboard_10yr`, `load_scoreboard_alternative`, `load_historical_ad_revenue`, `compute_kpis`.
+### Expand test coverage to remaining data loaders
+`tests/test_data_loader.py` now covers helpers, `load_expense_flow_summary`, `compute_board_demands`, `load_fixed_obligations`, `load_scoreboard_10yr`, `load_scoreboard_alternative`, `load_historical_ad_revenue`, and `compute_kpis` (44 tests). Remaining ~30 loader functions have no test coverage.
 - **Effort:** M
-- **Depends on:** Test infrastructure established in this PR
+- **Depends on:** Test infrastructure established in prior PRs
 
 ## P3 — Low Priority
 
@@ -26,7 +26,5 @@ Currently `auth.yaml` is tracked in git with sanitized placeholder values; real 
 - **Effort:** M
 - **Depends on:** Streamlit Cloud secrets management being the primary deploy target
 
-### Add FileNotFoundError handling for missing Excel files
-All loaders call `pd.read_excel()` without catching `FileNotFoundError`. If a data file is missing (e.g., after a fresh clone without GDrive sync), the app shows an unhandled Streamlit error page. Could wrap in a common decorator or try/except returning empty DataFrames.
-- **Effort:** S
-- **Note:** Pre-existing gap, not introduced by the data_loader refactor
+### ~~Add FileNotFoundError handling for missing Excel files~~ DONE
+All loaders now use `_read_excel()` wrapper that catches `FileNotFoundError` and returns empty DataFrame with a warning log.
