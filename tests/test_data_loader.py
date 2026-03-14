@@ -144,3 +144,148 @@ class TestLoadExpenseFlowSummary:
         result = fn()
         assert result.empty
         assert list(result.columns) == ["Approval Method", "YTD Amount", "% of Total"]
+
+
+# ── compute_board_demands ────────────────────────────────────────────────
+
+class TestComputeBoardDemands:
+    @pytest.fixture(autouse=True)
+    def _patch_streamlit(self, monkeypatch):
+        import utils.data_loader as dl
+        self._dl = dl
+
+    def _mock_loaders(self, monkeypatch, cscg_rel=None, mods=None, expense_summary=None, scorecard=None):
+        """Set up mocked loaders. None means use empty DataFrame."""
+        if cscg_rel is None:
+            cscg_rel = pd.DataFrame(columns=["Component", "Amount", "Approval Required?", "Contract Reference"])
+        if mods is None:
+            mods = pd.DataFrame(columns=["Line Item", "Proposal Annual", "CSCG Annual (Implied)",
+                                         "Annual Variance $", "Direction", "Severity", "Board Governance Impact"])
+        if expense_summary is None:
+            expense_summary = pd.DataFrame(columns=["Approval Method", "YTD Amount", "% of Total"])
+        if scorecard is None:
+            scorecard = pd.DataFrame(columns=["Contract Term", "Contract Amount", "6mo Expected", "6mo Actual", "Status"])
+
+        monkeypatch.setattr(self._dl, "load_cscg_relationship", lambda: cscg_rel)
+        monkeypatch.setattr(self._dl, "load_unauthorized_modifications", lambda: mods)
+        monkeypatch.setattr(self._dl, "load_expense_flow_summary", lambda: expense_summary)
+        monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: scorecard)
+
+    def test_returns_15_items(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        assert len(result) == 15
+
+    def test_has_required_columns(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        assert list(result.columns) == ["Category", "Demand", "Frequency", "Status", "Evidence"]
+
+    def test_all_red_when_loaders_empty(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        # All should be RED when no data (except demand 8 which is YELLOW by default)
+        non_yellow = result[result["Demand"] != "Quarterly budget-to-actual comparison with CSCG commentary"]
+        assert (non_yellow["Status"] == "RED").all()
+
+    def test_demand_1_green_when_payroll_exists(self, monkeypatch):
+        cscg_rel = pd.DataFrame({
+            "Component": ["Office Payroll", "Management Fee"],
+            "Amount": [100000, 21000],
+            "Approval Required?": ["No", "Yes"],
+            "Contract Reference": ["", ""],
+        })
+        self._mock_loaders(monkeypatch, cscg_rel=cscg_rel)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_1 = result[result["Demand"].str.contains("payroll report", case=False)]
+        assert demand_1.iloc[0]["Status"] == "GREEN"
+
+    def test_demand_3_green_when_board_approved_high(self, monkeypatch):
+        expense_summary = pd.DataFrame({
+            "Approval Method": ["Board Approved", "CSCG Auto-Pay"],
+            "YTD Amount": [90000, 10000],
+            "% of Total": [0.90, 0.10],
+        })
+        self._mock_loaders(monkeypatch, expense_summary=expense_summary)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_3 = result[result["Demand"].str.contains("Invoice copies", case=False)]
+        assert demand_3.iloc[0]["Status"] == "GREEN"
+
+    def test_demand_3_yellow_when_board_approved_medium(self, monkeypatch):
+        expense_summary = pd.DataFrame({
+            "Approval Method": ["Board Approved", "CSCG Auto-Pay"],
+            "YTD Amount": [60000, 40000],
+            "% of Total": [0.60, 0.40],
+        })
+        self._mock_loaders(monkeypatch, expense_summary=expense_summary)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_3 = result[result["Demand"].str.contains("Invoice copies", case=False)]
+        assert demand_3.iloc[0]["Status"] == "YELLOW"
+
+    def test_demand_6_red_when_high_severity_mods_exist(self, monkeypatch):
+        mods = pd.DataFrame({
+            "Line Item": ["Ice Rental Revenue"],
+            "Proposal Annual": [100000],
+            "CSCG Annual (Implied)": [80000],
+            "Annual Variance $": [-20000],
+            "Direction": ["DECREASE"],
+            "Severity": ["HIGH"],
+            "Board Governance Impact": ["Revenue reduction without board vote"],
+        })
+        self._mock_loaders(monkeypatch, mods=mods)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_6 = result[result["Demand"].str.contains("variance explanation", case=False)]
+        assert demand_6.iloc[0]["Status"] == "RED"
+
+    def test_demand_7_green_when_no_mods(self, monkeypatch):
+        self._mock_loaders(monkeypatch, mods=pd.DataFrame(columns=[
+            "Line Item", "Proposal Annual", "CSCG Annual (Implied)",
+            "Annual Variance $", "Direction", "Severity", "Board Governance Impact"]))
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_7 = result[result["Demand"].str.contains("pre-approval", case=False)]
+        assert demand_7.iloc[0]["Status"] == "GREEN"
+
+    def test_demand_10_green_when_mgmt_fee_compliant(self, monkeypatch):
+        scorecard = pd.DataFrame({
+            "Contract Term": ["Management Fee", "Land Lease"],
+            "Contract Amount": [42000, 1],
+            "6mo Expected": [21000, 1],
+            "6mo Actual": [21000, 1],
+            "Status": ["COMPLIANT", "COMPLIANT"],
+        })
+        self._mock_loaders(monkeypatch, scorecard=scorecard)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_10 = result[result["Demand"].str.contains("management fee reconciliation", case=False)]
+        assert demand_10.iloc[0]["Status"] == "GREEN"
+
+    def test_demand_13_red_when_autopay_exists(self, monkeypatch):
+        expense_summary = pd.DataFrame({
+            "Approval Method": ["Board Approved", "CSCG Auto-Pay"],
+            "YTD Amount": [50000, 50000],
+            "% of Total": [0.50, 0.50],
+        })
+        self._mock_loaders(monkeypatch, expense_summary=expense_summary)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        demand_13 = result[result["Demand"].str.contains("auto-pay transaction log", case=False)]
+        assert demand_13.iloc[0]["Status"] == "RED"
+
+    def test_category_counts(self, monkeypatch):
+        self._mock_loaders(monkeypatch)
+        fn = self._dl.compute_board_demands.__wrapped__
+        result = fn()
+        cats = result["Category"].value_counts()
+        assert cats["Financial Reporting"] == 5
+        assert cats["Budget Accountability"] == 3
+        assert cats["Contract Compliance"] == 3
+        assert cats["Operational Transparency"] == 2
+        assert cats["Board Communication"] == 2
