@@ -697,6 +697,157 @@ def compute_cscg_scorecard() -> pd.DataFrame:
     return df
 
 
+@st.cache_data
+def compute_board_demands() -> pd.DataFrame:
+    """Compute status of 15 board demand items from CSCG.
+    Returns DataFrame with columns: Category, Demand, Frequency, Status, Evidence.
+
+    Status values: GREEN (received/verified), YELLOW (partial/unverifiable), RED (not received).
+    Auto-detects status from existing data loaders where possible; defaults to RED otherwise.
+    """
+    # Load data from existing loaders — each wrapped individually
+    try:
+        cscg_rel = load_cscg_relationship()
+    except Exception:
+        logger.warning("compute_board_demands: load_cscg_relationship failed")
+        cscg_rel = pd.DataFrame()
+
+    try:
+        mods = load_unauthorized_modifications()
+        # Filter to actual modifications (exclude totals/summaries)
+        mods = mods[~mods["Line Item"].str.contains(
+            "AGGREGATE|Total|Net Budget", case=False, na=False)].copy()
+        mods = mods.dropna(subset=["Severity"])
+    except Exception:
+        logger.warning("compute_board_demands: load_unauthorized_modifications failed")
+        mods = pd.DataFrame()
+
+    try:
+        expense_summary = load_expense_flow_summary()
+    except Exception:
+        logger.warning("compute_board_demands: load_expense_flow_summary failed")
+        expense_summary = pd.DataFrame()
+
+    try:
+        scorecard = compute_cscg_scorecard()
+    except Exception:
+        logger.warning("compute_board_demands: compute_cscg_scorecard failed")
+        scorecard = pd.DataFrame()
+
+    # --- Auto-detection helpers ---
+
+    def _detect_payroll_report():
+        """Demand 1: Monthly itemized payroll report."""
+        if cscg_rel.empty:
+            return "RED", "No CSCG relationship data available"
+        payroll = cscg_rel[cscg_rel["Component"].str.contains("Payroll", case=False, na=False)]
+        if len(payroll) > 0:
+            return "GREEN", f"Payroll tracked ({len(payroll)} line items) — itemized detail still needed"
+        return "RED", "No payroll data found in CSCG relationship"
+
+    def _detect_invoice_coverage():
+        """Demand 3: Invoice copies for vendor payments > $500."""
+        if expense_summary.empty:
+            return "RED", "No expense summary data available"
+        board_row = expense_summary[expense_summary["Approval Method"].str.contains("Board", case=False, na=False)]
+        if board_row.empty:
+            return "RED", "No board-approved category found"
+        pct = board_row["% of Total"].iloc[0]
+        if pd.isna(pct):
+            return "RED", "Board approval percentage unavailable"
+        if pct > 0.80:
+            return "GREEN", f"Board-approved: {pct:.0%} of expenses"
+        if pct >= 0.50:
+            return "YELLOW", f"Board-approved: {pct:.0%} of expenses — below 80% target"
+        return "RED", f"Board-approved: only {pct:.0%} of expenses"
+
+    def _detect_variance_explanations():
+        """Demand 6: Written variance explanation for changes > $2,500."""
+        if mods.empty:
+            return "GREEN", "No unauthorized budget modifications found"
+        high_crit = mods[mods["Severity"].str.contains("HIGH|CRITICAL", case=False, na=False)]
+        if len(high_crit) > 0:
+            return "RED", f"{len(high_crit)} HIGH/CRITICAL modifications without verifiable explanation"
+        return "GREEN", "No HIGH/CRITICAL unauthorized modifications"
+
+    def _detect_preapproval():
+        """Demand 7: Board pre-approval before budget modifications."""
+        if mods.empty:
+            return "GREEN", "No unauthorized budget modifications found"
+        return "RED", f"{len(mods)} budget modifications made without board pre-approval"
+
+    def _detect_mgmt_fee():
+        """Demand 10: Management fee reconciliation vs. contract."""
+        if scorecard.empty:
+            return "RED", "No scorecard data available"
+        fee_row = scorecard[scorecard["Contract Term"].str.contains("Management Fee", case=False, na=False)]
+        if fee_row.empty:
+            return "RED", "Management Fee not found in scorecard"
+        status = fee_row.iloc[0]["Status"]
+        status_map = {"COMPLIANT": "GREEN", "MINOR VARIANCE": "YELLOW", "NON-COMPLIANT": "RED", "AUTO-PAY": "YELLOW"}
+        color = status_map.get(status, "RED")
+        return color, f"Management fee status: {status}"
+
+    def _detect_autopay_log():
+        """Demand 13: Auto-pay transaction log."""
+        if expense_summary.empty:
+            return "RED", "No expense summary data available"
+        autopay = expense_summary[expense_summary["Approval Method"].str.contains("CSCG|Auto", case=False, na=False)]
+        if len(autopay) > 0:
+            total = autopay["YTD Amount"].sum()
+            return "RED", f"${total:,.0f} in auto-pay with no itemized transaction log"
+        return "GREEN", "No auto-pay category detected"
+
+    # --- Build the 15 demand items ---
+
+    d1_status, d1_evidence = _detect_payroll_report()
+    d3_status, d3_evidence = _detect_invoice_coverage()
+    d6_status, d6_evidence = _detect_variance_explanations()
+    d7_status, d7_evidence = _detect_preapproval()
+    d10_status, d10_evidence = _detect_mgmt_fee()
+    d13_status, d13_evidence = _detect_autopay_log()
+
+    demands = [
+        # Financial Reporting
+        {"Category": "Financial Reporting", "Demand": "Monthly itemized payroll report (names, hours, rates)",
+         "Frequency": "Monthly", "Status": d1_status, "Evidence": d1_evidence},
+        {"Category": "Financial Reporting", "Demand": "Monthly expense reimbursement detail with receipts",
+         "Frequency": "Monthly", "Status": "RED", "Evidence": "Manual review required"},
+        {"Category": "Financial Reporting", "Demand": "Invoice copies for all vendor payments > $500",
+         "Frequency": "Monthly", "Status": d3_status, "Evidence": d3_evidence},
+        {"Category": "Financial Reporting", "Demand": "Quarterly revenue reconciliation (collected vs. deposited)",
+         "Frequency": "Quarterly", "Status": "RED", "Evidence": "No revenue reconciliation data available"},
+        {"Category": "Financial Reporting", "Demand": "Monthly bank account transaction log",
+         "Frequency": "Monthly", "Status": "RED", "Evidence": "No bank transaction data available"},
+        # Budget Accountability
+        {"Category": "Budget Accountability", "Demand": "Written variance explanation for any line item change > $2,500",
+         "Frequency": "As needed", "Status": d6_status, "Evidence": d6_evidence},
+        {"Category": "Budget Accountability", "Demand": "Board pre-approval before any budget line modification",
+         "Frequency": "As needed", "Status": d7_status, "Evidence": d7_evidence},
+        {"Category": "Budget Accountability", "Demand": "Quarterly budget-to-actual comparison with CSCG commentary",
+         "Frequency": "Quarterly", "Status": "YELLOW", "Evidence": "Budget-to-actual data exists but CSCG commentary not verifiable"},
+        # Contract Compliance
+        {"Category": "Contract Compliance", "Demand": "Current insurance certificates (GL, workers comp, D&O)",
+         "Frequency": "Annual", "Status": "RED", "Evidence": "Manual review required"},
+        {"Category": "Contract Compliance", "Demand": "Annual management fee reconciliation vs. contract terms",
+         "Frequency": "Annual", "Status": d10_status, "Evidence": d10_evidence},
+        {"Category": "Contract Compliance", "Demand": "Proof of regulatory compliance (health dept, fire, refrigerant)",
+         "Frequency": "Annual", "Status": "RED", "Evidence": "Manual review required"},
+        # Operational Transparency
+        {"Category": "Operational Transparency", "Demand": "Read-only access to operating bank account",
+         "Frequency": "One-time", "Status": "RED", "Evidence": "Manual review required"},
+        {"Category": "Operational Transparency", "Demand": "Monthly auto-pay transaction log with categorization",
+         "Frequency": "Monthly", "Status": d13_status, "Evidence": d13_evidence},
+        # Board Communication
+        {"Category": "Board Communication", "Demand": "Board meeting prep materials delivered 5+ business days in advance",
+         "Frequency": "Per meeting", "Status": "RED", "Evidence": "Manual review required"},
+        {"Category": "Board Communication", "Demand": "Written response to board questions within 10 business days",
+         "Frequency": "As needed", "Status": "RED", "Evidence": "Manual review required"},
+    ]
+
+    return pd.DataFrame(demands)
+
+
 # ── Phase 2: Monthly Financials ─────────────────────────────────────────
 
 @st.cache_data

@@ -187,9 +187,12 @@ class TestComputeBoardDemands:
         self._mock_loaders(monkeypatch)
         fn = self._dl.compute_board_demands.__wrapped__
         result = fn()
-        # All should be RED when no data (except demand 8 which is YELLOW by default)
-        non_yellow = result[result["Demand"] != "Quarterly budget-to-actual comparison with CSCG commentary"]
-        assert (non_yellow["Status"] == "RED").all()
+        # Demands 6 & 7 are GREEN when no unauthorized mods (correct: absence = compliance)
+        # Demand 8 is YELLOW by default (budget-to-actual exists but commentary unverifiable)
+        exclude = result[result["Demand"].str.contains(
+            "variance explanation|pre-approval|budget-to-actual", case=False)]
+        remaining = result.drop(exclude.index)
+        assert (remaining["Status"] == "RED").all()
 
     def test_demand_1_green_when_payroll_exists(self, monkeypatch):
         cscg_rel = pd.DataFrame({
