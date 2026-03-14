@@ -56,10 +56,15 @@ def _get_role(username: str) -> str:
 def init_authenticator():
     """Create and return the authenticator object. Call once in app.py."""
     config = _load_config()
+    # Use secret cookie key from .streamlit/secrets.toml instead of the config file
+    try:
+        cookie_key = st.secrets.get("auth", {}).get("cookie_key", config["cookie"]["key"])
+    except (FileNotFoundError, KeyError):
+        cookie_key = config["cookie"]["key"]
     authenticator = stauth.Authenticate(
         config["credentials"],
         config["cookie"]["name"],
-        config["cookie"]["key"],
+        cookie_key,
         config["cookie"]["expiry_days"],
     )
     return authenticator

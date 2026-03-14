@@ -2,16 +2,56 @@
 Data loading and cleaning utilities for the NSIA Bond Dashboard.
 All functions use @st.cache_data for performance.
 """
+import logging
 import os
 import re
 import pandas as pd
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
 
 def _path(filename: str) -> str:
     return os.path.join(DATA_DIR, filename)
+
+
+def _find_row(df, col: int, text: str) -> int | None:
+    """Find the first row index where df.iloc[row, col] contains `text` (case-insensitive).
+    Returns None if not found."""
+    for i in range(len(df)):
+        val = df.iloc[i, col]
+        if pd.notna(val) and text.lower() in str(val).lower():
+            return i
+    return None
+
+
+def _find_row_reverse(df, col: int, text: str, start_from: int | None = None) -> int | None:
+    """Find the last row index where df.iloc[row, col] contains `text` (case-insensitive).
+    Searches from `start_from` (default: last row) backward to the midpoint of the sheet.
+    Returns None if not found."""
+    end = start_from if start_from is not None else len(df) - 1
+    for i in range(end, max(len(df) // 2, 0), -1):
+        val = df.iloc[i, col]
+        if pd.notna(val) and text.lower() in str(val).lower():
+            return i
+    return None
+
+
+def _find_rows_between(df, col: int, start_text: str, end_texts: list[str]) -> pd.DataFrame:
+    """Return rows between a start marker and the first subsequent end marker (exclusive).
+    Skips the start marker row itself. If the start marker is found but no end marker matches,
+    all rows after the start marker are returned. Returns empty DataFrame if start marker not found."""
+    start = _find_row(df, col, start_text)
+    if start is None:
+        return pd.DataFrame()
+    for i in range(start + 1, len(df)):
+        val = df.iloc[i, col]
+        if pd.notna(val) and any(end.lower() in str(val).lower() for end in end_texts):
+            return df.iloc[start + 1:i].copy()
+    # No end marker found — take everything after start
+    return df.iloc[start + 1:].copy()
 
 
 def _clean_dollar(val):
@@ -148,14 +188,31 @@ def load_expense_flow_summary() -> pd.DataFrame:
     """Expense approval summary breakdown from Expense Flow Analysis."""
     df = pd.read_excel(_path("expense_flow.xlsx"),
                        sheet_name="Expense Flow Analysis", header=None)
-    # Rows 35-39 contain the summary
-    summary = df.iloc[35:40].copy()
-    summary.columns = ["Approval Method", "YTD Amount", "% of Total", "Board Oversight",
-                        "_col4", "_col5"]
-    summary = summary[["Approval Method", "YTD Amount", "% of Total"]].dropna(subset=["Approval Method"])
-    summary = summary[summary["Approval Method"] != "Approval Method"]
+    # Find the summary section by its header marker
+    header_idx = _find_row(df, 0, "SUMMARY BY APPROVAL METHOD")
+    if header_idx is None:
+        header_idx = _find_row(df, 0, "Approval Method")
+    if header_idx is None:
+        logger.warning("Expense flow summary: no 'SUMMARY BY APPROVAL METHOD' or 'Approval Method' marker found in expense_flow.xlsx")
+        return pd.DataFrame(columns=["Approval Method", "YTD Amount", "% of Total"])
+    # Data starts after the "Approval Method" header row
+    start = header_idx + 1
+    if str(df.iloc[start, 0]).strip() == "Approval Method":
+        start += 1
+    # Read until TOTAL or blank
+    rows = []
+    for i in range(start, min(start + 20, len(df))):
+        val = df.iloc[i, 0]
+        if pd.isna(val) or "TOTAL" in str(val).upper() or "KEY" in str(val).upper():
+            break
+        rows.append(i)
+    summary = df.iloc[rows].copy()
+    summary.columns = range(len(summary.columns))
+    summary = summary[[0, 1, 2]].copy()
+    summary.columns = ["Approval Method", "YTD Amount", "% of Total"]
     summary["YTD Amount"] = pd.to_numeric(summary["YTD Amount"], errors="coerce")
     summary["% of Total"] = pd.to_numeric(summary["% of Total"], errors="coerce")
+    summary = summary.dropna(subset=["Approval Method"])
     summary = summary.reset_index(drop=True)
     return summary
 
@@ -182,12 +239,16 @@ def load_cscg_relationship() -> pd.DataFrame:
 
 @st.cache_data
 def load_fixed_obligations() -> pd.DataFrame:
-    """Fixed obligations section from Expense Flow Analysis (rows 24-31)."""
+    """Fixed obligations section from Expense Flow Analysis."""
     df = pd.read_excel(_path("expense_flow.xlsx"),
                        sheet_name="Expense Flow Analysis", header=None)
     headers = ["Expense Category", "YTD per Financials", "YTD from Invoices",
                "Variance", "Approval Method", "Notes"]
-    data = df.iloc[25:32].copy()
+    # Find section by its header marker
+    data = _find_rows_between(df, 0, "FIXED OBLIGATIONS", ["SUMMARY", "KEY FINDINGS", "TOTAL EXPENSES"])
+    if data.empty:
+        logger.warning("Fixed obligations: 'FIXED OBLIGATIONS' marker not found in expense_flow.xlsx")
+        return pd.DataFrame(columns=headers)
     data.columns = headers[:len(data.columns)]
     data = data.dropna(subset=["Expense Category"])
     for col in ["YTD per Financials", "YTD from Invoices", "Variance"]:
@@ -204,20 +265,25 @@ def load_scoreboard_10yr() -> pd.DataFrame:
     df = pd.read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet1", header=None)
     years = list(range(1, 11))
-    rows_of_interest = {
-        "Existing Sponsor Revenue": 10,
-        "Referral Sponsorship Revenue to NSIA": 18,
-        "Non-Referral Revenue to NSIA": 23,
-        "Total NSIA Sponsorship Revenue": 25,
-        "Software License": 29,
-        "Maintenance & Repair": 30,
-        "Total Annual Costs": 31,
-        "Net Cash Flow (Current Deal)": 33,
+    # Search for each row by label text in column 1
+    label_searches = {
+        "Existing Sponsor Revenue": "Existing Sponsor Revenue",
+        "Referral Sponsorship Revenue to NSIA": "Referral Sponsorship Revenue to NSIA",
+        "Non-Referral Revenue to NSIA": "Non-Referral Sponsorship Revenue to NSIA",
+        "Total NSIA Sponsorship Revenue": "NSIA Sponsorship Revenue",
+        "Software License": "Software License",
+        "Maintenance & Repair": "Maintenance & Repair",
+        "Total Annual Costs": "Total Annual Costs",
+        "Net Cash Flow (Current Deal)": "Net Cash Flow",
     }
     records = []
-    for label, row_idx in rows_of_interest.items():
+    for label, search_text in label_searches.items():
+        row_idx = _find_row(df, 1, search_text)
+        if row_idx is None:
+            logger.warning("Scoreboard 10yr: label '%s' not found in scoreboard_economics.xlsx", search_text)
+            continue
         vals = df.iloc[row_idx, 6:16].tolist()
-        total = df.iloc[row_idx, 17]
+        total = df.iloc[row_idx, 17] if df.shape[1] > 17 else None
         records.append({"Category": label, **{f"Year {y}": v for y, v in zip(years, vals)},
                         "10yr Total": total})
     return pd.DataFrame(records)
@@ -225,33 +291,54 @@ def load_scoreboard_10yr() -> pd.DataFrame:
 
 @st.cache_data
 def load_scoreboard_alternative() -> pd.DataFrame:
-    """Alternative cheaper scoreboard option (Sheet1 rows 43-46)."""
+    """Alternative cheaper scoreboard option (Sheet1)."""
     df = pd.read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet1", header=None)
     years = list(range(1, 11))
-    rows = {
-        "Upfront Cost": 43,
-        "Annual Maintenance": 44,
-        "Sponsorship Revenue": 45,
-        "Net Cash Flow (Cheaper Alt)": 46,
+    # Find the alternative section and its rows by label
+    label_searches = {
+        "Upfront Cost": "Upfront Cost",
+        "Annual Maintenance": "Annual Maintenance",
+        "Sponsorship Revenue": "Sponsorship Revenue",
+        "Net Cash Flow (Cheaper Alt)": "Cash Flow to Purchase Cheaper",
     }
+    # Start searching from the "Alternative" section header
+    alt_start = _find_row(df, 1, "Alternative")
+    if alt_start is None:
+        logger.warning("Scoreboard alternative: 'Alternative' section not found in scoreboard_economics.xlsx")
+        return pd.DataFrame()
     records = []
-    for label, row_idx in rows.items():
-        vals = df.iloc[row_idx, 6:16].tolist()
-        total = df.iloc[row_idx, 17]
-        records.append({"Category": label, **{f"Year {y}": v for y, v in zip(years, vals)},
-                        "10yr Total": total})
+    for label, search_text in label_searches.items():
+        for i in range(alt_start, len(df)):
+            val = df.iloc[i, 1]
+            if pd.notna(val) and search_text.lower() in str(val).lower():
+                vals = df.iloc[i, 6:16].tolist()
+                total = df.iloc[i, 17] if df.shape[1] > 17 else None
+                records.append({"Category": label, **{f"Year {y}": v for y, v in zip(years, vals)},
+                                "10yr Total": total})
+                break
     return pd.DataFrame(records)
 
 
 @st.cache_data
 def load_historical_ad_revenue() -> pd.DataFrame:
-    """Historical ad revenue from Sheet2 row 20."""
+    """Historical ad revenue from Sheet2."""
     df = pd.read_excel(_path("scoreboard_economics.xlsx"),
                        sheet_name="Sheet2", header=None)
-    # Row 18 has years (2014-2024), row 20 has ad revenue
-    year_row = df.iloc[18, 7:18].tolist()
-    rev_row = df.iloc[20, 7:18].tolist()
+    # Find the "Ad Revenue" row and the year header row (2 rows above it)
+    ad_row = _find_row(df, 4, "Ad Revenue")
+    if ad_row is None:
+        ad_row = _find_row(df, 0, "Ad Revenue")
+    if ad_row is None:
+        logger.warning("Historical ad revenue: 'Ad Revenue' not found in scoreboard_economics.xlsx Sheet2")
+        return pd.DataFrame(columns=["Year", "Ad Revenue"])
+    # Year row is 2 rows before the ad revenue row
+    if ad_row < 2:
+        logger.warning("Historical ad revenue: 'Ad Revenue' found at row %d, too close to top for year header", ad_row)
+        return pd.DataFrame(columns=["Year", "Ad Revenue"])
+    year_row_idx = ad_row - 2
+    year_row = df.iloc[year_row_idx, 7:18].tolist()
+    rev_row = df.iloc[ad_row, 7:18].tolist()
     result = pd.DataFrame({"Year": [int(y) for y in year_row if pd.notna(y)],
                            "Ad Revenue": [r for r, y in zip(rev_row, year_row) if pd.notna(y)]})
     result["Ad Revenue"] = pd.to_numeric(result["Ad Revenue"], errors="coerce")
@@ -373,12 +460,24 @@ def compute_kpis() -> dict:
     net_operating_income = annual_rev - annual_exp
     dscr = net_operating_income / debt_service if debt_service > 0 else 0
 
+    # Compute board-approved percentage from expense flow summary data
+    pct_board = 0.255  # fallback
+    try:
+        summary = load_expense_flow_summary()
+        board_row = summary[summary["Approval Method"].str.contains("Board", case=False, na=False)]
+        if len(board_row) > 0:
+            pct_board = board_row["% of Total"].iloc[0]
+    except Exception:
+        pass
+    if pd.isna(pct_board):
+        pct_board = 0.255
+
     return {
         "total_annual_revenue": annual_rev,
         "total_annual_expenses": annual_exp,
         "net_cash_flow": annual_rev - annual_exp - hidden_total,
         "hidden_cash_outflows": hidden_total,
-        "pct_board_approved": 0.255,
+        "pct_board_approved": pct_board,
         "dscr": dscr,
         "debt_service": debt_service,
         "net_operating_income": net_operating_income,
@@ -636,14 +735,22 @@ def load_payroll_benchmarks() -> pd.DataFrame:
 
 @st.cache_data
 def load_weekday_ice_summary() -> pd.DataFrame:
-    """Weekday ice allocation summary (rows 46-49 of Sheet1)."""
+    """Weekday ice allocation summary from Sheet1."""
     df = pd.read_excel(_path("ice_weekday_breakdown.xlsx"),
                        sheet_name="Sheet1", header=None)
-    # Summary at rows 46-49: row 46 is header, 47-49 are clubs
+    # Find the summary header row ("Hrs/Day") near the bottom of the sheet
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    header_idx = _find_row_reverse(df, 0, "hrs/day")
+    if header_idx is None:
+        logger.warning("Weekday ice summary: 'Hrs/Day' marker not found in ice_weekday_breakdown.xlsx")
+        return pd.DataFrame(columns=["Club", "Day", "Current Hours", "Proposed Hours"])
     records = []
-    for row_idx in range(47, 50):
-        club = str(df.iloc[row_idx, 0])
+    # Club rows follow immediately after the header
+    for row_idx in range(header_idx + 1, min(header_idx + 10, len(df))):
+        club = df.iloc[row_idx, 0]
+        if pd.isna(club) or str(club).strip() == "":
+            break
+        club = str(club).strip()
         current_vals = [pd.to_numeric(df.iloc[row_idx, c], errors="coerce") for c in range(1, 6)]
         current_total = pd.to_numeric(df.iloc[row_idx, 6], errors="coerce")
         proposed_vals = [pd.to_numeric(df.iloc[row_idx, c], errors="coerce") for c in range(11, 16)]
@@ -666,14 +773,20 @@ def load_weekday_ice_summary() -> pd.DataFrame:
 
 @st.cache_data
 def load_weekend_ice_summary() -> pd.DataFrame:
-    """Weekend ice allocation summary (rows 91-94)."""
+    """Weekend ice allocation summary."""
     df = pd.read_excel(_path("ice_weekend_breakdown.xlsx"), header=None)
-    # Row 91 header, 92-94 clubs
-    # Current: cols 1-2 (Wknd1 Sat/Sun), col 3 (Total W1), cols 5-6 (Wknd2 Sat/Sun), col 7 (Total W2)
-    # Proposed: cols 10-11, 12, cols 14-15, 16
+    # Find the summary "Hrs/Day" header row near the bottom
+    header_idx = _find_row_reverse(df, 0, "hrs/day")
+    if header_idx is None:
+        logger.warning("Weekend ice summary: 'Hrs/Day' marker not found in ice_weekend_breakdown.xlsx")
+        return pd.DataFrame(columns=["Club", "Weekend", "Current Saturday", "Current Sunday",
+                                      "Current Total", "Proposed Saturday", "Proposed Sunday", "Proposed Total"])
     records = []
-    for row_idx in range(92, 95):
-        club = str(df.iloc[row_idx, 0])
+    for row_idx in range(header_idx + 1, min(header_idx + 10, len(df))):
+        club = df.iloc[row_idx, 0]
+        if pd.isna(club) or str(club).strip() == "":
+            break
+        club = str(club).strip()
         records.append({
             "Club": club,
             "Weekend": "Weekend 1",

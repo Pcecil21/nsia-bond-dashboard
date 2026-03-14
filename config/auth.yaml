@@ -1,6 +1,6 @@
 cookie:
   expiry_days: 30
-  key: nsia_bond_dashboard_auth_key
+  key: CHANGE_ME_use_streamlit_secrets_toml
   name: nsia_auth
 
 credentials:
