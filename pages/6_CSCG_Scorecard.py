@@ -22,6 +22,7 @@ st.title("CSCG Contract Scorecard")
 st.caption("Management agreement compliance and financial relationship transparency")
 
 from utils.data_loader import (
+    compute_board_demands,
     compute_cscg_scorecard,
     load_cscg_relationship,
     load_expense_flow_summary,
@@ -270,6 +271,112 @@ if not mods_filtered.empty:
                   delta="Unfavorable" if net_mod < 0 else "Favorable",
                   delta_color="inverse" if net_mod < 0 else "normal")
 
+# ── Board Demands ─────────────────────────────────────────────────────────
+st.markdown("---")
+st.header("Board Demands — What NSIA Needs From CSCG")
+st.markdown(
+    "Specific documents, reports, and actions the board should require from the management company. "
+    "Status is auto-detected from dashboard data where possible."
+)
+
+demands = compute_board_demands()
+n_green = len(demands[demands["Status"] == "GREEN"])
+n_yellow = len(demands[demands["Status"] == "YELLOW"])
+n_red = len(demands[demands["Status"] == "RED"])
+
+# Summary KPIs
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Demands Met", f"{n_green} / {len(demands)}")
+with col2:
+    st.metric("Outstanding", n_red)
+with col3:
+    st.metric("Needs Verification", n_yellow)
+
+# Compliance progress bar
+fig_prog = go.Figure()
+fig_prog.add_trace(go.Bar(
+    y=["Board Demands"],
+    x=[n_green],
+    name=f"Met ({n_green})",
+    orientation="h",
+    marker=dict(color="#00d084"),
+    text=f"{n_green}" if n_green > 0 else "",
+    textposition="inside",
+    textfont=dict(color="#fff", size=14, family="Arial Black"),
+    hovertemplate=f"Met: {n_green}<extra></extra>",
+))
+fig_prog.add_trace(go.Bar(
+    y=["Board Demands"],
+    x=[n_yellow],
+    name=f"Verify ({n_yellow})",
+    orientation="h",
+    marker=dict(color="#fcb900"),
+    text=f"{n_yellow}" if n_yellow > 0 else "",
+    textposition="inside",
+    textfont=dict(color="#fff", size=14, family="Arial Black"),
+    hovertemplate=f"Needs Verification: {n_yellow}<extra></extra>",
+))
+fig_prog.add_trace(go.Bar(
+    y=["Board Demands"],
+    x=[n_red],
+    name=f"Outstanding ({n_red})",
+    orientation="h",
+    marker=dict(color="#eb144c"),
+    text=f"{n_red}" if n_red > 0 else "",
+    textposition="inside",
+    textfont=dict(color="#fff", size=14, family="Arial Black"),
+    hovertemplate=f"Outstanding: {n_red}<extra></extra>",
+))
+fig_prog.update_layout(
+    barmode="stack",
+    showlegend=True,
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                font=dict(color="#a8b2d1")),
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False),
+)
+style_chart(fig_prog, 120)
+st.plotly_chart(fig_prog, use_container_width=True)
+
+# Demand table as styled HTML
+status_colors = {"GREEN": "#00d084", "YELLOW": "#fcb900", "RED": "#eb144c"}
+
+html_rows = ""
+for _, row in demands.iterrows():
+    color = status_colors.get(row["Status"], "#eb144c")
+    pill = (f'<span style="background:{color}33;color:{color};padding:2px 10px;'
+            f'border-radius:10px;font-weight:bold;font-size:0.85rem;">{row["Status"]}</span>')
+    html_rows += (
+        f'<tr style="border-bottom:1px solid rgba(168,178,209,0.15);">'
+        f'<td style="padding:8px 12px;color:#a8b2d1;font-size:0.85rem;">{row["Category"]}</td>'
+        f'<td style="padding:8px 12px;color:#e6f1ff;">{row["Demand"]}</td>'
+        f'<td style="padding:8px 12px;color:#a8b2d1;font-size:0.85rem;">{row["Frequency"]}</td>'
+        f'<td style="padding:8px 12px;text-align:center;">{pill}</td>'
+        f'<td style="padding:8px 12px;color:#a8b2d1;font-size:0.8rem;">{row["Evidence"]}</td>'
+        f'</tr>'
+    )
+
+html_table = f'''
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;background:rgba(10,25,47,0.5);border-radius:8px;">
+<thead>
+<tr style="border-bottom:2px solid rgba(168,178,209,0.3);">
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Category</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Demand</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Frequency</th>
+    <th style="padding:10px 12px;text-align:center;color:#64ffda;font-size:0.85rem;">Status</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Evidence</th>
+</tr>
+</thead>
+<tbody>
+{html_rows}
+</tbody>
+</table>
+</div>
+'''
+st.markdown(html_table, unsafe_allow_html=True)
+
 # ── AI Assessment ─────────────────────────────────────────────────────────
 if ANTHROPIC_AVAILABLE and get_api_key():
     st.markdown("")
@@ -288,6 +395,11 @@ if ANTHROPIC_AVAILABLE and get_api_key():
         if not mods_filtered.empty:
             scorecard_summary += f"\n=== UNAUTHORIZED BUDGET MODIFICATIONS ===\n"
             scorecard_summary += mods_filtered.to_csv(index=False)
+
+        # Add Board Demands summary
+        scorecard_summary += f"\n=== BOARD DEMANDS STATUS ===\n"
+        scorecard_summary += f"Met: {n_green}/15 | Needs Verification: {n_yellow} | Outstanding: {n_red}\n"
+        scorecard_summary += demands.to_csv(index=False)
 
         with st.spinner("Running Management Company Performance Scorer analysis..."):
             result = analyze_document(
