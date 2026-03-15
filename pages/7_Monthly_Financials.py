@@ -2,6 +2,7 @@
 Page 7: Monthly Financials
 Budget vs Actuals, Cash Forecast, and Contract Receivables.
 """
+import os
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
@@ -385,3 +386,127 @@ if ANTHROPIC_AVAILABLE and get_api_key():
                 file_name="nsia_monthly_ai_assessment.md",
                 mime="text/markdown",
             )
+
+# ══════════════════════════════════════════════════════════════════════════
+# Section 4: Bank Transactions & Cash Position
+# ══════════════════════════════════════════════════════════════════════════
+st.markdown("---")
+st.header("Bank Transactions & Cash Position")
+
+from utils.bank_parser import parse_bank_csv, deduplicate
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+BANK_CSV_PATH = os.path.join(DATA_DIR, "bank_transactions.csv")
+
+uploaded_file = st.file_uploader("Upload bank CSV (Chase, BMO, or generic)", type=["csv"])
+
+if uploaded_file is not None:
+    file_bytes = uploaded_file.getvalue()
+    parsed_df, parse_errors = parse_bank_csv(file_bytes, uploaded_file.name)
+
+    for err in parse_errors:
+        st.warning(err)
+
+    if not parsed_df.empty:
+        # Deduplicate against existing data
+        if os.path.exists(BANK_CSV_PATH) and os.path.getsize(BANK_CSV_PATH) > 50:
+            existing_df = pd.read_csv(BANK_CSV_PATH)
+        else:
+            existing_df = pd.DataFrame(columns=["date", "description", "amount", "balance",
+                                                 "category", "source_file", "import_date"])
+
+        new_df = deduplicate(parsed_df, existing_df)
+        dup_count = len(parsed_df) - len(new_df)
+
+        st.info(f"**{len(new_df)}** new transactions found, **{dup_count}** duplicates skipped.")
+
+        if len(new_df) > 0:
+            if st.button("Import Transactions", type="primary"):
+                combined = pd.concat([existing_df, new_df], ignore_index=True)
+                combined.to_csv(BANK_CSV_PATH, index=False)
+                st.success(f"Imported {len(new_df)} transactions.")
+                st.rerun()
+
+# Display section — only if bank_transactions.csv has data
+if os.path.exists(BANK_CSV_PATH) and os.path.getsize(BANK_CSV_PATH) > 50:
+    bank_df = pd.read_csv(BANK_CSV_PATH)
+    bank_df["amount"] = pd.to_numeric(bank_df["amount"], errors="coerce")
+    bank_df["balance"] = pd.to_numeric(bank_df["balance"], errors="coerce")
+    bank_df["date"] = pd.to_datetime(bank_df["date"], errors="coerce")
+    bank_df = bank_df.sort_values("date").reset_index(drop=True)
+
+    # Metric cards
+    current_balance = bank_df["balance"].dropna().iloc[-1] if not bank_df["balance"].dropna().empty else 0
+    total_deposits = bank_df.loc[bank_df["amount"] > 0, "amount"].sum()
+    total_withdrawals = bank_df.loc[bank_df["amount"] < 0, "amount"].sum()
+    large_txns = bank_df[bank_df["amount"].abs() > 5000]
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.metric("Current Balance", f"${current_balance:,.0f}")
+    with c2:
+        st.metric("Total Deposits", f"${total_deposits:,.0f}")
+    with c3:
+        st.metric("Total Withdrawals", f"${total_withdrawals:,.0f}")
+    with c4:
+        st.metric("Large Transactions (>$5K)", f"{len(large_txns)}")
+
+    # Cash position line chart with forecast overlay
+    if not bank_df["balance"].dropna().empty:
+        fig_cash = go.Figure()
+        bal_data = bank_df.dropna(subset=["balance"])
+        fig_cash.add_trace(go.Scatter(
+            x=bal_data["date"], y=bal_data["balance"],
+            name="Actual Balance",
+            mode="lines+markers",
+            line=dict(color="#64ffda", width=2),
+            marker=dict(size=5),
+            hovertemplate="%{x|%Y-%m-%d}<br>Balance: $%{y:,.0f}<extra></extra>",
+        ))
+
+        # Overlay cash forecast
+        forecast = load_cash_forecast()
+        if not forecast.empty and "Month" in forecast.columns and "Cumulative Cash" in forecast.columns:
+            fig_cash.add_trace(go.Scatter(
+                x=forecast["Month"], y=forecast["Cumulative Cash"],
+                name="Forecast",
+                mode="lines",
+                line=dict(color="#fcb900", width=2, dash="dash"),
+                hovertemplate="%{x}<br>Forecast: $%{y:,.0f}<extra></extra>",
+            ))
+
+        fig_cash.update_layout(
+            title="Cash Position — Actual vs Forecast",
+            yaxis_title="Balance ($)",
+        )
+        style_chart(fig_cash, 420)
+        st.plotly_chart(fig_cash, use_container_width=True)
+
+    # Large transaction alerts
+    if not large_txns.empty:
+        st.subheader("Large Transaction Alerts (>$5,000)")
+        display_large = large_txns[["date", "description", "amount", "balance", "source_file"]].copy()
+        display_large["date"] = display_large["date"].dt.strftime("%Y-%m-%d")
+        st.dataframe(
+            display_large,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "amount": st.column_config.NumberColumn(format="$%,.2f"),
+                "balance": st.column_config.NumberColumn(format="$%,.2f"),
+            },
+        )
+
+    # Full transaction table
+    with st.expander("Full Transaction Table"):
+        display_all = bank_df.copy()
+        display_all["date"] = display_all["date"].dt.strftime("%Y-%m-%d")
+        st.dataframe(
+            display_all,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "amount": st.column_config.NumberColumn(format="$%,.2f"),
+                "balance": st.column_config.NumberColumn(format="$%,.2f"),
+            },
+        )
