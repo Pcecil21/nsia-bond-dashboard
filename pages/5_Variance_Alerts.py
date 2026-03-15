@@ -19,6 +19,33 @@ st.set_page_config(page_title="Variance Alerts | NSIA", layout="wide", page_icon
 inject_css()
 require_auth()
 
+import os
+from datetime import date as _date, timedelta as _timedelta
+
+# ── Board Action Item Alerts ─────────────────────────────────────────────
+try:
+    _board_actions_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "board_actions.xlsx")
+    if os.path.exists(_board_actions_path):
+        _ba_actions = pd.read_excel(_board_actions_path, sheet_name="Action Items", dtype={"id": str})
+        if not _ba_actions.empty and "due_date" in _ba_actions.columns:
+            _ba_actions["due_date"] = pd.to_datetime(_ba_actions["due_date"]).dt.date
+            _today = _date.today()
+            _open = _ba_actions[_ba_actions["status"].isin(["Open", "In Progress"])]
+            _overdue = _open[_open["due_date"] < _today]
+            _due_soon = _open[(_open["due_date"] >= _today) & (_open["due_date"] <= _today + _timedelta(days=7))]
+
+            if not _overdue.empty or not _due_soon.empty:
+                ba_col1, ba_col2 = st.columns(2)
+                with ba_col1:
+                    if not _overdue.empty:
+                        st.metric("Overdue Board Actions", len(_overdue))
+                with ba_col2:
+                    if not _due_soon.empty:
+                        st.metric("Due This Week", len(_due_soon))
+                st.markdown("---")
+except Exception:
+    pass  # Don't break variance page if board actions file is missing
+
 st.title("Variance Alerts")
 st.caption("Automated monitoring: CSCG operational budget vs. board-approved proposal")
 
