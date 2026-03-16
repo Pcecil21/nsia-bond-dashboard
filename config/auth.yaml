@@ -8,12 +8,12 @@ credentials:
     admin:
       email: admin@nsia.org
       name: NSIA Admin
-      password: $2b$12$g7Z89llIG0h21tUNkQ8gB.QHbBa0BCMffEiSaJqSHDZo9UBasMsay
+      password: $2b$12$QjyjLnEseMSldoAzi10Bfej2eqdw28s15bFRX5TqOibJ1CZG0YTAq
       role: admin
     board:
       email: board@nsia.org
       name: Board Member
-      password: $2b$12$/b9.KLDMg.V.H9Nb13TZb.n6uhTLNOEwZlgFjWgWmOCJWO.fqDNdu
+      password: $2b$12$6Tgi/RbZMLePN8gOGOpdSuP25bTZlPA43n0SaRWHlF9MbGDDV/sGy
       role: board
     winnetka:
       email: winnetka@nsia.org
