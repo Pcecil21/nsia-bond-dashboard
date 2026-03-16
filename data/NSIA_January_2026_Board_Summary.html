@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NSIA Board Summary — January 2026</title>
+<style>
+  @page { size: letter; margin: 0.5in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: #1a1a1a;
+    max-width: 7.5in;
+    margin: 0 auto;
+    padding: 0.25in;
+    line-height: 1.35;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 3px solid #1a3a5c;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 18px;
+    color: #1a3a5c;
+    font-weight: 700;
+  }
+  .header .subtitle {
+    font-size: 11px;
+    color: #666;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .card {
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+  .card h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #1a3a5c;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .full-width { grid-column: 1 / -1; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+  }
+  th {
+    text-align: left;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-bottom: 1px solid #ccc;
+    color: #444;
+  }
+  td {
+    padding: 2px 4px;
+  }
+  .num { text-align: right; }
+  .bold { font-weight: 700; }
+  .green { color: #1a7a2e; }
+  .red { color: #c0392b; }
+  .yellow { color: #b8860b; }
+  .highlight-row { background: #f5f8fc; }
+  .divider { border-top: 1px solid #ccc; margin: 4px 0; }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    text-align: center;
+  }
+  .kpi {
+    background: #f5f8fc;
+    border-radius: 4px;
+    padding: 6px 4px;
+  }
+  .kpi .value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a3a5c;
+  }
+  .kpi .label {
+    font-size: 9px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .flag {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .flag-red { background: #fde8e8; color: #c0392b; }
+  .flag-yellow { background: #fef9e7; color: #b8860b; }
+  .flag-green { background: #e8f8e8; color: #1a7a2e; }
+  .footer {
+    margin-top: 8px;
+    padding-top: 4px;
+    border-top: 1px solid #ccc;
+    font-size: 9px;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+  }
+  .notes {
+    font-size: 9.5px;
+    color: #555;
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+  .notes li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>North Shore Ice Arena — Board Financial Summary</h1>
+  <div class="subtitle">January 2026 &nbsp;|&nbsp; FY2026 (Jul '25 – Jun '26) &nbsp;|&nbsp; Month 7 of 12</div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="value green">$93,258</div>
+    <div class="label">January Net Income</div>
+  </div>
+  <div class="kpi">
+    <div class="value">$163K</div>
+    <div class="label">Cash on Hand (1/31)</div>
+  </div>
+  <div class="kpi">
+    <div class="value yellow">$327K <span style="font-size:11px;font-weight:400;color:#666">/ $337K budget</span></div>
+    <div class="label">YTD Net Income (97% of plan)</div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:10px;">
+
+  <!-- P&L SUMMARY -->
+  <div class="card">
+    <h2>January P&L vs Budget</h2>
+    <table>
+      <tr><th></th><th class="num">Actual</th><th class="num">Budget</th><th class="num">Var</th><th class="num">%</th></tr>
+      <tr class="highlight-row bold"><td>Total Revenue</td><td class="num">$220,826</td><td class="num">$206,225</td><td class="num green">+$14,602</td><td class="num green">107%</td></tr>
+      <tr><td>&nbsp; Contract Ice</td><td class="num">$152,187</td><td class="num">$152,188</td><td class="num">$0</td><td class="num">100%</td></tr>
+      <tr><td>&nbsp; Public Programs</td><td class="num">$52,204</td><td class="num">$38,104</td><td class="num green">+$14,100</td><td class="num green">137%</td></tr>
+      <tr><td>&nbsp; Lease Revenue</td><td class="num">$6,258</td><td class="num">$7,658</td><td class="num red">-$1,400</td><td class="num red">82%</td></tr>
+      <tr><td colspan="5"><div class="divider"></div></td></tr>
+      <tr class="highlight-row bold"><td>Total Expenses</td><td class="num">$129,128</td><td class="num">$119,160</td><td class="num red">+$9,968</td><td class="num red">108%</td></tr>
+      <tr><td>&nbsp; Payroll + Comp</td><td class="num">$32,012</td><td class="num">$33,161</td><td class="num green">-$1,149</td><td class="num green">97%</td></tr>
+      <tr><td>&nbsp; Bldg Maintenance</td><td class="num">$9,521</td><td class="num">$1,935</td><td class="num red">+$7,586</td><td class="num red"><span class="flag flag-red">492%</span></td></tr>
+      <tr><td>&nbsp; Utilities</td><td class="num">$21,142</td><td class="num">$19,775</td><td class="num red">+$1,367</td><td class="num yellow">107%</td></tr>
+      <tr><td>&nbsp; Gas (Nicor)</td><td class="num">$5,012</td><td class="num">$2,300</td><td class="num red">+$2,712</td><td class="num red"><span class="flag flag-red">218%</span></td></tr>
+      <tr><td colspan="5"><div class="divider"></div></td></tr>
+      <tr class="highlight-row bold"><td>Net Income</td><td class="num green">$93,258</td><td class="num">$87,065</td><td class="num green">+$6,194</td><td class="num green">107%</td></tr>
+    </table>
+  </div>
+
+  <!-- YTD SUMMARY -->
+  <div class="card">
+    <h2>YTD Performance (Jul–Jan)</h2>
+    <table>
+      <tr><th></th><th class="num">Actual</th><th class="num">Budget</th><th class="num">%</th></tr>
+      <tr class="highlight-row bold"><td>Total Revenue</td><td class="num">$1,518,429</td><td class="num">$1,497,925</td><td class="num green">101%</td></tr>
+      <tr class="highlight-row bold"><td>Total Expenses</td><td class="num">$1,209,092</td><td class="num">$1,160,874</td><td class="num red">104%</td></tr>
+      <tr class="highlight-row bold"><td>Net Income</td><td class="num">$327,097</td><td class="num">$337,050</td><td class="num yellow">97%</td></tr>
+      <tr><td colspan="4"><div class="divider"></div></td></tr>
+      <tr><td colspan="4" style="padding-top:4px;"><strong>YTD vs Prior Year (Jul–Jan)</strong></td></tr>
+      <tr><th></th><th class="num">FY2026</th><th class="num">FY2025</th><th class="num">Chg</th></tr>
+      <tr><td>Revenue</td><td class="num">$1,518,429</td><td class="num">$1,433,130</td><td class="num green">+6.0%</td></tr>
+      <tr><td>Expenses</td><td class="num">$1,209,092</td><td class="num">$1,548,264</td><td class="num green">-21.9%</td></tr>
+      <tr class="bold"><td>Net Income</td><td class="num green">$327,097</td><td class="num red">-$285,765</td><td class="num green">+$613K</td></tr>
+    </table>
+  </div>
+
+  <!-- CASH POSITION -->
+  <div class="card">
+    <h2>Cash Position (1/31/2026)</h2>
+    <table>
+      <tr><td>Chase General</td><td class="num bold">$151,509</td></tr>
+      <tr><td>Chase Operating</td><td class="num">$1,891</td></tr>
+      <tr><td>Belmont Bank</td><td class="num">$9,543</td></tr>
+      <tr><td colspan="2"><div class="divider"></div></td></tr>
+      <tr class="bold highlight-row"><td>Total Operating Cash</td><td class="num">$162,943</td></tr>
+      <tr><td colspan="2" style="height:6px"></td></tr>
+      <tr><td>UMB Debt Service Reserve</td><td class="num">$646,097</td></tr>
+      <tr><td>UMB Repair & Replace</td><td class="num">$47,868</td></tr>
+      <tr><td>UMB Other Funds</td><td class="num">$965</td></tr>
+    </table>
+    <div class="divider" style="margin-top:6px;"></div>
+    <div class="notes" style="margin-top:4px;">
+      <strong>Cash Forecast Alerts:</strong>
+      <ul style="padding-left:14px;">
+        <li><span class="flag flag-yellow">MAR</span> Property taxes (~$105K) — forecast net: -$42K</li>
+        <li><span class="flag flag-red">MAY</span> Debt service interest (~$180K) — forecast net: -$101K</li>
+        <li>Projected FY end cash: ~$6K</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CONTRACT STATUS -->
+  <div class="card">
+    <h2>Contract Ice Collections</h2>
+    <table>
+      <tr><th>Club</th><th class="num">Contract</th><th class="num">Paid</th><th class="num">Owed</th></tr>
+      <tr><td>Wilmette</td><td class="num">$531,079</td><td class="num">$405,000</td><td class="num">$126,079</td></tr>
+      <tr><td>Winnetka</td><td class="num">$682,451</td><td class="num">$503,921</td><td class="num">$178,530</td></tr>
+      <tr><td>NT Boys</td><td class="num">$189,434</td><td class="num">$123,194</td><td class="num">$66,240</td></tr>
+      <tr><td>NT Girls</td><td class="num">$20,625</td><td class="num">$17,188</td><td class="num">$3,438</td></tr>
+      <tr><td>GVN</td><td class="num">$51,096</td><td class="num">$29,806</td><td class="num">$21,290</td></tr>
+      <tr><td>Bar/Restaurant</td><td class="num">$12,000</td><td class="num">$7,000</td><td class="num">$5,000</td></tr>
+      <tr><td colspan="4"><div class="divider"></div></td></tr>
+      <tr class="bold highlight-row"><td>Total</td><td class="num">$1,486,685</td><td class="num">$1,086,108</td><td class="num">$400,577</td></tr>
+    </table>
+    <div class="notes" style="margin-top:4px;">
+      Collection rate: 73% through Month 7. On pace.
+    </div>
+  </div>
+
+  <!-- VARIANCE FLAGS -->
+  <div class="card full-width">
+    <h2>Variance Flags — Items Requiring Board Discussion</h2>
+    <table>
+      <tr><th>Line Item</th><th class="num">Jan Actual</th><th class="num">Jan Budget</th><th class="num">% of Budget</th><th class="num">YTD Actual</th><th class="num">YTD Budget</th><th class="num">YTD %</th><th>Status</th></tr>
+      <tr><td>Building Maintenance</td><td class="num">$9,521</td><td class="num">$1,935</td><td class="num red">492%</td><td class="num">$50,629</td><td class="num">$13,545</td><td class="num red">374%</td><td><span class="flag flag-red">OVER</span> Need explanation from CSCG</td></tr>
+      <tr><td>Gas (Nicor)</td><td class="num">$5,012</td><td class="num">$2,300</td><td class="num red">218%</td><td class="num">$20,331</td><td class="num">$16,100</td><td class="num yellow">126%</td><td><span class="flag flag-yellow">WATCH</span> Cold month or low budget?</td></tr>
+      <tr><td>Capital Expenditures</td><td class="num">$0</td><td class="num">$0</td><td class="num">—</td><td class="num">$24,939</td><td class="num">$14,913</td><td class="num red">167%</td><td><span class="flag flag-yellow">WATCH</span> YTD overage</td></tr>
+      <tr><td>Lease Restaurant/Bar</td><td class="num">$1,000</td><td class="num">$2,000</td><td class="num red">50%</td><td class="num">$7,000</td><td class="num">$14,000</td><td class="num red">50%</td><td><span class="flag flag-red">UNDER</span> Half of budgeted rent</td></tr>
+      <tr><td>Youth Programs Rev</td><td class="num">$28,050</td><td class="num">$9,510</td><td class="num green">295%</td><td class="num">$111,699</td><td class="num">$78,285</td><td class="num green">143%</td><td><span class="flag flag-green">STRONG</span> Verify via scheduling system</td></tr>
+      <tr><td>Rink Rentals Rev</td><td class="num">$24,154</td><td class="num">$28,594</td><td class="num yellow">84%</td><td class="num">$304,040</td><td class="num">$318,541</td><td class="num yellow">95%</td><td><span class="flag flag-yellow">WATCH</span> Trending below plan</td></tr>
+    </table>
+  </div>
+
+  <!-- GOVERNANCE -->
+  <div class="card full-width">
+    <h2>Governance Notes</h2>
+    <table>
+      <tr><td style="width:30%;"><strong>Bank Reconciliation</strong></td><td>GL does not fully tie to Chase bank statements. General account off by $27; Operating account off by $677 and growing. Formal bank recs requested from CSCG.</td></tr>
+      <tr><td><strong>CSCG Auto-Pay</strong></td><td>$36,211 (28% of Jan expenses) paid through CSCG without individual invoice approval — payroll, workers comp, management fees, on-ice instruction.</td></tr>
+      <tr><td><strong>Board Access Requests</strong></td><td>Read-only access to ice scheduling software and admin access to NSIA website requested to support independent revenue verification and organizational oversight.</td></tr>
+      <tr><td><strong>Reporting Format</strong></td><td>Requesting CSCG provide monthly board packet (P&L, balance sheet, cash flow, bank recs, variance narrative) instead of raw 18-page GL.</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>Prepared by Pete Ceci, Board President</span>
+  <span>Data source: CSCG January 2026 financials &nbsp;|&nbsp; Accrual basis &nbsp;|&nbsp; Report date: March 2026</span>
+</div>
+
+</body>
+</html>

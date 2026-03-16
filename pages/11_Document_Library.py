@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import (
     analyze_document,
+    analyze_document_with_pdf,
     detect_agent,
     get_api_key,
     ANTHROPIC_AVAILABLE,
@@ -362,7 +363,7 @@ if drive_config:
                             list_drive_files.clear()
                             st.rerun()
                     elif not is_folder:
-                        btn_cols = st.columns(2)
+                        btn_cols = st.columns(3)
                         # Download button
                         if btn_cols[0].button("Download", key=f"dl_{f['id']}"):
                             st.session_state[f"_downloading_{f['id']}"] = True
@@ -370,6 +371,10 @@ if drive_config:
                         if is_previewable(mime):
                             if btn_cols[1].button("Preview", key=f"pv_{f['id']}"):
                                 st.session_state[f"_preview_{f['id']}"] = not st.session_state.get(f"_preview_{f['id']}", False)
+                        # AI Analyze button
+                        if ANTHROPIC_AVAILABLE and get_api_key():
+                            if btn_cols[2].button("Analyze", key=f"ai_{f['id']}"):
+                                st.session_state[f"_analyzing_{f['id']}"] = True
 
                 # Handle download
                 if st.session_state.get(f"_downloading_{f.get('id')}"):
@@ -396,6 +401,81 @@ if drive_config:
                         f'width="100%" height="700" style="border:none;border-radius:8px;"></iframe>',
                         unsafe_allow_html=True,
                     )
+
+                # Handle AI analysis
+                if st.session_state.get(f"_analyzing_{f.get('id')}"):
+                    with st.spinner(f"Downloading and analyzing {f['name']}..."):
+                        file_data = download_drive_file(f["id"], mime)
+                    if file_data:
+                        fname = f["name"]
+                        # Determine extension
+                        if mime in GOOGLE_EXPORT_MIMES:
+                            ext = GOOGLE_EXPORT_MIMES[mime][1].lstrip(".")
+                            if not fname.lower().endswith(f".{ext}"):
+                                fname += GOOGLE_EXPORT_MIMES[mime][1]
+                        else:
+                            ext = os.path.splitext(fname)[1].lower().lstrip(".")
+
+                        # Detect agent
+                        preview_text = ""
+                        if ext in ("csv", "txt"):
+                            try:
+                                preview_text = file_data.decode("utf-8", errors="replace")[:2000]
+                            except Exception:
+                                pass
+                        agent_id = detect_agent(fname, preview_text)
+                        agent_config = AGENT_REGISTRY[agent_id]
+
+                        st.info(f"**Agent:** {agent_config['icon']} {agent_config['name']} — {agent_config['description']}")
+
+                        result = None
+                        with st.spinner(f"Running {agent_config['name']} analysis..."):
+                            if ext == "pdf":
+                                result = analyze_document_with_pdf(
+                                    agent_id=agent_id, pdf_bytes=file_data, filename=fname,
+                                )
+                            elif ext in ("csv", "txt"):
+                                text_content = file_data.decode("utf-8", errors="replace")
+                                result = analyze_document(
+                                    agent_id=agent_id, document_content=text_content, filename=fname,
+                                )
+                            elif ext in ("xlsx", "xls"):
+                                try:
+                                    import pandas as pd
+                                    import io as _io
+                                    xls = pd.ExcelFile(_io.BytesIO(file_data))
+                                    sheets = []
+                                    for sn in xls.sheet_names:
+                                        df = pd.read_excel(_io.BytesIO(file_data), sheet_name=sn)
+                                        sheets.append(f"=== Sheet: {sn} ===\n{df.to_csv(index=False)}")
+                                    text_content = "\n\n".join(sheets)
+                                    result = analyze_document(
+                                        agent_id=agent_id, document_content=text_content, filename=fname,
+                                    )
+                                except Exception as e:
+                                    st.error(f"Error reading Excel: {e}")
+                            else:
+                                st.warning(f"File type `.{ext}` not supported for analysis.")
+
+                        if result:
+                            st.subheader(f"{agent_config['icon']} Analysis Results")
+                            red_flags = result.count("\U0001f534")
+                            yellow_flags = result.count("\U0001f7e1")
+                            if red_flags:
+                                st.error(f"**{red_flags} critical item(s)** require board attention")
+                            if yellow_flags:
+                                st.warning(f"**{yellow_flags} caution item(s)** flagged for review")
+                            st.markdown(result)
+                            st.download_button(
+                                "Download Analysis",
+                                data=result,
+                                file_name=f"analysis_{fname.rsplit('.', 1)[0]}.md",
+                                mime="text/markdown",
+                                key=f"dl_analysis_{f['id']}",
+                            )
+                    else:
+                        st.error("Could not download file for analysis.")
+                    st.session_state.pop(f"_analyzing_{f['id']}", None)
 
                 st.markdown(
                     '<div style="border-bottom:1px solid rgba(168,178,209,0.1);margin:4px 0 8px;"></div>',

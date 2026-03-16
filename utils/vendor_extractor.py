@@ -46,6 +46,9 @@ def extract_vendors_from_bills(bills_df: pd.DataFrame) -> pd.DataFrame:
         ]
         return pd.DataFrame(columns=cols)
 
+    # Filter out summary rows
+    bills_df = bills_df[~bills_df["Vendor"].str.upper().isin(["TOTAL", "GRAND TOTAL"])]
+
     grouped = bills_df.groupby("Vendor").agg(
         total_spend_ytd=("Amount", "sum"),
         payment_count=("Amount", "count"),

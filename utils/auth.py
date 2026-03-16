@@ -13,12 +13,19 @@ Usage in any page:
     if has_role("admin"):          # check permissions
         st.data_editor(...)        # show editable widget
     club = get_user_club()         # "Winnetka", "Wilmette", or None
+
+Config priority:
+    1. st.secrets (Streamlit Cloud or .streamlit/secrets.toml)
+    2. config/auth.yaml (local dev fallback)
 """
 
+import logging
 import os
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
+
+logger = logging.getLogger(__name__)
 
 _CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "auth.yaml")
 
@@ -41,9 +48,59 @@ USER_CLUBS = {
 }
 
 
+def _load_yaml_config():
+    """Load auth.yaml as fallback config."""
+    try:
+        with open(_CONFIG_PATH) as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        logger.warning("auth.yaml not found at %s", _CONFIG_PATH)
+        return {}
+
+
 def _load_config():
-    with open(_CONFIG_PATH) as f:
-        return yaml.safe_load(f)
+    """Load auth config from st.secrets first, falling back to auth.yaml.
+
+    st.secrets structure (in secrets.toml or Streamlit Cloud):
+        [auth]
+        cookie_key = "..."
+        cookie_name = "nsia_auth"
+        cookie_expiry_days = 30
+
+        [auth.credentials.usernames.admin]
+        email = "admin@nsia.org"
+        name = "NSIA Admin"
+        password = "$2b$12$..."
+        role = "admin"
+    """
+    yaml_config = _load_yaml_config()
+
+    # Try to build config from st.secrets
+    try:
+        secrets_auth = dict(st.secrets.get("auth", {}))
+        if secrets_auth and "credentials" in secrets_auth:
+            # Full credentials in secrets — use them
+            config = {
+                "cookie": {
+                    "key": secrets_auth.get("cookie_key", yaml_config.get("cookie", {}).get("key", "")),
+                    "name": secrets_auth.get("cookie_name", yaml_config.get("cookie", {}).get("name", "nsia_auth")),
+                    "expiry_days": secrets_auth.get("cookie_expiry_days",
+                                                     yaml_config.get("cookie", {}).get("expiry_days", 30)),
+                },
+                "credentials": dict(secrets_auth["credentials"]),
+            }
+            logger.info("Auth config loaded from st.secrets")
+            return config
+        elif secrets_auth and "cookie_key" in secrets_auth:
+            # Only cookie_key in secrets — merge with yaml credentials
+            config = yaml_config.copy()
+            config.setdefault("cookie", {})["key"] = secrets_auth["cookie_key"]
+            return config
+    except (FileNotFoundError, KeyError):
+        pass
+
+    # Fall back to yaml entirely
+    return yaml_config
 
 
 def _get_role(username: str) -> str:
@@ -56,15 +113,10 @@ def _get_role(username: str) -> str:
 def init_authenticator():
     """Create and return the authenticator object. Call once in app.py."""
     config = _load_config()
-    # Use secret cookie key from .streamlit/secrets.toml instead of the config file
-    try:
-        cookie_key = st.secrets.get("auth", {}).get("cookie_key", config["cookie"]["key"])
-    except (FileNotFoundError, KeyError):
-        cookie_key = config["cookie"]["key"]
     authenticator = stauth.Authenticate(
         config["credentials"],
         config["cookie"]["name"],
-        cookie_key,
+        config["cookie"]["key"],
         config["cookie"]["expiry_days"],
     )
     return authenticator

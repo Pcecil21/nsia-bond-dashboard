@@ -26,12 +26,13 @@ from utils.data_loader import (
 
 # ── Revenue KPIs ─────────────────────────────────────────────────────────
 st.header("Revenue Breakdown")
-st.caption("All revenue sources — YTD through January 2026")
+st.caption("All revenue sources — YTD July 2025 through January 2026 (7 months)")
 
 rev = load_revenue_reconciliation()
 
 # Separate totals from line items
 rev_items = rev[~rev["Line Item"].str.startswith("Total")].copy()
+rev_items["Line Item"] = rev_items["Line Item"].str.strip()
 
 # Categorize revenue streams
 contract_ice = ["New Trier Boys", "New Trier Girls", "Wilmette Hockey", "Winnetka Hockey"]
@@ -54,32 +55,52 @@ k2.metric("Contract Ice", f"${contract_total:,.0f}", f"{contract_total/total_ytd
 k3.metric("Programs & Rentals", f"${program_total:,.0f}", f"{program_total/total_ytd*100:.0f}% of total" if total_ytd else None)
 k4.metric("Other Revenue", f"${other_total:,.0f}", f"{other_total/total_ytd*100:.0f}% of total" if total_ytd else None)
 
-# Full revenue treemap
+# Revenue by source — horizontal bar, actual vs budget, sorted by size
 rev_plot = rev_items[rev_items["YTD Actual"] > 0].copy()
-rev_plot["Category"] = rev_plot["Line Item"].apply(
-    lambda x: "Contract Ice" if x in contract_ice
-    else ("Programs & Rentals" if x in programs else "Other Revenue")
-)
-rev_plot = rev_plot.sort_values("YTD Actual", ascending=False)
+rev_plot["YTD Budget"] = rev_plot["Proposal YTD Budget"].fillna(0)
+rev_plot = rev_plot.sort_values("YTD Actual", ascending=True)
 
-fig_tree = px.treemap(
-    rev_plot,
-    path=["Category", "Line Item"],
-    values="YTD Actual",
-    color="Category",
-    color_discrete_map={"Contract Ice": "#0984e3", "Programs & Rentals": "#00b894", "Other Revenue": "#6c5ce7"},
-    custom_data=["YTD Actual"],
+fig_rev_bar = go.Figure()
+
+# Budget bars (behind)
+fig_rev_bar.add_trace(go.Bar(
+    y=rev_plot["Line Item"],
+    x=rev_plot["YTD Budget"],
+    orientation="h",
+    name="Budget",
+    marker=dict(color="rgba(168,178,209,0.25)", line=dict(width=1, color="rgba(168,178,209,0.4)")),
+    text=[f"${v:,.0f}" for v in rev_plot["YTD Budget"]],
+    textposition="inside",
+    textfont=dict(color="#8892b0", size=10),
+    hovertemplate="<b>%{y}</b><br>Budget: $%{x:,.0f}<extra></extra>",
+))
+
+# Actual bars (in front) — green if ahead, red if behind
+actual_colors = [
+    "#00d084" if a >= b else "#eb144c"
+    for a, b in zip(rev_plot["YTD Actual"], rev_plot["YTD Budget"])
+]
+fig_rev_bar.add_trace(go.Bar(
+    y=rev_plot["Line Item"],
+    x=rev_plot["YTD Actual"],
+    orientation="h",
+    name="Actual",
+    marker=dict(color=actual_colors, line=dict(width=1, color="rgba(255,255,255,0.3)")),
+    text=[f"${v:,.0f}" for v in rev_plot["YTD Actual"]],
+    textposition="outside",
+    textfont=dict(color=FONT_COLOR, size=11),
+    hovertemplate="<b>%{y}</b><br>Actual: $%{x:,.0f}<extra></extra>",
+))
+
+fig_rev_bar.update_layout(
+    title="Revenue by Source — Actual vs Budget (Jul '25 – Jan '26)",
+    barmode="overlay",
+    xaxis_title="YTD ($)",
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                font=dict(color=FONT_COLOR)),
 )
-fig_tree.update_traces(
-    texttemplate="<b>%{label}</b><br>$%{customdata[0]:,.0f}",
-    hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<extra></extra>",
-)
-fig_tree.update_layout(
-    title="Revenue Sources by Category (YTD)",
-    margin=dict(t=50, b=10, l=10, r=10),
-)
-style_chart(fig_tree, 420)
-st.plotly_chart(fig_tree, use_container_width=True)
+style_chart(fig_rev_bar, max(350, len(rev_plot) * 40 + 100))
+st.plotly_chart(fig_rev_bar, use_container_width=True)
 
 # ── Contract Ice: Proposal vs CSCG ──────────────────────────────────────
 st.subheader("Contract Ice — Proposal vs. CSCG Budget")

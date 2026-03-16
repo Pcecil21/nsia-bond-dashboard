@@ -57,22 +57,17 @@ if st.sidebar.button("Extract Vendors from Data", type="primary", use_container_
             bills_vendors = pd.DataFrame()
             st.sidebar.warning("bills_summary.xlsx not found")
 
-        # Read GL (header=None since headers are embedded in data)
-        if GL_PATH.exists():
+        # Only use GL as fallback — GL "Payee" column contains raw bank
+        # transaction descriptions (with dates), not clean vendor names.
+        # Bills data is the authoritative vendor source.
+        if bills_vendors.empty and GL_PATH.exists():
             gl_df = pd.read_excel(GL_PATH, header=None)
             gl_vendors = extract_vendors_from_gl(gl_df)
         else:
             gl_vendors = pd.DataFrame()
-            st.sidebar.warning("general_ledger.xlsx not found")
 
-        # Combine: bills is primary, add GL-only vendors
-        if not bills_vendors.empty and not gl_vendors.empty:
-            bills_names = set(bills_vendors["vendor_name"].str.lower())
-            gl_only = gl_vendors[
-                ~gl_vendors["vendor_name"].str.lower().isin(bills_names)
-            ]
-            combined = pd.concat([bills_vendors, gl_only], ignore_index=True)
-        elif not bills_vendors.empty:
+        # Use bills as primary source
+        if not bills_vendors.empty:
             combined = bills_vendors
         elif not gl_vendors.empty:
             combined = gl_vendors
@@ -174,11 +169,13 @@ if VENDOR_MASTER_PATH.exists():
     soon_str = (today + timedelta(days=90)).isoformat()
 
     vm["contract_end_dt"] = pd.to_datetime(vm["contract_end"], errors="coerce")
-    expired = vm[vm["contract_end_dt"].notna() & (vm["contract_end_dt"].dt.date < today)]
+    today_ts = pd.Timestamp(today)
+    soon_ts = pd.Timestamp(today + timedelta(days=90))
+    expired = vm[vm["contract_end_dt"].notna() & (vm["contract_end_dt"] < today_ts)]
     expiring_soon = vm[
         vm["contract_end_dt"].notna()
-        & (vm["contract_end_dt"].dt.date >= today)
-        & (vm["contract_end_dt"].dt.date <= today + timedelta(days=90))
+        & (vm["contract_end_dt"] >= today_ts)
+        & (vm["contract_end_dt"] <= soon_ts)
     ]
 
     c1, c2, c3, c4 = st.columns(4)
@@ -291,12 +288,18 @@ if VENDOR_MASTER_PATH.exists():
         "contract_doc_id": st.column_config.TextColumn("Doc ID"),
         "compliance_notes": st.column_config.TextColumn("Notes", width="large"),
         "aliases": st.column_config.TextColumn("Aliases", disabled=True),
-        "first_seen": st.column_config.TextColumn("First Seen", disabled=True),
-        "last_seen": st.column_config.TextColumn("Last Seen", disabled=True),
+        "first_seen": st.column_config.DateColumn("First Seen", disabled=True),
+        "last_seen": st.column_config.DateColumn("Last Seen", disabled=True),
     }
 
     # Drop the temp column before editing
     edit_df = vm[display_cols].copy()
+
+    # Convert date columns to datetime so st.data_editor DateColumn works.
+    # All-NaN columns stay as float64 after to_datetime, so force the dtype.
+    for dc in ["contract_start", "contract_end", "first_seen", "last_seen"]:
+        if dc in edit_df.columns:
+            edit_df[dc] = pd.to_datetime(edit_df[dc], errors="coerce").astype("datetime64[ns]")
 
     edited = st.data_editor(
         edit_df,
@@ -304,7 +307,7 @@ if VENDOR_MASTER_PATH.exists():
         use_container_width=True,
         num_rows="fixed",
         hide_index=True,
-        key="vendor_editor",
+        key="vendor_editor_v2",
     )
 
     if st.button("Save Changes", type="primary"):

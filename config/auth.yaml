@@ -8,7 +8,7 @@ credentials:
     admin:
       email: admin@nsia.org
       name: NSIA Admin
-      password: $2b$12$S7bpoTB5g9AO2nJ7RTVireremMVrQdSQpvLAUNJaqK5.ZFux0Idyq
+      password: $2b$12$g7Z89llIG0h21tUNkQ8gB.QHbBa0BCMffEiSaJqSHDZo9UBasMsay
       role: admin
     board:
       email: board@nsia.org

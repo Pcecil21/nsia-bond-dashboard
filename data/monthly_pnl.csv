@@ -1,37 +1,124 @@
 Month,Category,Subcategory,Actual,Budget
-Sept,Revenue,Contract Ice,142500,120000
-Sept,Revenue,Public Programs,52800,42197
-Sept,Revenue,Tournaments,8500,5000
-Sept,Revenue,Lease Income,7401,7000
-Sept,Revenue,Other Building,13000,10000
-Sept,Revenue,Total,224201,184197
-Sept,Expense,Payroll,32500,34000
-Sept,Expense,Operations,28700,30000
-Sept,Expense,Utilities,22000,24000
-Sept,Expense,Repairs & Maintenance,15497,16752
-Sept,Expense,Program Expenses,12000,12000
-Sept,Expense,Office & Admin,8000,8000
-Sept,Expense,Insurance,6000,6000
-Sept,Expense,Total,124697,130752
-Sept,Net,Net Income,102710,56651
-Sept,YTD Revenue,Total,554712,552592
-Sept,YTD Expense,Total,410069,392255
-Sept,YTD Net,Net Income,144643,160337
-Nov,Revenue,Contract Ice,155000,145000
-Nov,Revenue,Public Programs,55022,48000
-Nov,Revenue,Tournaments,6500,5500
-Nov,Revenue,Lease Income,7500,7200
-Nov,Revenue,Other Building,16000,12000
-Nov,Revenue,Total,240022,217700
-Nov,Expense,Payroll,38000,35000
-Nov,Expense,Operations,32000,30000
-Nov,Expense,Utilities,28000,26000
-Nov,Expense,Repairs & Maintenance,18496,17000
-Nov,Expense,Program Expenses,13000,12500
-Nov,Expense,Office & Admin,9000,8500
-Nov,Expense,Insurance,6000,6000
-Nov,Expense,Total,144496,135000
-Nov,Net,Net Income,97387,84561
-Nov,YTD Revenue,Total,1004733,1006447
-Nov,YTD Expense,Total,670585,642197
-Nov,YTD Net,Net Income,334148,364250
+Jul,Revenue,Contract Ice,0,0
+Jul,Revenue,Public Programs,112055,97475
+Jul,Revenue,Tournaments,0,0
+Jul,Revenue,Lease Income,5400,5400
+Jul,Revenue,Other Building,919,1318
+Jul,Revenue,Total,118374,104193
+Jul,Expense,Payroll,31907,31958
+Jul,Expense,Operations,22330,22101
+Jul,Expense,Utilities,21063,19775
+Jul,Expense,Land Lease,31667,31667
+Jul,Expense,Insurance,4195,4195
+Jul,Expense,Debt Service,0,0
+Jul,Expense,Building & Grounds,11171,5902
+Jul,Expense,Program Expenses,11000,11200
+Jul,Expense,Other,6500,5960
+Jul,Expense,Total,131833,119160
+Jul,Net,Net Income,-13459,-14967
+Aug,Revenue,Contract Ice,150000,150000
+Aug,Revenue,Public Programs,54880,51125
+Aug,Revenue,Tournaments,0,0
+Aug,Revenue,Lease Income,4658,4658
+Aug,Revenue,Other Building,2341,1300
+Aug,Revenue,Total,211879,207083
+Aug,Expense,Payroll,31021,33161
+Aug,Expense,Operations,24814,22101
+Aug,Expense,Utilities,20875,19775
+Aug,Expense,Land Lease,31667,31667
+Aug,Expense,Insurance,4820,4813
+Aug,Expense,Debt Service,0,0
+Aug,Expense,Building & Grounds,28800,5902
+Aug,Expense,Program Expenses,21500,11200
+Aug,Expense,Other,3043,1460
+Aug,Expense,Total,151540,119160
+Aug,Net,Net Income,60339,87923
+Sep,Revenue,Contract Ice,166590,166590
+Sep,Revenue,Public Programs,43895,42150
+Sep,Revenue,Tournaments,0,0
+Sep,Revenue,Lease Income,6258,6258
+Sep,Revenue,Other Building,936,1300
+Sep,Revenue,Total,217679,216298
+Sep,Expense,Payroll,31817,33161
+Sep,Expense,Operations,21074,22101
+Sep,Expense,Utilities,18988,19775
+Sep,Expense,Land Lease,32292,32292
+Sep,Expense,Insurance,4195,4195
+Sep,Expense,Debt Service,0,0
+Sep,Expense,Building & Grounds,19720,5902
+Sep,Expense,Program Expenses,0,11200
+Sep,Expense,Other,6868,1460
+Sep,Expense,Total,134954,119160
+Sep,Net,Net Income,82725,97138
+Oct,Revenue,Contract Ice,167337,167337
+Oct,Revenue,Public Programs,28117,26917
+Oct,Revenue,Tournaments,0,0
+Oct,Revenue,Lease Income,6658,6658
+Oct,Revenue,Other Building,1085,1300
+Oct,Revenue,Total,208197,207212
+Oct,Expense,Payroll,35329,33161
+Oct,Expense,Operations,22581,22101
+Oct,Expense,Utilities,20017,19775
+Oct,Expense,Land Lease,32292,32292
+Oct,Expense,Insurance,4845,4813
+Oct,Expense,Debt Service,0,0
+Oct,Expense,Building & Grounds,5814,5902
+Oct,Expense,Program Expenses,300,11200
+Oct,Expense,Other,1432,1460
+Oct,Expense,Total,122610,119160
+Oct,Net,Net Income,85586,88052
+Nov,Revenue,Contract Ice,143562,143562
+Nov,Revenue,Public Programs,44573,44573
+Nov,Revenue,Tournaments,20254,20254
+Nov,Revenue,Lease Income,6658,7658
+Nov,Revenue,Other Building,1995,1300
+Nov,Revenue,Total,217042,217347
+Nov,Expense,Payroll,34147,33161
+Nov,Expense,Operations,22350,22101
+Nov,Expense,Utilities,18818,19775
+Nov,Expense,Land Lease,32292,32292
+Nov,Expense,Insurance,4195,4195
+Nov,Expense,Debt Service,255000,255000
+Nov,Expense,Property Tax,96448,93000
+Nov,Expense,Building & Grounds,18628,5902
+Nov,Expense,Program Expenses,10869,11200
+Nov,Expense,Other,61608,1460
+Nov,Expense,Total,554355,478086
+Nov,Net,Net Income,-337313,-260739
+Dec,Revenue,Contract Ice,224813,224813
+Dec,Revenue,Public Programs,80385,80385
+Dec,Revenue,Tournaments,0,0
+Dec,Revenue,Lease Income,6658,7658
+Dec,Revenue,Other Building,4483,1300
+Dec,Revenue,Total,292339,314156
+Dec,Expense,Payroll,40229,33161
+Dec,Expense,Operations,24849,22101
+Dec,Expense,Utilities,19653,19775
+Dec,Expense,Land Lease,32292,32292
+Dec,Expense,Insurance,4195,4195
+Dec,Expense,Debt Service,0,0
+Dec,Expense,Building & Grounds,7869,5902
+Dec,Expense,Program Expenses,9620,11200
+Dec,Expense,Other,94197,1460
+Dec,Expense,Total,232904,119160
+Dec,Net,Net Income,59436,194996
+Jan,Revenue,Contract Ice,152187,152188
+Jan,Revenue,Public Programs,52204,38104
+Jan,Revenue,Tournaments,0,0
+Jan,Revenue,Lease Income,6258,7658
+Jan,Revenue,Other Building,2077,1300
+Jan,Revenue,Total,220826,206225
+Jan,Expense,Payroll,32012,33161
+Jan,Expense,Operations,22560,22101
+Jan,Expense,Utilities,21142,19775
+Jan,Expense,Land Lease,32292,32292
+Jan,Expense,Insurance,4823,4813
+Jan,Expense,Debt Service,0,0
+Jan,Expense,Building & Grounds,15069,5902
+Jan,Expense,Program Expenses,13681,11200
+Jan,Expense,Other,3999,1460
+Jan,Expense,Total,129128,119160
+Jan,Net,Net Income,93258,87065
+Jan,YTD Revenue,Total,1518429,1497925
+Jan,YTD Expense,Total,1209092,1160874
+Jan,YTD Net,Net Income,327097,337050
