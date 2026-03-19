@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_current_month, get_ytd_label, get_period_label
 
 st.set_page_config(page_title="Financial Overview | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -15,7 +16,7 @@ inject_css()
 require_auth()
 
 st.title("Financial Overview")
-st.caption("FY2026 Budget Reconciliation — Approved Proposal vs. CSCG Operational Budget")
+st.caption(f"{get_current_month()['fiscal_year']} Budget Reconciliation — Approved Proposal vs. CSCG Operational Budget")
 
 from utils.data_loader import (
     load_revenue_reconciliation,
@@ -23,6 +24,15 @@ from utils.data_loader import (
     load_unauthorized_modifications,
     load_expense_flow_summary,
 )
+
+def _board_approved_pct(summary_df: pd.DataFrame) -> float:
+    """Extract board-approved expense percentage from the summary DataFrame."""
+    if summary_df.empty or "% of Total" not in summary_df.columns:
+        return 25.5  # fallback
+    row = summary_df[summary_df["Approval Method"].str.contains("Board", case=False, na=False)]
+    if row.empty:
+        return 25.5
+    return float(row["% of Total"].iloc[0])
 
 # ── Summary KPIs ─────────────────────────────────────────────────────────
 rev = load_revenue_reconciliation()
@@ -64,8 +74,8 @@ def trend_arrow(row):
     ytd = row.get("YTD Variance $", 0)
     if pd.isna(jan) or pd.isna(ytd):
         return ""
-    # Compare January rate to YTD average rate (7 months)
-    monthly_avg = ytd / 7 if ytd != 0 else 0
+    # Compare latest month rate to YTD average rate
+    monthly_avg = ytd / get_current_month()["fiscal_month"] if ytd != 0 else 0
     if abs(jan) < 1 and abs(monthly_avg) < 1:
         return ""
     if jan > monthly_avg * 1.1:
@@ -159,7 +169,7 @@ if not exp_chart.empty:
 
 # ── Unauthorized Modifications ────────────────────────────────────────────
 st.header("Unauthorized Budget Modifications")
-st.caption("Line items where CSCG operational budget differs from board-approved FY2026 Budget Proposal")
+st.caption(f"Line items where CSCG operational budget differs from board-approved {get_current_month()['fiscal_year']} Budget Proposal")
 
 mods = load_unauthorized_modifications()
 
@@ -224,7 +234,7 @@ st.dataframe(
 
 # ── Expense Approval Breakdown ────────────────────────────────────────────
 st.header("Expense Approval Breakdown")
-st.caption("How NSIA expenses are approved (July-December 2025)")
+st.caption(f"How NSIA expenses are approved ({get_period_label(6)})")
 
 summary = load_expense_flow_summary()
 
@@ -247,7 +257,7 @@ with col1:
         fig_donut.update_layout(
             title=dict(text="Expense Approval by Method", font=dict(size=16, color=TITLE_COLOR)),
             showlegend=False,
-            annotations=[dict(text="<b>25.5%</b><br>Board-Approved",
+            annotations=[dict(text=f"<b>{_board_approved_pct(summary):.1f}%</b><br>Board-Approved",
                               x=0.5, y=0.5, font_size=14, font_color="#e6f1ff", showarrow=False)],
         )
         style_chart(fig_donut, 420)
@@ -263,10 +273,11 @@ with col2:
             "% of Total": st.column_config.NumberColumn(format="%.1%%"),
         },
     )
+    _ba = _board_approved_pct(summary)
     st.markdown(
-        """
-        **Key takeaway:** Only **25.5%** of NSIA expenses require individual
-        invoice approval by the Board President. The remaining 74.5% flows
+        f"""
+        **Key takeaway:** Only **{_ba:.1f}%** of NSIA expenses require individual
+        invoice approval by the Board President. The remaining {100 - _ba:.1f}% flows
         through CSCG auto-pay, fixed contracts, or other channels with
         limited board oversight.
         """

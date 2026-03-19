@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_period_label
 
 st.set_page_config(page_title="Bond & Debt | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -84,7 +85,7 @@ style_chart(fig_waterfall, 500)
 st.plotly_chart(fig_waterfall, use_container_width=True)
 
 # ── Fixed Obligations ─────────────────────────────────────────────────────
-st.header("Fixed Obligations (6 Months: Jul-Dec 2025)")
+st.header(f"Fixed Obligations (6 Months: {get_period_label(6)})")
 st.caption("Contractual obligations from the Expense Flow Analysis")
 
 fixed = load_fixed_obligations()

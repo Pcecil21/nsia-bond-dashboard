@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_ytd_label, get_period_label, get_fiscal_date_range, get_current_month
 
 st.set_page_config(page_title="Operations | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -26,7 +27,7 @@ from utils.data_loader import (
 
 # ── Revenue KPIs ─────────────────────────────────────────────────────────
 st.header("Revenue Breakdown")
-st.caption("All revenue sources — YTD July 2025 through January 2026 (7 months)")
+st.caption(f"All revenue sources — YTD {get_ytd_label()}")
 
 rev = load_revenue_reconciliation()
 
@@ -93,7 +94,7 @@ fig_rev_bar.add_trace(go.Bar(
 ))
 
 fig_rev_bar.update_layout(
-    title="Revenue by Source — Actual vs Budget (Jul '25 – Jan '26)",
+    title=f"Revenue by Source — Actual vs Budget ({get_fiscal_date_range()})",
     barmode="overlay",
     xaxis_title="YTD ($)",
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
@@ -150,7 +151,7 @@ st.markdown("---")
 
 # ── CSCG Relationship ─────────────────────────────────────────────────────
 st.header("CSCG Management Relationship")
-st.caption("Financial summary of disclosed vs. undisclosed payment flows (Jul-Dec 2025)")
+st.caption(f"Financial summary of disclosed vs. undisclosed payment flows ({get_period_label(6)})")
 
 cscg = load_cscg_relationship()
 
@@ -172,7 +173,7 @@ with col2:
     st.metric("Annualized", f"${total_cscg_rel * 2:,.0f}")
     # Percentage of total revenue
     if total_ytd > 0:
-        cscg_pct = (total_cscg_rel * 2) / (total_ytd * 12 / 7) * 100
+        cscg_pct = (total_cscg_rel * 2) / (total_ytd * 12 / get_current_month()["fiscal_month"]) * 100
         st.metric("% of Annual Revenue", f"{cscg_pct:.1f}%")
 
 # CSCG breakdown — side-by-side donut and stacked bar
@@ -257,7 +258,7 @@ with col_chart:
             hovertemplate="<b>%{x}</b><br>$%{y:,.0f}<extra></extra>",
         ))
         fig_bar.update_layout(
-            title="Expenses by Approval Method (Jul-Dec 2025)",
+            title=f"Expenses by Approval Method ({get_period_label(6)})",
             yaxis_title="6-Month Amount ($)",
             showlegend=False,
             bargap=0.3,

@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import FONT_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_current_month, get_receivable_months
 
 st.set_page_config(page_title="Monthly Financials | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -144,7 +145,7 @@ st.dataframe(
 # Section 2: Cash Forecast
 # ══════════════════════════════════════════════════════════════════════════
 st.markdown("---")
-st.header("12-Month Cash Forecast (FY2026)")
+st.header(f"12-Month Cash Forecast ({get_current_month()['fiscal_year']})")
 
 cash = load_cash_forecast()
 
@@ -156,9 +157,9 @@ lowest_label = cash["Month"].iloc[lowest_month_idx]
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Starting Cash (Jul 2025)", f"${starting_cash:,.0f}")
+    st.metric(f"Starting Cash (Jul {get_current_month()['fy_start_year']})", f"${starting_cash:,.0f}")
 with col2:
-    st.metric("Projected Ending (Jun 2026)", f"${ending_cash:,.0f}",
+    st.metric(f"Projected Ending (Jun {get_current_month()['fy_end_year']})", f"${ending_cash:,.0f}",
               delta="Negative" if ending_cash < 0 else "Positive",
               delta_color="inverse" if ending_cash < 0 else "normal")
 with col3:
@@ -255,6 +256,9 @@ st.markdown("---")
 st.header("Contract Receivables")
 
 recv = load_contract_receivables()
+_recv_months_7 = get_receivable_months()
+_recv_first_7 = _recv_months_7[0] if len(_recv_months_7) > 0 else "Sept"
+_recv_last_7 = _recv_months_7[-1] if len(_recv_months_7) > 0 else "Nov"
 totals = recv[recv["Customer"] == "Total"]
 customers = recv[recv["Customer"] != "Total"]
 
@@ -262,40 +266,40 @@ if len(totals) > 0:
     t = totals.iloc[0]
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Contracted (Nov)", f"${t['Nov Contracted']:,.0f}")
+        st.metric(f"Total Contracted ({_recv_last_7})", f"${t[f'{_recv_last_7} Contracted']:,.0f}")
     with col2:
-        st.metric("Collected (Nov)", f"${t['Nov Paid']:,.0f}")
+        st.metric(f"Collected ({_recv_last_7})", f"${t[f'{_recv_last_7} Paid']:,.0f}")
     with col3:
-        st.metric("Outstanding (Nov)", f"${t['Nov Owed']:,.0f}",
-                  delta=f"${t['Nov Owed'] - t['Sept Owed']:+,.0f} vs Sept",
+        st.metric(f"Outstanding ({_recv_last_7})", f"${t[f'{_recv_last_7} Owed']:,.0f}",
+                  delta=f"${t[f'{_recv_last_7} Owed'] - t[f'{_recv_first_7} Owed']:+,.0f} vs {_recv_first_7}",
                   delta_color="normal")
 
 # Stacked horizontal bar: paid vs owed by customer (Nov)
 fig_recv = go.Figure()
 fig_recv.add_trace(go.Bar(
     y=customers["Customer"],
-    x=customers["Nov Paid"],
+    x=customers[f"{_recv_last_7} Paid"],
     name="Paid",
     orientation="h",
     marker=dict(color="#64ffda", line=dict(width=1, color="rgba(255,255,255,0.2)")),
-    text=[f"${v:,.0f}" for v in customers["Nov Paid"]],
+    text=[f"${v:,.0f}" for v in customers[f"{_recv_last_7} Paid"]],
     textposition="inside",
     textfont=dict(size=10, color="#0a192f"),
     hovertemplate="<b>%{y}</b><br>Paid: $%{x:,.0f}<extra></extra>",
 ))
 fig_recv.add_trace(go.Bar(
     y=customers["Customer"],
-    x=customers["Nov Owed"],
+    x=customers[f"{_recv_last_7} Owed"],
     name="Outstanding",
     orientation="h",
     marker=dict(color="#eb144c", line=dict(width=1, color="rgba(255,255,255,0.2)")),
-    text=[f"${v:,.0f}" for v in customers["Nov Owed"]],
+    text=[f"${v:,.0f}" for v in customers[f"{_recv_last_7} Owed"]],
     textposition="inside",
     textfont=dict(size=10, color="#fff"),
     hovertemplate="<b>%{y}</b><br>Outstanding: $%{x:,.0f}<extra></extra>",
 ))
 fig_recv.update_layout(
-    title="Contract Receivables by Customer (November)",
+    title=f"Contract Receivables by Customer ({_recv_last_7})",
     barmode="stack",
     xaxis_title="Amount ($)",
 )
@@ -305,27 +309,27 @@ st.plotly_chart(fig_recv, use_container_width=True)
 # Collection progress: Sept vs Nov
 fig_progress = go.Figure()
 fig_progress.add_trace(go.Bar(
-    x=["September", "November"],
-    y=[totals["Sept Paid"].values[0], totals["Nov Paid"].values[0]] if len(totals) > 0 else [0, 0],
+    x=[_recv_first_7, _recv_last_7],
+    y=[totals[f"{_recv_first_7} Paid"].values[0], totals[f"{_recv_last_7} Paid"].values[0]] if len(totals) > 0 else [0, 0],
     name="Collected",
     marker=dict(color="#64ffda"),
-    text=[f"${v:,.0f}" for v in ([totals["Sept Paid"].values[0], totals["Nov Paid"].values[0]] if len(totals) > 0 else [0, 0])],
+    text=[f"${v:,.0f}" for v in ([totals[f"{_recv_first_7} Paid"].values[0], totals[f"{_recv_last_7} Paid"].values[0]] if len(totals) > 0 else [0, 0])],
     textposition="inside",
     textfont=dict(size=12, color="#0a192f"),
     hovertemplate="%{x}<br>Collected: $%{y:,.0f}<extra></extra>",
 ))
 fig_progress.add_trace(go.Bar(
-    x=["September", "November"],
-    y=[totals["Sept Owed"].values[0], totals["Nov Owed"].values[0]] if len(totals) > 0 else [0, 0],
+    x=[_recv_first_7, _recv_last_7],
+    y=[totals[f"{_recv_first_7} Owed"].values[0], totals[f"{_recv_last_7} Owed"].values[0]] if len(totals) > 0 else [0, 0],
     name="Outstanding",
     marker=dict(color="#eb144c"),
-    text=[f"${v:,.0f}" for v in ([totals["Sept Owed"].values[0], totals["Nov Owed"].values[0]] if len(totals) > 0 else [0, 0])],
+    text=[f"${v:,.0f}" for v in ([totals[f"{_recv_first_7} Owed"].values[0], totals[f"{_recv_last_7} Owed"].values[0]] if len(totals) > 0 else [0, 0])],
     textposition="inside",
     textfont=dict(size=12, color="#fff"),
     hovertemplate="%{x}<br>Outstanding: $%{y:,.0f}<extra></extra>",
 ))
 fig_progress.update_layout(
-    title="Collection Progress — September vs November",
+    title=f"Collection Progress — {_recv_first_7} vs {_recv_last_7}",
     barmode="stack",
     yaxis_title="Amount ($)",
 )
