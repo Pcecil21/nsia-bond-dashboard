@@ -9,6 +9,7 @@ import pandas as pd
 
 from utils.fiscal_period import get_current_month, get_month_label, get_sidebar_caption, get_latest_receivable_month, get_cash_forecast_months
 from utils.variance_engine import compute_monthly_flags, compute_discussion_items
+from utils.theme import inject_css, style_chart, FONT_COLOR, GRID_COLOR
 
 st.set_page_config(
     page_title="NSIA Board Dashboard",
@@ -18,7 +19,7 @@ st.set_page_config(
 )
 
 # ── Authentication ───────────────────────────────────────────────────────
-from utils.auth import init_authenticator, get_user_role
+from utils.auth import init_authenticator, get_user_role, get_user_club
 
 authenticator = init_authenticator()
 authenticator.login(location="sidebar")
@@ -38,6 +39,8 @@ if authentication_status:
     st.sidebar.markdown(f"**Logged in as:** {name} (`{role}`)")
     st.sidebar.markdown("---")
 
+inject_css()
+
 # ── Custom CSS ───────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -50,8 +53,9 @@ st.markdown("""
     .verdict-card {
         border-radius: 12px;
         padding: 24px 28px;
-        margin: 8px 0;
+        margin: 4px 0 12px 0;
         text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     .verdict-good {
         background: linear-gradient(135deg, #0d3320 0%, #1a5c3a 100%);
@@ -121,10 +125,15 @@ st.markdown("""
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         border: 1px solid #0f3460;
         border-radius: 8px;
-        padding: 10px 14px;
-        margin: 4px 0;
+        padding: 12px 16px;
+        margin: 6px 0;
         color: #ccd6f6;
         font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    .discuss-item:before {
+        content: "\25B8  ";
+        color: #64ffda;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -164,6 +173,7 @@ st.sidebar.markdown(
 - **Ice Utilization** — Allocation & Gaps
 - **Vendor Master** — Vendor registry
 - **Document Library** — Board documents
+- **Ask NSIA** — AI Q&A
     """
 )
 st.sidebar.markdown("---")
@@ -247,33 +257,36 @@ verdict_class = "verdict-good" if month_net > month_budget_net else (
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown(f"""
-    <div class="verdict-card {verdict_class}">
-        <div class="verdict-number">${month_net:,.0f}</div>
-        <div class="verdict-label">{period['name']} Net Income</div>
-        <div class="verdict-context">Budget was ${month_budget_net:,.0f} — {'beat it' if month_net > month_budget_net else 'fell short'}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {verdict_class}">'
+        f'<div class="verdict-number">${month_net:,.0f}</div>'
+        f'<div class="verdict-label">{period["name"]} Net Income</div>'
+        f'<div class="verdict-context">Budget was ${month_budget_net:,.0f} — {"beat it" if month_net > month_budget_net else "fell short"}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 with col2:
     cash_class = "verdict-good" if total_cash > 50000 else ("verdict-ok" if total_cash > 0 else "verdict-bad")
-    st.markdown(f"""
-    <div class="verdict-card {cash_class}">
-        <div class="verdict-number">${total_cash:,.0f}</div>
-        <div class="verdict-label">Cash on Hand</div>
-        <div class="verdict-context">As of {period['as_of_date']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {cash_class}">'
+        f'<div class="verdict-number">${total_cash:,.0f}</div>'
+        f'<div class="verdict-label">Cash on Hand</div>'
+        f'<div class="verdict-context">As of {period["as_of_date"]}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 with col3:
     ytd_class = "verdict-good" if ytd_pct >= 100 else ("verdict-ok" if ytd_pct >= 90 else "verdict-bad")
-    st.markdown(f"""
-    <div class="verdict-card {ytd_class}">
-        <div class="verdict-number">{ytd_pct:.0f}%</div>
-        <div class="verdict-label">YTD vs Plan</div>
-        <div class="verdict-context">${ytd_net:,.0f} actual vs ${ytd_budget_net:,.0f} budget</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {ytd_class}">'
+        f'<div class="verdict-number">{ytd_pct:.0f}%</div>'
+        f'<div class="verdict-label">YTD vs Plan</div>'
+        f'<div class="verdict-context">${ytd_net:,.0f} actual vs ${ytd_budget_net:,.0f} budget</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 # Plain english summary
 if month_net > month_budget_net:
@@ -338,20 +351,16 @@ if min_cash < 0:
         fillcolor="rgba(235,20,76,0.1)", line_width=0,
     )
 
+style_chart(fig_cash, height=300)
 fig_cash.update_layout(
-    height=300,
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#a8b2d1"),
-    xaxis=dict(color="#a8b2d1", gridcolor="rgba(168,178,209,0.1)"),
-    yaxis=dict(color="#a8b2d1", gridcolor="rgba(168,178,209,0.1)",
-               tickformat="$,.0f"),
+    yaxis=dict(tickformat="$,.0f"),
     margin=dict(t=30, b=40, l=60, r=20),
     showlegend=True,
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=11)),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=11, color=FONT_COLOR)),
     bargap=0.2,
 )
 st.plotly_chart(fig_cash, use_container_width=True)
+st.caption("Solid bars = actuals | Hatched bars = forecast. Red zone indicates negative cash balance.")
 
 # Plain english cash explanation
 negative_months = []
@@ -377,13 +386,24 @@ st.markdown('<div class="section-header">What Needs Attention</div>', unsafe_all
 
 flags = compute_monthly_flags()
 
+if not flags:
+    st.markdown(
+        '<div class="flag-row flag-green">'
+        '<div class="flag-title">&#x1F7E2; All Clear</div>'
+        '<div class="flag-detail">No variance flags this month.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
 for flag in flags:
-    st.markdown(f"""
-    <div class="flag-row flag-{flag['color']}">
-        <div class="flag-title">{'&#x1F534;' if flag['color'] == 'red' else '&#x1F7E1;' if flag['color'] == 'yellow' else '&#x1F7E2;'} {flag['title']}</div>
-        <div class="flag-detail">{flag['detail']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    icon = '&#x1F534;' if flag['color'] == 'red' else '&#x1F7E1;' if flag['color'] == 'yellow' else '&#x1F7E2;'
+    st.markdown(
+        f'<div class="flag-row flag-{flag["color"]}">'
+        f'<div class="flag-title">{icon} {flag["title"]}</div>'
+        f'<div class="flag-detail">{flag["detail"]}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("---")
 
@@ -404,24 +424,29 @@ if contracted_col in receivables.columns:
         bar_color = "#00d084" if pct >= 70 else ("#fcb900" if pct >= 50 else "#eb144c")
         customer = club["Customer"]
 
-        st.markdown(f"""
-        <div style="margin: 6px 0;">
-            <div style="display:flex;justify-content:space-between;color:#ccd6f6;font-size:0.9rem;">
-                <span><b>{customer}</b></span>
-                <span>${paid:,.0f} of ${contracted:,.0f} ({pct:.0f}%) — <span style="color:#a8b2d1;">${owed:,.0f} remaining</span></span>
-            </div>
-            <div style="background:rgba(168,178,209,0.1);border-radius:4px;height:12px;margin-top:3px;">
-                <div style="background:{bar_color};width:{min(pct, 100):.0f}%;height:100%;border-radius:4px;"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="margin:8px 0 12px 0;">'
+            f'<div style="display:flex;justify-content:space-between;color:#ccd6f6;font-size:0.9rem;margin-bottom:4px;">'
+            f'<span><b>{customer}</b></span>'
+            f'<span>${paid:,.0f} of ${contracted:,.0f} ({pct:.0f}%) &mdash; '
+            f'<span style="color:#a8b2d1;">${owed:,.0f} remaining</span></span>'
+            f'</div>'
+            f'<div style="background:rgba(168,178,209,0.1);border-radius:6px;height:14px;overflow:hidden;">'
+            f'<div style="background:{bar_color};width:{min(pct, 100):.0f}%;height:100%;border-radius:6px;'
+            f'transition:width 0.3s ease;"></div>'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.markdown(f"""
-    <div class="plain-text" style="margin-top:12px;">
-        <b>Total:</b> ${total_paid:,.0f} collected of ${total_contracted:,.0f} ({collection_pct:.0f}%) through Month {period['fiscal_month']}.
-        ${total_owed:,.0f} still outstanding. Everyone is paying on schedule.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="plain-text" style="margin-top:14px;">'
+        f'<b>Total:</b> ${total_paid:,.0f} collected of ${total_contracted:,.0f} '
+        f'({collection_pct:.0f}%) through Month {period["fiscal_month"]}. '
+        f'${total_owed:,.0f} still outstanding.'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("---")
 
@@ -432,11 +457,14 @@ st.markdown('<div class="section-header">Items for Next Board Meeting</div>', un
 
 discussion_items = compute_discussion_items()
 
+if not discussion_items:
+    st.info("No discussion items flagged for the upcoming meeting.")
+
 for item in discussion_items:
     st.markdown(f'<div class="discuss-item">{item}</div>', unsafe_allow_html=True)
 
 st.markdown("")
-st.markdown("")
+st.markdown("---")
 
 # ── Footer ───────────────────────────────────────────────────────────────
 with st.expander("Detailed Financial Pages", expanded=False):

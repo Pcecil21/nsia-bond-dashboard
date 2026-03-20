@@ -21,6 +21,7 @@ require_auth()
 
 st.title("Board Actions")
 st.caption("Track motions, votes, and action items from NSIA board meetings")
+st.markdown("---")
 
 # ── Constants ────────────────────────────────────────────────────────────
 MOTION_CATEGORIES = ["Financial", "Operations", "Governance", "Personnel", "Other"]
@@ -105,6 +106,8 @@ with m3:
 with m4:
     st.metric("Due This Week", len(due_soon_actions))
 
+st.markdown("---")
+
 # ── Overdue alert cards ──────────────────────────────────────────────────
 if not overdue_actions.empty:
     st.markdown("### Overdue Action Items")
@@ -150,10 +153,16 @@ if not motions.empty:
         use_container_width=True,
         hide_index=True,
         column_config={
+            "id": st.column_config.TextColumn("ID", width="small"),
             "meeting_date": st.column_config.DateColumn("Meeting Date"),
+            "motion": st.column_config.TextColumn("Motion", width="large"),
+            "category": st.column_config.TextColumn("Category"),
+            "outcome": st.column_config.TextColumn("Outcome"),
             "votes_for": st.column_config.NumberColumn("For"),
             "votes_against": st.column_config.NumberColumn("Against"),
             "votes_abstain": st.column_config.NumberColumn("Abstain"),
+            "notes": st.column_config.TextColumn("Notes", width="medium"),
+            "minutes_doc_id": st.column_config.TextColumn("Doc ID", width="small"),
         },
     )
 else:

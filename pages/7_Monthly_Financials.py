@@ -25,6 +25,8 @@ st.caption("Budget vs Actuals, Cash Forecast, and Contract Receivables")
 
 from utils.data_loader import load_monthly_pnl, load_cash_forecast, load_contract_receivables
 
+st.markdown("---")
+
 # ══════════════════════════════════════════════════════════════════════════
 # Section 1: Budget vs Actuals
 # ══════════════════════════════════════════════════════════════════════════

@@ -103,6 +103,8 @@ fig_rev_bar.update_layout(
 style_chart(fig_rev_bar, max(350, len(rev_plot) * 40 + 100))
 st.plotly_chart(fig_rev_bar, use_container_width=True)
 
+st.markdown("")
+
 # ── Contract Ice: Proposal vs CSCG ──────────────────────────────────────
 st.subheader("Contract Ice — Proposal vs. CSCG Budget")
 
@@ -287,11 +289,12 @@ with col_detail:
                     unsafe_allow_html=True,
                 )
 
+st.markdown("---")
+
+st.header("CSCG Disclosure Summary")
+
 st.markdown(
     """
----
-### CSCG Disclosure Summary
-
 | Category | Amount (6 mo) | Board Visibility |
 |----------|--------------|-----------------|
 | **Management Fee** | $21,000 | Visible in Budget vs. Actuals |

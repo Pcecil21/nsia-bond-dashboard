@@ -11,12 +11,12 @@ from utils.fiscal_period import get_season_dates
 
 st.set_page_config(page_title="Ice Utilization | NSIA", layout="wide", page_icon=":ice_hockey:")
 
+inject_css()
+
 _username = require_auth()
 _user_club = get_user_club()  # "Winnetka", "Wilmette", or None (admin/board see all)
 
 CLUB_COLORS = {"NT": "#fcb900", "Winnetka": "#64ffda", "Wilmette": "#f78da7"}
-
-inject_css()
 
 st.title("Ice Utilization")
 st.caption("Weekday & weekend ice allocation analysis and Winnetka usage gaps")
@@ -29,6 +29,8 @@ from utils.data_loader import (
     load_winnetka_weekend_summary,
     load_winnetka_day_level_gaps,
 )
+
+st.markdown("---")
 
 # ======================================================================
 # Section 1: Weekend Allocation

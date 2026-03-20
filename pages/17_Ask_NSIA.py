@@ -121,9 +121,8 @@ def _build_system_prompt() -> str:
 # ---------------------------------------------------------------------------
 
 st.title("Ask NSIA")
-st.markdown(
-    "Ask questions about NSIA finances, operations, and governance in plain English."
-)
+st.caption("AI-powered Q&A for board members — ask about finances, operations, and governance in plain English.")
+st.markdown("---")
 
 if not ANTHROPIC_AVAILABLE:
     st.error(
@@ -138,7 +137,11 @@ if "messages" not in st.session_state:
 
 # Suggested questions — shown only when the conversation is empty
 if len(st.session_state.messages) == 0:
-    st.markdown("**Try asking:**")
+    st.markdown(
+        '<div style="color:#a8b2d1;font-size:0.95rem;margin-bottom:12px;">'
+        '<b style="color:#ccd6f6;">Try asking:</b></div>',
+        unsafe_allow_html=True,
+    )
     cols = st.columns(2)
     suggestions = [
         "How did we do this month?",
@@ -155,6 +158,7 @@ if len(st.session_state.messages) == 0:
             if st.button(q, key=f"suggest_{i}", use_container_width=True):
                 st.session_state.pending_question = q
                 st.rerun()
+    st.markdown("---")
 
 # Display existing messages
 for msg in st.session_state.messages:

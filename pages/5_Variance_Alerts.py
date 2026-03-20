@@ -22,6 +22,9 @@ require_auth()
 import os
 from datetime import date as _date, timedelta as _timedelta
 
+st.title("Variance Alerts")
+st.caption("Automated monitoring: CSCG operational budget vs. board-approved proposal")
+
 # ── Board Action Item Alerts ─────────────────────────────────────────────
 try:
     _board_actions_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "board_actions.xlsx")
@@ -45,9 +48,6 @@ try:
                 st.markdown("---")
 except Exception:
     pass  # Don't break variance page if board actions file is missing
-
-st.title("Variance Alerts")
-st.caption("Automated monitoring: CSCG operational budget vs. board-approved proposal")
 
 from utils.data_loader import compute_variance_alerts
 
@@ -118,6 +118,7 @@ fig_stop.update_layout(
 )
 style_chart(fig_stop, 350)
 st.plotly_chart(fig_stop, use_container_width=True)
+st.caption("Adjust the threshold in the sidebar to change alert sensitivity")
 
 # ── RED Alerts — Requires Immediate Board Attention ───────────────────────
 st.markdown("---")
@@ -308,14 +309,13 @@ with col3:
               delta="Positive" if net_impact > 0 else "Negative",
               delta_color="normal" if net_impact > 0 else "inverse")
 
+st.markdown("---")
+
 st.markdown(
-    """
-    ---
-    **How to use this page:**
-    - Adjust the **variance threshold** in the sidebar to change sensitivity
-    - **RED** items require immediate board discussion and possible budget amendment
-    - **YELLOW** items should be monitored monthly for trend changes
-    - **GREEN** items are within normal tolerance
-    - Ask CSCG to provide written justification for all RED and YELLOW items
-    """
+    """**How to use this page:**
+- Adjust the **variance threshold** in the sidebar to change sensitivity
+- **RED** items require immediate board discussion and possible budget amendment
+- **YELLOW** items should be monitored monthly for trend changes
+- **GREEN** items are within normal tolerance
+- Ask CSCG to provide written justification for all RED and YELLOW items"""
 )

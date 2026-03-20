@@ -123,6 +123,8 @@ if not rev_chart.empty:
     style_chart(fig_rev, 480)
     st.plotly_chart(fig_rev, use_container_width=True)
 
+st.markdown("---")
+
 # ── Expense Variance ─────────────────────────────────────────────────────
 st.header("Expenses — Budget vs. CSCG Variance")
 
@@ -166,6 +168,8 @@ if not exp_chart.empty:
     fig_exp.add_vline(x=0, line_dash="dot", line_color="rgba(255,255,255,0.3)")
     style_chart(fig_exp, 550)
     st.plotly_chart(fig_exp, use_container_width=True)
+
+st.markdown("---")
 
 # ── Unauthorized Modifications ────────────────────────────────────────────
 st.header("Unauthorized Budget Modifications")
@@ -212,6 +216,8 @@ if not mods_chart.empty:
     ))
     st.plotly_chart(fig_mods, use_container_width=True)
 
+st.markdown("")
+
 # Severity table
 def severity_color(val):
     colors = {"HIGH": "background-color: #eb144c33; color: #ff6b6b",
@@ -231,6 +237,8 @@ st.dataframe(
         "Annual Variance $": st.column_config.NumberColumn(format="$%,.0f"),
     },
 )
+
+st.markdown("---")
 
 # ── Expense Approval Breakdown ────────────────────────────────────────────
 st.header("Expense Approval Breakdown")

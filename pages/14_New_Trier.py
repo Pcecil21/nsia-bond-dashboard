@@ -14,15 +14,11 @@ inject_css()
 require_auth()
 
 st.title("New Trier Hockey")
-st.caption("NSIA home games for all 6 teams")
+st.caption("NSIA home games for all 6 teams &nbsp;|&nbsp; Source: [newtrierhockey.com/schedule](https://www.newtrierhockey.com/schedule)")
 
 from utils.data_loader import load_hockey_schedule
 
-st.header("NSIA Home Games — All 6 Teams")
-st.caption("Games played at NSIA Main & North Shore Ice Arena")
-st.markdown(
-    '*Source: [newtrierhockey.com/schedule](https://www.newtrierhockey.com/schedule)*'
-)
+st.markdown("---")
 
 schedule = load_hockey_schedule()
 
@@ -43,6 +39,8 @@ s1, s2, s3 = st.columns(3)
 s1.metric("Total NSIA Home Games", len(home), f"across {team_count} teams")
 s2.metric("Played", len(played))
 s3.metric("Upcoming", len(upcoming))
+
+st.markdown("---")
 
 # ── Games per team bar chart ─────────────────────────────────────────────
 team_colors = {
@@ -116,7 +114,9 @@ st.dataframe(
     display_home.style.map(status_style, subset=["Status"]),
     use_container_width=True,
     hide_index=True,
+    height=450,
 )
+st.caption(f"Showing {len(display_home)} games for {len(selected_teams)} team(s)")
 
 # ── Upcoming games callout ───────────────────────────────────────────────
 upcoming_filtered = filtered[filtered["Status"] == "Upcoming"].sort_values("_date")

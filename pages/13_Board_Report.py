@@ -38,6 +38,8 @@ st.markdown("""
 st.title("Board Report Generator")
 st.caption("One-click comprehensive governance report for board meetings")
 
+st.markdown("---")
+
 # ── Preflight ─────────────────────────────────────────────────────────────
 if not ANTHROPIC_AVAILABLE:
     st.error(
@@ -101,6 +103,8 @@ with col3:
     st.metric("Hidden Outflows", f"${kpis['hidden_cash_outflows']:,.0f}/yr")
     non_compliant = len(scorecard[scorecard["Status"] == "NON-COMPLIANT"])
     st.metric("Non-Compliant Items", non_compliant)
+
+st.caption("These metrics will be included in the generated report based on your section selections below.")
 
 st.markdown("---")
 

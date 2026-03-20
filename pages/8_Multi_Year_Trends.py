@@ -19,6 +19,8 @@ st.caption("3-year revenue & expense analysis, Form 990 highlights, and payroll 
 
 from utils.data_loader import load_multiyear_revenue, load_payroll_benchmarks
 
+st.markdown("---")
+
 # ── Section 1: 3-Year Revenue ────────────────────────────────────────────
 st.header("3-Year Revenue Trend")
 

@@ -56,10 +56,12 @@ st.markdown("""
 
 st.title("AI Governance Analysis")
 st.caption(
-    "Upload any NSIA document — invoices, bank statements, budgets, contracts, "
-    "schedules, or reports — and the system will route it to the appropriate "
+    "Upload any NSIA document -- invoices, bank statements, budgets, contracts, "
+    "schedules, or reports -- and the system will route it to the appropriate "
     "analysis agent automatically."
 )
+
+st.markdown("---")
 
 # ---------------------------------------------------------------------------
 # Preflight checks

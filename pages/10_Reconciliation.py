@@ -14,7 +14,7 @@ inject_css()
 require_auth()
 
 st.title("Budget vs Financials Reconciliation")
-st.caption("4-way match: Budget → Financials → GL → Invoices")
+st.caption("4-way match: Budget -> Financials -> GL -> Invoices")
 
 from utils.data_loader import (
     build_reconciliation_master,
@@ -74,9 +74,10 @@ fig_waterfall = go.Figure(go.Waterfall(
     decreasing=dict(marker=dict(color="#ff6b6b")),
     totals=dict(marker=dict(color="#6c5ce7")),
 ))
-fig_waterfall.update_layout(title="Budget → Actuals → Invoiced Flow")
+fig_waterfall.update_layout(title="Budget -> Actuals -> Invoiced Flow")
 style_chart(fig_waterfall, height=400)
 st.plotly_chart(fig_waterfall, use_container_width=True)
+st.caption("Waterfall shows the flow from budgeted amounts through actual spending to invoice-verified totals.")
 
 st.markdown("---")
 
@@ -96,37 +97,23 @@ filtered = recon[recon["Status"].isin(selected_statuses)]
 if search_term:
     filtered = filtered[filtered["Line Item"].str.contains(search_term, case=False, na=False)]
 
-# Color-code by status
-def color_status(status):
-    colors = {
-        "Matched": "background-color: rgba(0,184,148,0.2)",
-        "Minor Variance": "background-color: rgba(253,203,110,0.2)",
-        "Major Variance": "background-color: rgba(255,107,107,0.2)",
-        "No Invoice Trail": "background-color: rgba(108,92,231,0.2)",
-        "Budget-Only": "background-color: rgba(168,178,209,0.1)",
-        "Actual-Only": "background-color: rgba(9,132,227,0.2)",
-    }
-    return colors.get(status, "")
-
-
-def highlight_row(row):
-    color = color_status(row["Status"])
-    return [color] * len(row)
-
-
 display_cols = ["Line Item", "Budget Amount", "Financial (Actual)", "Invoice Total",
                 "Budget-Actual Variance", "Actual-Invoice Variance", "Approval Method", "Status"]
 display_df = filtered[display_cols].copy()
 
-# Format dollar columns
-dollar_cols = ["Budget Amount", "Financial (Actual)", "Invoice Total",
-               "Budget-Actual Variance", "Actual-Invoice Variance"]
-format_dict = {col: "${:,.0f}" for col in dollar_cols}
-
-styled = display_df.style.apply(highlight_row, axis=1).format(
-    format_dict, na_rep="—"
+st.dataframe(
+    display_df,
+    use_container_width=True,
+    height=500,
+    hide_index=True,
+    column_config={
+        "Budget Amount": st.column_config.NumberColumn(format="$%,.0f"),
+        "Financial (Actual)": st.column_config.NumberColumn(format="$%,.0f"),
+        "Invoice Total": st.column_config.NumberColumn(format="$%,.0f"),
+        "Budget-Actual Variance": st.column_config.NumberColumn(format="$%+,.0f"),
+        "Actual-Invoice Variance": st.column_config.NumberColumn(format="$%+,.0f"),
+    },
 )
-st.dataframe(styled, use_container_width=True, height=500)
 
 st.markdown(f"**{len(filtered)}** line items shown | "
             f"Matched: {len(filtered[filtered['Status']=='Matched'])} | "
@@ -315,12 +302,17 @@ st.info(
 # Detail table in expander
 with st.expander("View All Adjusting Entries"):
     display_entries = entries[["Num", "Date", "Memo", "Account", "Debit", "Credit"]].copy()
-    display_entries["Debit"] = display_entries["Debit"].apply(
-        lambda x: f"${x:,.2f}" if x > 0 else "")
-    display_entries["Credit"] = display_entries["Credit"].apply(
-        lambda x: f"${x:,.2f}" if x > 0 else "")
-    display_entries["Date"] = display_entries["Date"].dt.strftime("%m/%d/%Y").fillna("")
-    st.dataframe(display_entries, use_container_width=True, height=400)
+    st.dataframe(
+        display_entries,
+        use_container_width=True,
+        height=400,
+        hide_index=True,
+        column_config={
+            "Date": st.column_config.DateColumn(format="MM/DD/YYYY"),
+            "Debit": st.column_config.NumberColumn(format="$%,.2f"),
+            "Credit": st.column_config.NumberColumn(format="$%,.2f"),
+        },
+    )
 
 st.markdown("---")
 
@@ -377,6 +369,8 @@ with col_b:
     )
     style_chart(fig_overlay, height=400)
     st.plotly_chart(fig_overlay, use_container_width=True)
+
+st.markdown("")
 
 # Verification metrics
 invoice_gap = total_actual - total_invoice

@@ -73,6 +73,8 @@ with col3:
 with col4:
     st.metric("Non-Compliant", non_compliant)
 
+st.markdown("")
+
 # ── Compliance Gauge ──────────────────────────────────────────────────────
 verifiable = scorecard[scorecard["Status"] != "AUTO-PAY"]
 if len(verifiable) > 0:

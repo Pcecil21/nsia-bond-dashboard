@@ -23,5 +23,5 @@ credentials:
     wilmette:
       email: wilmette@nsia.org
       name: Wilmette Rep
-      password: $2b$12$79c2unABduOciINw6a95F.SxlpwWy60YS6dlnKimyMX/ponneCsdi
+      password: $2b$12$PpoIyIjZnvo6HsyAMAHsa.1OuGrNCXeafyAm.NVC6QEX6XwnllmSS
       role: club_rep
