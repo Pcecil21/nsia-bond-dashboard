@@ -18,7 +18,7 @@ credentials:
     winnetka:
       email: winnetka@nsia.org
       name: Winnetka Rep
-      password: $2b$12$R3lz57cnxJKD3CcH.CRlm.99c5yFB/GjzzHTskcE2RWcQyZAZfvgG
+      password: $2b$12$581JPPgafN6y797f8khGLeC7Iv6KcodyeXIRTcM1LFkSsUzVboYqy
       role: club_rep
     wilmette:
       email: wilmette@nsia.org
