@@ -7,6 +7,10 @@ import plotly.graph_objects as go
 import os
 import pandas as pd
 
+from utils.fiscal_period import get_current_month, get_month_label, get_sidebar_caption, get_latest_receivable_month, get_cash_forecast_months
+from utils.variance_engine import compute_monthly_flags, compute_discussion_items
+from utils.theme import inject_css, style_chart, FONT_COLOR, GRID_COLOR
+
 st.set_page_config(
     page_title="NSIA Board Dashboard",
     page_icon=":ice_hockey:",
@@ -15,7 +19,7 @@ st.set_page_config(
 )
 
 # ── Authentication ───────────────────────────────────────────────────────
-from utils.auth import init_authenticator, get_user_role
+from utils.auth import init_authenticator, get_user_role, get_user_club
 
 authenticator = init_authenticator()
 authenticator.login(location="sidebar")
@@ -35,6 +39,8 @@ if authentication_status:
     st.sidebar.markdown(f"**Logged in as:** {name} (`{role}`)")
     st.sidebar.markdown("---")
 
+inject_css()
+
 # ── Custom CSS ───────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -47,8 +53,9 @@ st.markdown("""
     .verdict-card {
         border-radius: 12px;
         padding: 24px 28px;
-        margin: 8px 0;
+        margin: 4px 0 12px 0;
         text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     .verdict-good {
         background: linear-gradient(135deg, #0d3320 0%, #1a5c3a 100%);
@@ -118,10 +125,15 @@ st.markdown("""
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         border: 1px solid #0f3460;
         border-radius: 8px;
-        padding: 10px 14px;
-        margin: 4px 0;
+        padding: 12px 16px;
+        margin: 6px 0;
         color: #ccd6f6;
         font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    .discuss-item:before {
+        content: "\25B8  ";
+        color: #64ffda;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -161,10 +173,11 @@ st.sidebar.markdown(
 - **Ice Utilization** — Allocation & Gaps
 - **Vendor Master** — Vendor registry
 - **Document Library** — Board documents
+- **Ask NSIA** — AI Q&A
     """
 )
 st.sidebar.markdown("---")
-st.sidebar.caption("FY2026 | Data through January 2026 (Month 7 of 12)")
+st.sidebar.caption(get_sidebar_caption())
 
 # ── Load Data ────────────────────────────────────────────────────────────
 from utils.data_loader import (
@@ -178,38 +191,45 @@ pnl = load_monthly_pnl()
 receivables = load_contract_receivables()
 
 # ── Compute key numbers from the data ────────────────────────────────────
-# January P&L
-jan_pnl = pnl[pnl["Month"] == "Jan"]
-jan_revenue = jan_pnl[
-    (jan_pnl["Category"] == "Revenue") & (jan_pnl["Subcategory"] == "Total")
+period = get_current_month()
+cur_month = period["abbrev"]
+
+# Current month P&L
+month_pnl = pnl[pnl["Month"] == cur_month]
+month_revenue = month_pnl[
+    (month_pnl["Category"] == "Revenue") & (month_pnl["Subcategory"] == "Total")
 ]["Actual"].sum()
-jan_expenses = jan_pnl[
-    (jan_pnl["Category"] == "Expense") & (jan_pnl["Subcategory"] == "Total")
+month_expenses = month_pnl[
+    (month_pnl["Category"] == "Expense") & (month_pnl["Subcategory"] == "Total")
 ]["Actual"].sum()
-jan_net = jan_pnl[
-    (jan_pnl["Category"] == "Net") & (jan_pnl["Subcategory"] == "Net Income")
+month_net = month_pnl[
+    (month_pnl["Category"] == "Net") & (month_pnl["Subcategory"] == "Net Income")
 ]["Actual"].sum()
-jan_budget_net = jan_pnl[
-    (jan_pnl["Category"] == "Net") & (jan_pnl["Subcategory"] == "Net Income")
+month_budget_net = month_pnl[
+    (month_pnl["Category"] == "Net") & (month_pnl["Subcategory"] == "Net Income")
 ]["Budget"].sum()
 
 # YTD
-ytd_revenue = jan_pnl[jan_pnl["Category"] == "YTD Revenue"]["Actual"].sum()
-ytd_expenses = jan_pnl[jan_pnl["Category"] == "YTD Expense"]["Actual"].sum()
-ytd_net = jan_pnl[jan_pnl["Category"] == "YTD Net"]["Actual"].sum()
-ytd_budget_net = jan_pnl[jan_pnl["Category"] == "YTD Net"]["Budget"].sum()
+ytd_revenue = month_pnl[month_pnl["Category"] == "YTD Revenue"]["Actual"].sum()
+ytd_expenses = month_pnl[month_pnl["Category"] == "YTD Expense"]["Actual"].sum()
+ytd_net = month_pnl[month_pnl["Category"] == "YTD Net"]["Actual"].sum()
+ytd_budget_net = month_pnl[month_pnl["Category"] == "YTD Net"]["Budget"].sum()
 ytd_pct = (ytd_net / ytd_budget_net * 100) if ytd_budget_net else 0
 
-# Cash position (from cash forecast — Jan actuals)
-# Actual months are Jul-Jan (first 7 rows)
-actual_months = cash.head(7)
+# Cash position (from cash forecast — actuals through current month)
+cf_info = get_cash_forecast_months()
+actual_months = cash.head(cf_info["actual_count"])
 total_cash = actual_months["Cumulative Cash"].iloc[-1] if len(actual_months) > 0 else 0
 
-# Contract receivables — use January columns if available
-if "Jan Contracted" in receivables.columns:
-    total_contracted = receivables[receivables["Customer"] == "Total"]["Jan Contracted"].sum()
-    total_paid = receivables[receivables["Customer"] == "Total"]["Jan Paid"].sum()
-    total_owed = receivables[receivables["Customer"] == "Total"]["Jan Owed"].sum()
+# Contract receivables — use latest available month columns
+latest_recv = get_latest_receivable_month()
+contracted_col = f"{latest_recv} Contracted"
+paid_col = f"{latest_recv} Paid"
+owed_col = f"{latest_recv} Owed"
+if contracted_col in receivables.columns:
+    total_contracted = receivables[receivables["Customer"] == "Total"][contracted_col].sum()
+    total_paid = receivables[receivables["Customer"] == "Total"][paid_col].sum()
+    total_owed = receivables[receivables["Customer"] == "Total"][owed_col].sum()
     collection_pct = (total_paid / total_contracted * 100) if total_contracted else 0
 else:
     total_contracted = total_paid = total_owed = 0
@@ -218,10 +238,10 @@ else:
 # ── HEADER ───────────────────────────────────────────────────────────────
 st.title("North Shore Ice Arena")
 st.markdown(
-    '<span style="color:#a8b2d1;font-size:1.1rem;">Monthly Board Summary</span>'
+    f'<span style="color:#a8b2d1;font-size:1.1rem;">Monthly Board Summary</span>'
     ' &nbsp; '
-    '<span style="background:#0f3460;padding:3px 12px;border-radius:10px;'
-    'font-size:0.85rem;color:#64ffda;">January 2026 — Month 7 of 12</span>',
+    f'<span style="background:#0f3460;padding:3px 12px;border-radius:10px;'
+    f'font-size:0.85rem;color:#64ffda;">{get_month_label()}</span>',
     unsafe_allow_html=True,
 )
 
@@ -230,48 +250,51 @@ st.markdown("---")
 # ═════════════════════════════════════════════════════════════════════════
 # SECTION 1: THE VERDICT
 # ═════════════════════════════════════════════════════════════════════════
-verdict_class = "verdict-good" if jan_net > jan_budget_net else (
-    "verdict-ok" if jan_net > 0 else "verdict-bad"
+verdict_class = "verdict-good" if month_net > month_budget_net else (
+    "verdict-ok" if month_net > 0 else "verdict-bad"
 )
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown(f"""
-    <div class="verdict-card {verdict_class}">
-        <div class="verdict-number">${jan_net:,.0f}</div>
-        <div class="verdict-label">January Net Income</div>
-        <div class="verdict-context">Budget was ${jan_budget_net:,.0f} — {'beat it' if jan_net > jan_budget_net else 'fell short'}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {verdict_class}">'
+        f'<div class="verdict-number">${month_net:,.0f}</div>'
+        f'<div class="verdict-label">{period["name"]} Net Income</div>'
+        f'<div class="verdict-context">Budget was ${month_budget_net:,.0f} — {"beat it" if month_net > month_budget_net else "fell short"}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 with col2:
     cash_class = "verdict-good" if total_cash > 50000 else ("verdict-ok" if total_cash > 0 else "verdict-bad")
-    st.markdown(f"""
-    <div class="verdict-card {cash_class}">
-        <div class="verdict-number">${total_cash:,.0f}</div>
-        <div class="verdict-label">Cash on Hand</div>
-        <div class="verdict-context">As of January 31, 2026</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {cash_class}">'
+        f'<div class="verdict-number">${total_cash:,.0f}</div>'
+        f'<div class="verdict-label">Cash on Hand</div>'
+        f'<div class="verdict-context">As of {period["as_of_date"]}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 with col3:
     ytd_class = "verdict-good" if ytd_pct >= 100 else ("verdict-ok" if ytd_pct >= 90 else "verdict-bad")
-    st.markdown(f"""
-    <div class="verdict-card {ytd_class}">
-        <div class="verdict-number">{ytd_pct:.0f}%</div>
-        <div class="verdict-label">YTD vs Plan</div>
-        <div class="verdict-context">${ytd_net:,.0f} actual vs ${ytd_budget_net:,.0f} budget</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="verdict-card {ytd_class}">'
+        f'<div class="verdict-number">{ytd_pct:.0f}%</div>'
+        f'<div class="verdict-label">YTD vs Plan</div>'
+        f'<div class="verdict-context">${ytd_net:,.0f} actual vs ${ytd_budget_net:,.0f} budget</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 # Plain english summary
-if jan_net > jan_budget_net:
-    summary_text = f"January was a strong month. We netted <b>${jan_net:,.0f}</b>, beating the budget by <b>${jan_net - jan_budget_net:,.0f}</b>. Revenue came in at ${jan_revenue:,.0f} against ${jan_expenses:,.0f} in expenses."
-elif jan_net > 0:
-    summary_text = f"January was positive but came in slightly under plan. We netted <b>${jan_net:,.0f}</b> against a budget of ${jan_budget_net:,.0f}."
+if month_net > month_budget_net:
+    summary_text = f"{period['name']} was a strong month. We netted <b>${month_net:,.0f}</b>, beating the budget by <b>${month_net - month_budget_net:,.0f}</b>. Revenue came in at ${month_revenue:,.0f} against ${month_expenses:,.0f} in expenses."
+elif month_net > 0:
+    summary_text = f"{period['name']} was positive but came in slightly under plan. We netted <b>${month_net:,.0f}</b> against a budget of ${month_budget_net:,.0f}."
 else:
-    summary_text = f"January was a loss month. We lost <b>${abs(jan_net):,.0f}</b> against a planned profit of ${jan_budget_net:,.0f}."
+    summary_text = f"{period['name']} was a loss month. We lost <b>${abs(month_net):,.0f}</b> against a planned profit of ${month_budget_net:,.0f}."
 
 ytd_text = f"Year-to-date, we're at <b>{ytd_pct:.0f}% of plan</b> — ${ytd_net:,.0f} actual vs ${ytd_budget_net:,.0f} budgeted."
 
@@ -289,29 +312,31 @@ months_short = [m.replace(" 2025", "").replace(" 2026", "") for m in cash["Month
 cash_colors = ["#eb144c" if v < 0 else "#00d084" for v in cash["Cumulative Cash"]]
 
 # Mark actual vs forecast
-bar_opacity = [1.0] * 7 + [0.5] * 5  # first 7 are actuals, last 5 are forecast
+n_actual = cf_info["actual_count"]
+n_forecast = cf_info["forecast_count"]
+bar_opacity = [1.0] * n_actual + [0.5] * n_forecast
 
 fig_cash = go.Figure()
 
 # Actual months
 fig_cash.add_trace(go.Bar(
-    x=months_short[:7],
-    y=cash["Cumulative Cash"].iloc[:7],
-    marker_color=cash_colors[:7],
+    x=months_short[:n_actual],
+    y=cash["Cumulative Cash"].iloc[:n_actual],
+    marker_color=cash_colors[:n_actual],
     name="Actual",
-    text=[f"${v:,.0f}" for v in cash["Cumulative Cash"].iloc[:7]],
+    text=[f"${v:,.0f}" for v in cash["Cumulative Cash"].iloc[:n_actual]],
     textposition="outside",
     textfont=dict(size=10, color="#a8b2d1"),
 ))
 
 # Forecast months
 fig_cash.add_trace(go.Bar(
-    x=months_short[7:],
-    y=cash["Cumulative Cash"].iloc[7:],
-    marker_color=cash_colors[7:],
+    x=months_short[n_actual:],
+    y=cash["Cumulative Cash"].iloc[n_actual:],
+    marker_color=cash_colors[n_actual:],
     marker_pattern_shape="/",
     name="Forecast",
-    text=[f"${v:,.0f}" for v in cash["Cumulative Cash"].iloc[7:]],
+    text=[f"${v:,.0f}" for v in cash["Cumulative Cash"].iloc[n_actual:]],
     textposition="outside",
     textfont=dict(size=10, color="#a8b2d1"),
     opacity=0.6,
@@ -326,20 +351,16 @@ if min_cash < 0:
         fillcolor="rgba(235,20,76,0.1)", line_width=0,
     )
 
+style_chart(fig_cash, height=300)
 fig_cash.update_layout(
-    height=300,
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#a8b2d1"),
-    xaxis=dict(color="#a8b2d1", gridcolor="rgba(168,178,209,0.1)"),
-    yaxis=dict(color="#a8b2d1", gridcolor="rgba(168,178,209,0.1)",
-               tickformat="$,.0f"),
+    yaxis=dict(tickformat="$,.0f"),
     margin=dict(t=30, b=40, l=60, r=20),
     showlegend=True,
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=11)),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=11, color=FONT_COLOR)),
     bargap=0.2,
 )
 st.plotly_chart(fig_cash, use_container_width=True)
+st.caption("Solid bars = actuals | Hatched bars = forecast. Red zone indicates negative cash balance.")
 
 # Plain english cash explanation
 negative_months = []
@@ -363,47 +384,26 @@ st.markdown("---")
 # ═════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-header">What Needs Attention</div>', unsafe_allow_html=True)
 
-# Hardcoded flags from the January analysis — these are the real governance items
-flags = [
-    {
-        "color": "red",
-        "title": "Building Maintenance is 4x over budget",
-        "detail": "$9,521 in January vs $1,935 budgeted (492%). Year-to-date: $50,629 vs $13,545 budget. This is the single biggest variance. We need CSCG to explain what's driving this.",
-    },
-    {
-        "color": "red",
-        "title": "Restaurant lease collecting half of budget",
-        "detail": "$1,000/month vs $2,000 budgeted. YTD $7,000 vs $14,000 plan. Ties into the Ice Shack discussion — we need a real F&B operator or the current tenant paying full rent.",
-    },
-    {
-        "color": "yellow",
-        "title": "Gas costs running hot",
-        "detail": "Nicor came in at $5,012 vs $2,300 budget (218%). Could be weather-driven or a budget set too low. Worth asking CSCG.",
-    },
-    {
-        "color": "yellow",
-        "title": "CSCG auto-pay: $36K in January without invoice approval",
-        "detail": "28% of January expenses flowed through CSCG (payroll, management fees, on-ice instruction) without individual invoice approval by the board.",
-    },
-    {
-        "color": "yellow",
-        "title": "GL doesn't match bank statements",
-        "detail": "Chase General is off by $27 (carried from prior month). Chase Operating is off by $677 and growing. We've requested formal bank reconciliations.",
-    },
-    {
-        "color": "green",
-        "title": "Youth programs revenue way ahead of plan",
-        "detail": "$28,050 in January vs $9,510 budget (295%). YTD $111,699 vs $78,285. Strong demand — verify through scheduling system.",
-    },
-]
+flags = compute_monthly_flags()
+
+if not flags:
+    st.markdown(
+        '<div class="flag-row flag-green">'
+        '<div class="flag-title">&#x1F7E2; All Clear</div>'
+        '<div class="flag-detail">No variance flags this month.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 for flag in flags:
-    st.markdown(f"""
-    <div class="flag-row flag-{flag['color']}">
-        <div class="flag-title">{'&#x1F534;' if flag['color'] == 'red' else '&#x1F7E1;' if flag['color'] == 'yellow' else '&#x1F7E2;'} {flag['title']}</div>
-        <div class="flag-detail">{flag['detail']}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    icon = '&#x1F534;' if flag['color'] == 'red' else '&#x1F7E1;' if flag['color'] == 'yellow' else '&#x1F7E2;'
+    st.markdown(
+        f'<div class="flag-row flag-{flag["color"]}">'
+        f'<div class="flag-title">{icon} {flag["title"]}</div>'
+        f'<div class="flag-detail">{flag["detail"]}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("---")
 
@@ -412,36 +412,41 @@ st.markdown("---")
 # ═════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-header">Club Payments — Are They Paying?</div>', unsafe_allow_html=True)
 
-if "Jan Contracted" in receivables.columns:
+if contracted_col in receivables.columns:
     clubs = receivables[receivables["Customer"] != "Total"].copy()
-    clubs = clubs.sort_values("Jan Contracted", ascending=False)
+    clubs = clubs.sort_values(contracted_col, ascending=False)
 
     for _, club in clubs.iterrows():
-        contracted = club["Jan Contracted"]
-        paid = club["Jan Paid"]
-        owed = club["Jan Owed"]
+        contracted = club[contracted_col]
+        paid = club[paid_col]
+        owed = club[owed_col]
         pct = (paid / contracted * 100) if contracted > 0 else 0
         bar_color = "#00d084" if pct >= 70 else ("#fcb900" if pct >= 50 else "#eb144c")
         customer = club["Customer"]
 
-        st.markdown(f"""
-        <div style="margin: 6px 0;">
-            <div style="display:flex;justify-content:space-between;color:#ccd6f6;font-size:0.9rem;">
-                <span><b>{customer}</b></span>
-                <span>${paid:,.0f} of ${contracted:,.0f} ({pct:.0f}%) — <span style="color:#a8b2d1;">${owed:,.0f} remaining</span></span>
-            </div>
-            <div style="background:rgba(168,178,209,0.1);border-radius:4px;height:12px;margin-top:3px;">
-                <div style="background:{bar_color};width:{min(pct, 100):.0f}%;height:100%;border-radius:4px;"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="margin:8px 0 12px 0;">'
+            f'<div style="display:flex;justify-content:space-between;color:#ccd6f6;font-size:0.9rem;margin-bottom:4px;">'
+            f'<span><b>{customer}</b></span>'
+            f'<span>${paid:,.0f} of ${contracted:,.0f} ({pct:.0f}%) &mdash; '
+            f'<span style="color:#a8b2d1;">${owed:,.0f} remaining</span></span>'
+            f'</div>'
+            f'<div style="background:rgba(168,178,209,0.1);border-radius:6px;height:14px;overflow:hidden;">'
+            f'<div style="background:{bar_color};width:{min(pct, 100):.0f}%;height:100%;border-radius:6px;'
+            f'transition:width 0.3s ease;"></div>'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.markdown(f"""
-    <div class="plain-text" style="margin-top:12px;">
-        <b>Total:</b> ${total_paid:,.0f} collected of ${total_contracted:,.0f} ({collection_pct:.0f}%) through Month 7.
-        ${total_owed:,.0f} still outstanding. Everyone is paying on schedule.
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="plain-text" style="margin-top:14px;">'
+        f'<b>Total:</b> ${total_paid:,.0f} collected of ${total_contracted:,.0f} '
+        f'({collection_pct:.0f}%) through Month {period["fiscal_month"]}. '
+        f'${total_owed:,.0f} still outstanding.'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("---")
 
@@ -450,20 +455,16 @@ st.markdown("---")
 # ═════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-header">Items for Next Board Meeting</div>', unsafe_allow_html=True)
 
-discussion_items = [
-    "Ice Shack term sheet from Nick Larkin — review proposed concession lease terms",
-    "Building maintenance overage — need explanation from CSCG on $37K YTD budget blow",
-    "Request: formal bank reconciliations included in monthly financial package",
-    "Request: board read-only access to ice scheduling software",
-    "Request: board admin access to NSIA website",
-    "Cash forecast — plan for March property taxes and May debt service crunch",
-]
+discussion_items = compute_discussion_items()
+
+if not discussion_items:
+    st.info("No discussion items flagged for the upcoming meeting.")
 
 for item in discussion_items:
     st.markdown(f'<div class="discuss-item">{item}</div>', unsafe_allow_html=True)
 
 st.markdown("")
-st.markdown("")
+st.markdown("---")
 
 # ── Footer ───────────────────────────────────────────────────────────────
 with st.expander("Detailed Financial Pages", expanded=False):

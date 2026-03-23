@@ -7,6 +7,7 @@ import os
 import re
 import pandas as pd
 import streamlit as st
+from utils.fiscal_period import get_current_month
 
 logger = logging.getLogger(__name__)
 
@@ -464,7 +465,7 @@ def compute_kpis() -> dict:
     exp = load_expense_reconciliation()
     hidden = load_hidden_cash_flows()
 
-    # Total annual revenue: sum of Proposal YTD * 12/7 (annualize 7-month data)
+    # Total annual revenue: annualize YTD data using detected fiscal month
     total_rev_ytd = rev[rev["Line Item"].str.startswith("Total")]["Proposal YTD Budget"].sum()
     # Use the total rows
     rev_totals = rev[rev["Line Item"].str.startswith("Total")]
@@ -479,9 +480,10 @@ def compute_kpis() -> dict:
     else:
         total_exp_ytd = exp_totals["Proposal YTD Budget"].sum()
 
-    # Annualize from 7 months
-    annual_rev = total_rev_ytd * 12 / 7
-    annual_exp = total_exp_ytd * 12 / 7
+    # Annualize YTD data using dynamically detected fiscal month count
+    fiscal_months = get_current_month()["fiscal_month"]
+    annual_rev = total_rev_ytd * 12 / fiscal_months
+    annual_exp = total_exp_ytd * 12 / fiscal_months
 
     hidden_total = hidden["Annual Impact"].sum()
 
@@ -687,6 +689,9 @@ def compute_cscg_scorecard() -> pd.DataFrame:
             "6mo Actual": cscg[cscg["Component"].str.contains("Workers Comp", case=False, na=False)]["Amount"].sum(),
             "Source": "CSCG Relationship sheet",
         },
+        # TODO: The actuals below are hardcoded from 6-month payment records.
+        # Update these when new monthly data arrives, or source them from
+        # a dedicated fixed-obligations CSV to make them dynamic.
         {
             "Contract Term": "Land Lease — Techny (Ground Lease)",
             "Contract Amount": 385000,

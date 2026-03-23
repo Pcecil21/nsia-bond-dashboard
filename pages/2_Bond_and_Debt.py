@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_period_label
 
 st.set_page_config(page_title="Bond & Debt | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -53,6 +54,7 @@ with col2:
 
 # Waterfall chart
 st.subheader("Annual Debt Service Waterfall")
+st.caption("Cumulative annual cash outflows not visible in the board's primary performance report")
 hidden_sorted = hidden.sort_values("Annual Impact", ascending=False)
 items = hidden_sorted["Item"].tolist()
 values = hidden_sorted["Annual Impact"].tolist()
@@ -83,8 +85,10 @@ fig_waterfall.update_layout(
 style_chart(fig_waterfall, 500)
 st.plotly_chart(fig_waterfall, use_container_width=True)
 
+st.markdown("---")
+
 # ── Fixed Obligations ─────────────────────────────────────────────────────
-st.header("Fixed Obligations (6 Months: Jul-Dec 2025)")
+st.header(f"Fixed Obligations (6 Months: {get_period_label(6)})")
 st.caption("Contractual obligations from the Expense Flow Analysis")
 
 fixed = load_fixed_obligations()
@@ -120,6 +124,8 @@ fig_fixed.update_layout(title="Fixed Obligations Breakdown (6-Month Period)",
                          xaxis_title="Dollars")
 style_chart(fig_fixed, 420)
 st.plotly_chart(fig_fixed, use_container_width=True)
+
+st.markdown("---")
 
 # ── Scoreboard Economics ──────────────────────────────────────────────────
 st.header("Scoreboard Economics — 10-Year NPV Comparison")
@@ -167,8 +173,11 @@ with col2:
                        for col in sb_alt.columns if col != "Category"},
     )
 
+st.markdown("")
+
 # Comparison area chart
 st.subheader("Net Cash Flow Comparison Over 10 Years")
+st.caption("Year-by-year cash flow comparison showing cumulative impact of each deal structure")
 current_vals = sb_current[sb_current["Category"] == "Net Cash Flow (Current Deal)"]
 alt_vals = sb_alt[sb_alt["Category"] == "Net Cash Flow (Cheaper Alt)"]
 

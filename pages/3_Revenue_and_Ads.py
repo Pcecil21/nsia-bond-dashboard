@@ -9,6 +9,7 @@ import pandas as pd
 from datetime import datetime
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_receivable_months, get_latest_receivable_month
 
 st.set_page_config(page_title="Revenue & Ads | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -181,7 +182,10 @@ st.markdown("---")
 
 # ── Contract Receivables ─────────────────────────────────────────────────
 st.header("Contract Receivables")
-st.caption("Collection progress by major customer — September vs. November snapshots")
+_recv_months = get_receivable_months()
+_recv_first = _recv_months[0] if len(_recv_months) > 0 else "Sept"
+_recv_last = _recv_months[-1] if len(_recv_months) > 0 else "Nov"
+st.caption(f"Collection progress by major customer — {_recv_first} vs. {_recv_last} snapshots")
 
 recv_data = recv[recv["Customer"] != "Total"].copy()
 
@@ -191,25 +195,25 @@ if not recv_data.empty:
 
     fig_recv.add_trace(go.Bar(
         x=recv_data["Customer"],
-        y=recv_data["Nov Paid"],
+        y=recv_data[f"{_recv_last} Paid"],
         name="Paid",
         marker_color="#00d084",
-        text=[f"${v:,.0f}" for v in recv_data["Nov Paid"]],
+        text=[f"${v:,.0f}" for v in recv_data[f"{_recv_last} Paid"]],
         textposition="inside",
         textfont=dict(color="#fff", size=11),
     ))
     fig_recv.add_trace(go.Bar(
         x=recv_data["Customer"],
-        y=recv_data["Nov Owed"],
+        y=recv_data[f"{_recv_last} Owed"],
         name="Outstanding",
         marker_color="#eb144c",
-        text=[f"${v:,.0f}" for v in recv_data["Nov Owed"]],
+        text=[f"${v:,.0f}" for v in recv_data[f"{_recv_last} Owed"]],
         textposition="inside",
         textfont=dict(color="#fff", size=11),
     ))
 
     fig_recv.update_layout(
-        title="Collection Status by Customer (November)",
+        title=f"Collection Status by Customer ({_recv_last})",
         barmode="stack",
         yaxis_title="Contract Amount ($)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
@@ -221,38 +225,38 @@ if not recv_data.empty:
     totals = recv[recv["Customer"] == "Total"]
     if not totals.empty:
         t = totals.iloc[0]
-        sept_rate = t["Sept Paid"] / t["Sept Contracted"] * 100 if t["Sept Contracted"] > 0 else 0
-        nov_rate = t["Nov Paid"] / t["Nov Contracted"] * 100 if t["Nov Contracted"] > 0 else 0
-        delta = nov_rate - sept_rate
+        first_rate = t[f"{_recv_first} Paid"] / t[f"{_recv_first} Contracted"] * 100 if t[f"{_recv_first} Contracted"] > 0 else 0
+        last_rate = t[f"{_recv_last} Paid"] / t[f"{_recv_last} Contracted"] * 100 if t[f"{_recv_last} Contracted"] > 0 else 0
+        delta = last_rate - first_rate
 
         r1, r2, r3, r4 = st.columns(4)
-        r1.metric("Total Contracted", f"${t['Nov Contracted']:,.0f}")
-        r2.metric("Total Collected", f"${t['Nov Paid']:,.0f}")
-        r3.metric("Outstanding", f"${t['Nov Owed']:,.0f}")
-        r4.metric("Collection Rate", f"{nov_rate:.1f}%", f"{delta:+.1f}pp vs Sept ({sept_rate:.1f}%)")
+        r1.metric("Total Contracted", f"${t[f'{_recv_last} Contracted']:,.0f}")
+        r2.metric("Total Collected", f"${t[f'{_recv_last} Paid']:,.0f}")
+        r3.metric("Outstanding", f"${t[f'{_recv_last} Owed']:,.0f}")
+        r4.metric("Collection Rate", f"{last_rate:.1f}%", f"{delta:+.1f}pp vs {_recv_first} ({first_rate:.1f}%)")
 
-    # Sept → Nov collection progress
-    recv_data["Sept Collection %"] = (recv_data["Sept Paid"] / recv_data["Sept Contracted"] * 100).round(1)
-    recv_data["Nov Collection %"] = (recv_data["Nov Paid"] / recv_data["Nov Contracted"] * 100).round(1)
+    # Collection progress: first → last receivable month
+    recv_data[f"{_recv_first} Collection %"] = (recv_data[f"{_recv_first} Paid"] / recv_data[f"{_recv_first} Contracted"] * 100).round(1)
+    recv_data[f"{_recv_last} Collection %"] = (recv_data[f"{_recv_last} Paid"] / recv_data[f"{_recv_last} Contracted"] * 100).round(1)
 
     fig_progress = go.Figure()
     fig_progress.add_trace(go.Bar(
         x=recv_data["Customer"],
-        y=recv_data["Sept Collection %"],
-        name="Sept",
+        y=recv_data[f"{_recv_first} Collection %"],
+        name=_recv_first,
         marker_color="#636e72",
     ))
     fig_progress.add_trace(go.Bar(
         x=recv_data["Customer"],
-        y=recv_data["Nov Collection %"],
-        name="Nov",
+        y=recv_data[f"{_recv_last} Collection %"],
+        name=_recv_last,
         marker_color="#0984e3",
-        text=[f"{v:.0f}%" for v in recv_data["Nov Collection %"]],
+        text=[f"{v:.0f}%" for v in recv_data[f"{_recv_last} Collection %"]],
         textposition="outside",
         textfont=dict(color=FONT_COLOR, size=11),
     ))
     fig_progress.update_layout(
-        title="Collection Rate Progress: September → November",
+        title=f"Collection Rate Progress: {_recv_first} \u2192 {_recv_last}",
         barmode="group",
         yaxis_title="% Collected",
         yaxis=dict(range=[0, 105]),

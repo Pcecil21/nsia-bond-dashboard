@@ -34,11 +34,7 @@ _CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config"
 ROLE_PAGES = {
     "admin": None,  # all pages
     "board": None,  # all pages
-    "club_rep": [
-        "1_financial_overview",
-        "4_operations",
-        "9_ice_utilization",
-    ],
+    "club_rep": None,  # all pages — ice utilization filters by club internally
 }
 
 # Map usernames to their club affiliation (for club_rep filtering)

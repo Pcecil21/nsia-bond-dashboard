@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_current_month, get_month_label
 
 st.set_page_config(page_title="Board Report | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -36,6 +37,8 @@ st.markdown("""
 
 st.title("Board Report Generator")
 st.caption("One-click comprehensive governance report for board meetings")
+
+st.markdown("---")
 
 # ── Preflight ─────────────────────────────────────────────────────────────
 if not ANTHROPIC_AVAILABLE:
@@ -101,6 +104,8 @@ with col3:
     non_compliant = len(scorecard[scorecard["Status"] == "NON-COMPLIANT"])
     st.metric("Non-Compliant Items", non_compliant)
 
+st.caption("These metrics will be included in the generated report based on your section selections below.")
+
 st.markdown("---")
 
 # ── Report Options ────────────────────────────────────────────────────────
@@ -109,7 +114,7 @@ st.markdown("### Report Options")
 col_opt1, col_opt2 = st.columns(2)
 with col_opt1:
     meeting_date = st.date_input("Board Meeting Date", value=date.today())
-    report_period = st.text_input("Reporting Period", value="FY2026 — Through January 2026 (Month 7)")
+    report_period = st.text_input("Reporting Period", value=f"{get_current_month()['fiscal_year']} — Through {get_month_label()}")
 with col_opt2:
     include_sections = st.multiselect(
         "Sections to include",

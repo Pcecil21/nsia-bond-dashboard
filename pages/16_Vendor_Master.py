@@ -43,6 +43,7 @@ CATEGORY_OPTIONS = [
 
 st.title("Vendor Master")
 st.caption("Centralized vendor registry with contract tracking, risk flags, and spend analytics")
+st.markdown("---")
 
 # ── Sidebar: Extract Vendors ────────────────────────────────────────────
 st.sidebar.markdown("### Data Extraction")
@@ -206,6 +207,7 @@ if VENDOR_MASTER_PATH.exists():
             )
 
     # ── Top 10 Vendors by Spend ─────────────────────────────────────────
+    st.markdown("---")
     st.markdown("### Top 10 Vendors by Spend")
 
     top10 = vm.nlargest(10, "total_spend_ytd").copy()
@@ -229,6 +231,7 @@ if VENDOR_MASTER_PATH.exists():
     # ── CSCG Deep-Dive ──────────────────────────────────────────────────
     cscg_rows = vm[vm["vendor_name"].str.contains("CSCG", case=False, na=False)]
     if not cscg_rows.empty:
+        st.markdown("---")
         st.markdown("### CSCG Deep-Dive")
         cscg_spend = cscg_rows["total_spend_ytd"].sum()
         cscg_count = cscg_rows["payment_count"].sum()
@@ -255,6 +258,7 @@ if VENDOR_MASTER_PATH.exists():
         st.markdown("")
 
     # ── Editable Vendor Table ───────────────────────────────────────────
+    st.markdown("---")
     st.markdown("### Vendor Registry")
 
     # Prepare display columns
@@ -271,7 +275,7 @@ if VENDOR_MASTER_PATH.exists():
         "vendor_id": st.column_config.TextColumn("ID", width="small", disabled=True),
         "vendor_name": st.column_config.TextColumn("Vendor Name", width="medium"),
         "total_spend_ytd": st.column_config.NumberColumn(
-            "Spend (YTD)", format="$%.2f", disabled=True,
+            "Spend (YTD)", format="$%,.0f", disabled=True,
         ),
         "payment_count": st.column_config.NumberColumn(
             "Payments", disabled=True,

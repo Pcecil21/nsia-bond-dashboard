@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_current_month
 
 st.set_page_config(page_title="Multi-Year Trends | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -17,6 +18,8 @@ st.title("Multi-Year Trends")
 st.caption("3-year revenue & expense analysis, Form 990 highlights, and payroll benchmarking")
 
 from utils.data_loader import load_multiyear_revenue, load_payroll_benchmarks
+
+st.markdown("---")
 
 # ── Section 1: 3-Year Revenue ────────────────────────────────────────────
 st.header("3-Year Revenue Trend")
@@ -169,7 +172,7 @@ st.plotly_chart(fig_gap, use_container_width=True)
 
 # ── Section 3: Form 990 Highlights ──────────────────────────────────────
 st.markdown("---")
-st.header("Form 990 Highlights (FY ending June 2025)")
+st.header(f"Form 990 Highlights (FY ending June {get_current_month()['fy_start_year']})")
 
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:

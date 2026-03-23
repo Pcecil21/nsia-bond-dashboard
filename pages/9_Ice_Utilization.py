@@ -7,15 +7,16 @@ import plotly.graph_objects as go
 import pandas as pd
 from utils.theme import FONT_COLOR, style_chart, inject_css
 from utils.auth import require_auth, has_role, get_user_club
+from utils.fiscal_period import get_season_dates
 
 st.set_page_config(page_title="Ice Utilization | NSIA", layout="wide", page_icon=":ice_hockey:")
+
+inject_css()
 
 _username = require_auth()
 _user_club = get_user_club()  # "Winnetka", "Wilmette", or None (admin/board see all)
 
 CLUB_COLORS = {"NT": "#fcb900", "Winnetka": "#64ffda", "Wilmette": "#f78da7"}
-
-inject_css()
 
 st.title("Ice Utilization")
 st.caption("Weekday & weekend ice allocation analysis and Winnetka usage gaps")
@@ -28,6 +29,8 @@ from utils.data_loader import (
     load_winnetka_weekend_summary,
     load_winnetka_day_level_gaps,
 )
+
+st.markdown("---")
 
 # ======================================================================
 # Section 1: Weekend Allocation
@@ -268,7 +271,8 @@ _show_wilmette = _user_club is None or _user_club == "Wilmette"
 if _show_winnetka:
     st.markdown("---")
     st.subheader("Winnetka Hockey -- NSIA Actual Usage vs Allocation")
-    st.caption("Scraped from winnetkahockey.com/schedule -- Sep 2025 to Mar 2026 weekend days")
+    _season = get_season_dates()
+    st.caption(f"Scraped from winnetkahockey.com/schedule -- {_season['label']} weekend days")
     st.markdown(
         '*Source: [winnetkahockey.com/schedule](https://www.winnetkahockey.com/schedule)*'
     )
@@ -294,7 +298,7 @@ if _show_winnetka:
         daily_usage["Actual_Hours"] = daily_usage["Event_Hours"] + daily_usage["Resurface_Hours"]
 
         # Determine weekend type (1 or 2) based on alternating pattern
-        first_sat = pd.Timestamp("2025-09-06")
+        first_sat = get_season_dates()["first_saturday"]
         daily_usage["WeekNum"] = ((daily_usage["Date"] - first_sat).dt.days // 7).astype(int)
         daily_usage["WeekendType"] = daily_usage["WeekNum"].apply(lambda w: 1 if (w // 1) % 2 == 0 else 2)
 
@@ -510,7 +514,8 @@ if _show_winnetka:
 if _show_wilmette:
     st.markdown("---")
     st.subheader("Wilmette (Jr. Trevians) -- NSIA Actual Usage vs Allocation")
-    st.caption("Scraped from jrtrevianshockey.com/schedule -- Sep 2025 to Mar 2026 weekend days")
+    _wil_season = get_season_dates()
+    st.caption(f"Scraped from jrtrevianshockey.com/schedule -- {_wil_season['label']} weekend days")
     st.markdown(
         '*Source: [jrtrevianshockey.com/schedule](https://www.jrtrevianshockey.com/schedule)*'
     )
@@ -536,7 +541,7 @@ if _show_wilmette:
         wil_daily["Actual_Hours"] = wil_daily["Event_Hours"] + wil_daily["Resurface_Hours"]
 
         # Determine weekend type (1 or 2) based on alternating pattern
-        wil_first_sat = pd.Timestamp("2025-09-06")
+        wil_first_sat = get_season_dates()["first_saturday"]
         wil_daily["WeekNum"] = ((wil_daily["Date"] - wil_first_sat).dt.days // 7).astype(int)
         wil_daily["WeekendType"] = wil_daily["WeekNum"].apply(lambda w: 1 if (w // 1) % 2 == 0 else 2)
 

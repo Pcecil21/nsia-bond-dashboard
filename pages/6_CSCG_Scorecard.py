@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.agent_router import analyze_document, get_api_key, ANTHROPIC_AVAILABLE
 from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
 from utils.auth import require_auth
+from utils.fiscal_period import get_period_label
 
 st.set_page_config(page_title="CSCG Scorecard | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -72,6 +73,8 @@ with col3:
 with col4:
     st.metric("Non-Compliant", non_compliant)
 
+st.markdown("")
+
 # ── Compliance Gauge ──────────────────────────────────────────────────────
 verifiable = scorecard[scorecard["Status"] != "AUTO-PAY"]
 if len(verifiable) > 0:
@@ -125,7 +128,7 @@ with col1:
     # Stacked bar showing disclosed vs undisclosed
     fig_disc = go.Figure()
     fig_disc.add_trace(go.Bar(
-        x=["CSCG Relationship (6 months)"],
+        x=[f"CSCG Relationship ({get_period_label(6)})"],
         y=[mgmt_fee],
         name="Disclosed (Management Fee)",
         marker=dict(color="#00d084", line=dict(width=1.5, color="rgba(255,255,255,0.3)")),
@@ -135,7 +138,7 @@ with col1:
         hovertemplate="<b>Disclosed</b><br>Management Fee: $%{y:,.0f}<extra></extra>",
     ))
     fig_disc.add_trace(go.Bar(
-        x=["CSCG Relationship (6 months)"],
+        x=[f"CSCG Relationship ({get_period_label(6)})"],
         y=[undisclosed],
         name="Undisclosed (Payroll + Other)",
         marker=dict(color="#eb144c", line=dict(width=1.5, color="rgba(255,255,255,0.3)")),
@@ -211,7 +214,7 @@ fig_detail = go.Figure(go.Bar(
     hovertemplate="<b>%{y}</b><br>$%{x:,.0f}<extra></extra>",
 ))
 fig_detail.update_layout(
-    title="CSCG Payment Components (6-Month Period)",
+    title=f"CSCG Payment Components ({get_period_label(6)})",
     xaxis_title="Amount ($)",
 )
 style_chart(fig_detail, 380)
