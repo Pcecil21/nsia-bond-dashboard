@@ -451,3 +451,6 @@ st.markdown("""
 *These recommendations are based on the analysis of actual financial data and the CSCG management agreement.
 Implementing even items 1, 2, and 8 would significantly improve board oversight.*
 """)
+
+from utils import ask_about_this
+ask_about_this("CSCG Scorecard")

@@ -5,7 +5,9 @@ Plain-english monthly summary for board members.
 import streamlit as st
 import plotly.graph_objects as go
 import os
+import logging
 import pandas as pd
+from datetime import datetime, timezone
 
 from utils.fiscal_period import get_current_month, get_month_label, get_sidebar_caption, get_latest_receivable_month, get_cash_forecast_months
 from utils.variance_engine import compute_monthly_flags, compute_discussion_items
@@ -135,6 +137,34 @@ st.markdown("""
         content: "\25B8  ";
         color: #64ffda;
     }
+    .staleness-fresh {
+        color: #00d084;
+        font-size: 0.8rem;
+    }
+    .staleness-stale {
+        color: #fcb900;
+        font-size: 0.8rem;
+    }
+    .staleness-critical {
+        color: #eb144c;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    @media (max-width: 768px) {
+        .verdict-card {
+            padding: 16px 14px;
+            margin: 4px 0 8px 0;
+        }
+        .verdict-number {
+            font-size: 1.8rem;
+        }
+        .verdict-label {
+            font-size: 0.85rem;
+        }
+        .verdict-context {
+            font-size: 0.75rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -244,6 +274,27 @@ st.markdown(
     f'font-size:0.85rem;color:#64ffda;">{get_month_label()}</span>',
     unsafe_allow_html=True,
 )
+
+# ── Data Freshness Indicator ──────────────────────────────────────────────
+_last_sync_path = os.path.join(os.path.dirname(__file__), "data", ".last_sync")
+try:
+    _sync_ts = datetime.fromisoformat(open(_last_sync_path, encoding="utf-8").read().strip())
+    _age = datetime.now(timezone.utc) - _sync_ts
+    _age_days = _age.total_seconds() / 86400
+    if _age_days > 7:
+        _cls, _label = "staleness-critical", f"Data last synced {_age_days:.0f} days ago — may be stale"
+    elif _age_days > 1:
+        _label = f"Data synced {_age_days:.0f} day{'s' if _age_days >= 2 else ''} ago"
+        _cls = "staleness-stale" if _age_days > 3 else "staleness-fresh"
+    else:
+        _hours = _age.total_seconds() / 3600
+        _label = f"Data synced {_hours:.0f}h ago" if _hours >= 1 else "Data synced just now"
+        _cls = "staleness-fresh"
+    st.markdown(f'<span class="{_cls}">{_label}</span>', unsafe_allow_html=True)
+except FileNotFoundError:
+    st.markdown('<span class="staleness-stale">Data sync status unknown</span>', unsafe_allow_html=True)
+except Exception as e:
+    logging.getLogger(__name__).warning("Failed to read .last_sync: %s", e)
 
 st.markdown("---")
 

@@ -47,9 +47,11 @@ logger = logging.getLogger(__name__)
 # Public API
 # ---------------------------------------------------------------------------
 
+@st.cache_data(ttl=300)
 def build_data_summary() -> str:
     """Build a ~2000 token structured text summary of current NSIA financial state.
 
+    Cached for 5 minutes to avoid redundant string assembly on every question.
     Each section is independently wrapped in try/except so partial data
     failures do not kill the entire summary.
     """

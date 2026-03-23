@@ -3,11 +3,17 @@ Page 17: Ask NSIA — AI-powered Q&A for board members.
 
 Conversational chat interface where board members can ask questions about
 NSIA finances, operations, and governance in plain English.
+Accepts redirects from per-page "Ask about this" widgets via session_state.
 """
 
+import logging
 import streamlit as st
 from pathlib import Path
 import sys
+
+logger = logging.getLogger(__name__)
+
+MAX_QUESTIONS_PER_SESSION = 50
 
 # Ensure utils is importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -76,8 +82,13 @@ Key risks: Revenue concentration, thin cash margins, escalating lease costs, bon
 # ---------------------------------------------------------------------------
 
 
-def _build_system_prompt() -> str:
-    """Assemble the system prompt with live financial data context."""
+def _build_system_prompt(page_context: str = "") -> str:
+    """Assemble the system prompt with live financial data context.
+
+    Args:
+        page_context: Optional context from a per-page redirect (e.g. "User was
+            viewing the Financial Overview page").
+    """
     try:
         data_summary = build_data_summary()
     except Exception:
@@ -93,13 +104,15 @@ def _build_system_prompt() -> str:
             "fiscal_month": "?",
         }
 
+    page_section = f"\n## Page Context\nThe user was viewing: {page_context}\nPrioritize answering with data relevant to that page.\n" if page_context else ""
+
     return f"""You are the NSIA Board Intelligence Assistant — a conversational AI that answers questions about North Shore Ice Arena's finances, operations, and governance using actual data.
 
 {NSIA_CONTEXT}
 
 ## Current Financial Snapshot
 {data_summary}
-
+{page_section}
 ## Rules
 - Always cite specific dollar amounts and percentages from the data
 - If you don't have data to answer a question, say so clearly — never guess
@@ -131,9 +144,14 @@ if not ANTHROPIC_AVAILABLE:
     )
     st.stop()
 
-# Initialize conversation history
+# Initialize conversation history and session counter
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "question_count" not in st.session_state:
+    st.session_state.question_count = 0
+
+# Read page context from redirect (set by per-page "Ask about this" widgets)
+_page_context = st.session_state.pop("page_context", "")
 
 # Suggested questions — shown only when the conversation is empty
 if len(st.session_state.messages) == 0:
@@ -178,6 +196,16 @@ if "pending_question" in st.session_state:
     del st.session_state.pending_question
 
 if prompt:
+    # Session counter check
+    if st.session_state.question_count >= MAX_QUESTIONS_PER_SESSION:
+        st.warning(
+            f"You've asked {MAX_QUESTIONS_PER_SESSION} questions this session. "
+            "Please refresh the page to continue, or review past answers above."
+        )
+        st.stop()
+
+    st.session_state.question_count += 1
+
     # Add user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -192,9 +220,9 @@ if prompt:
         )
         st.stop()
 
-    # Build conversation for API
+    # Build conversation for API (include page context from redirect if present)
     client = anthropic.Anthropic(api_key=api_key)
-    system_prompt = _build_system_prompt()
+    system_prompt = _build_system_prompt(page_context=_page_context)
 
     # Convert session messages to API format
     api_messages = [
@@ -274,8 +302,8 @@ if prompt:
             input_summary=prompt[:500],
             source_page="Ask NSIA",
         )
-    except Exception:
-        pass  # Don't crash on history save failure
+    except Exception as e:
+        logger.warning("Failed to save analysis history: %s", e)
 
 
 # ---------------------------------------------------------------------------

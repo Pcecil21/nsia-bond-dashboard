@@ -1,7 +1,9 @@
 """
 Page 8: Multi-Year Trends
 3-year revenue/expense trends, Form 990 highlights, and payroll benchmarking.
+FY columns are detected dynamically from CSV headers.
 """
+import re
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
@@ -21,33 +23,43 @@ from utils.data_loader import load_multiyear_revenue, load_payroll_benchmarks
 
 st.markdown("---")
 
-# ── Section 1: 3-Year Revenue ────────────────────────────────────────────
-st.header("3-Year Revenue Trend")
-
+# ── Detect FY columns dynamically ────────────────────────────────────────
 data = load_multiyear_revenue()
+_fy_cols = sorted([c for c in data.columns if re.match(r'^FY\d{4}$', c)])
+years = _fy_cols[-3:] if len(_fy_cols) >= 3 else _fy_cols  # last 3 FY columns
+
+if not years:
+    st.warning("No fiscal year columns found in multi-year data.")
+    st.stop()
+
+# Color palettes — cycle if more/fewer than 3
+_REV_PALETTE = ["#8ed1fc", "#64ffda", "#fcb900", "#7bdcb5", "#f78da7"]
+_EXP_PALETTE = ["#f78da7", "#eb144c", "#ff6900", "#fcb900", "#8ed1fc"]
+year_colors = {yr: _REV_PALETTE[i % len(_REV_PALETTE)] for i, yr in enumerate(years)}
+exp_colors = {yr: _EXP_PALETTE[i % len(_EXP_PALETTE)] for i, yr in enumerate(years)}
+
+# ── Section 1: 3-Year Revenue ────────────────────────────────────────────
+st.header(f"{len(years)}-Year Revenue Trend")
+
 rev = data[data["Type"] == "Revenue"]
 exp = data[data["Type"] == "Expense"]
 
-# Revenue totals
+# Revenue totals — dynamic per FY column
 rev_totals = rev[rev["Category"] == "Total Revenue"]
-fy24_rev = rev_totals["FY2024"].values[0] if len(rev_totals) > 0 else 0
-fy25_rev = rev_totals["FY2025"].values[0] if len(rev_totals) > 0 else 0
-fy26_rev = rev_totals["FY2026"].values[0] if len(rev_totals) > 0 else 0
+fy_rev = {yr: rev_totals[yr].values[0] if len(rev_totals) > 0 and yr in rev_totals.columns else 0 for yr in years}
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("FY2024 Revenue", f"${fy24_rev:,.0f}")
-with col2:
-    delta_25 = (fy25_rev - fy24_rev) / fy24_rev * 100 if fy24_rev else 0
-    st.metric("FY2025 Revenue", f"${fy25_rev:,.0f}", delta=f"{delta_25:+.1f}% YoY")
-with col3:
-    delta_26 = (fy26_rev - fy25_rev) / fy25_rev * 100 if fy25_rev else 0
-    st.metric("FY2026 Revenue", f"${fy26_rev:,.0f}", delta=f"{delta_26:+.1f}% YoY")
+cols = st.columns(len(years))
+for i, yr in enumerate(years):
+    with cols[i]:
+        if i == 0:
+            st.metric(f"{yr} Revenue", f"${fy_rev[yr]:,.0f}")
+        else:
+            prev_yr = years[i - 1]
+            delta = (fy_rev[yr] - fy_rev[prev_yr]) / fy_rev[prev_yr] * 100 if fy_rev[prev_yr] else 0
+            st.metric(f"{yr} Revenue", f"${fy_rev[yr]:,.0f}", delta=f"{delta:+.1f}% YoY")
 
-# Grouped bar: revenue categories across 3 years
+# Grouped bar: revenue categories across years
 rev_categories = rev[rev["Category"] != "Total Revenue"]
-years = ["FY2024", "FY2025", "FY2026"]
-year_colors = {"FY2024": "#8ed1fc", "FY2025": "#64ffda", "FY2026": "#fcb900"}
 
 fig_rev = go.Figure()
 for yr in years:
@@ -62,7 +74,7 @@ for yr in years:
         hovertemplate="<b>%{x}</b><br>" + yr + ": $%{y:,.0f}<extra></extra>",
     ))
 fig_rev.update_layout(
-    title="Revenue by Category — 3-Year Comparison",
+    title=f"Revenue by Category — {len(years)}-Year Comparison",
     barmode="group",
     xaxis_tickangle=-20,
     yaxis_title="Revenue ($)",
@@ -76,7 +88,7 @@ area_colors = ["#64ffda", "#f78da7", "#fcb900", "#7bdcb5", "#8ed1fc"]
 for i, (_, row) in enumerate(rev_categories.iterrows()):
     fig_area.add_trace(go.Scatter(
         x=years,
-        y=[row["FY2024"], row["FY2025"], row["FY2026"]],
+        y=[row[yr] for yr in years],
         name=row["Category"],
         mode="lines",
         stackgroup="one",
@@ -93,12 +105,11 @@ st.plotly_chart(fig_area, use_container_width=True)
 
 # ── Section 2: 3-Year Expenses ──────────────────────────────────────────
 st.markdown("---")
-st.header("3-Year Expense Trend")
+st.header(f"{len(years)}-Year Expense Trend")
 
 exp_categories = exp[exp["Category"] != "Total Expenses"]
 
 fig_exp = go.Figure()
-exp_colors = {"FY2024": "#f78da7", "FY2025": "#eb144c", "FY2026": "#ff6900"}
 for yr in years:
     fig_exp.add_trace(go.Bar(
         x=exp_categories["Category"],
@@ -111,7 +122,7 @@ for yr in years:
         hovertemplate="<b>%{x}</b><br>" + yr + ": $%{y:,.0f}<extra></extra>",
     ))
 fig_exp.update_layout(
-    title="Expenses by Category — 3-Year Comparison",
+    title=f"Expenses by Category — {len(years)}-Year Comparison",
     barmode="group",
     xaxis_tickangle=-20,
     yaxis_title="Expenses ($)",
@@ -121,14 +132,12 @@ st.plotly_chart(fig_exp, use_container_width=True)
 
 # Revenue vs Expenses line chart
 exp_totals = exp[exp["Category"] == "Total Expenses"]
-fy24_exp = exp_totals["FY2024"].values[0] if len(exp_totals) > 0 else 0
-fy25_exp = exp_totals["FY2025"].values[0] if len(exp_totals) > 0 else 0
-fy26_exp = exp_totals["FY2026"].values[0] if len(exp_totals) > 0 else 0
+fy_exp = {yr: exp_totals[yr].values[0] if len(exp_totals) > 0 and yr in exp_totals.columns else 0 for yr in years}
 
 fig_gap = go.Figure()
 fig_gap.add_trace(go.Scatter(
     x=years,
-    y=[fy24_rev, fy25_rev, fy26_rev],
+    y=[fy_rev[yr] for yr in years],
     name="Total Revenue",
     mode="lines+markers",
     line=dict(color="#64ffda", width=3),
@@ -137,7 +146,7 @@ fig_gap.add_trace(go.Scatter(
 ))
 fig_gap.add_trace(go.Scatter(
     x=years,
-    y=[fy24_exp, fy25_exp, fy26_exp],
+    y=[fy_exp[yr] for yr in years],
     name="Total Expenses",
     mode="lines+markers",
     line=dict(color="#eb144c", width=3),
@@ -145,9 +154,11 @@ fig_gap.add_trace(go.Scatter(
     hovertemplate="Expenses: $%{y:,.0f}<extra></extra>",
 ))
 # Shade the gap
+rev_vals = [fy_rev[yr] for yr in years]
+exp_vals = [fy_exp[yr] for yr in years]
 fig_gap.add_trace(go.Scatter(
     x=years + years[::-1],
-    y=[fy24_rev, fy25_rev, fy26_rev, fy26_exp, fy25_exp, fy24_exp],
+    y=rev_vals + exp_vals[::-1],
     fill="toself",
     fillcolor="rgba(100,255,218,0.1)",
     line=dict(width=0),
@@ -155,8 +166,7 @@ fig_gap.add_trace(go.Scatter(
     hoverinfo="skip",
 ))
 for i, yr in enumerate(years):
-    r = [fy24_rev, fy25_rev, fy26_rev][i]
-    e = [fy24_exp, fy25_exp, fy26_exp][i]
+    r, e = rev_vals[i], exp_vals[i]
     fig_gap.add_annotation(
         x=yr, y=(r + e) / 2,
         text=f"Gap: ${r - e:+,.0f}",
@@ -282,3 +292,6 @@ st.dataframe(
         "Payroll Pct": st.column_config.NumberColumn("Payroll %", format="%.2f%%"),
     },
 )
+
+from utils import ask_about_this
+ask_about_this("Multi-Year Trends")

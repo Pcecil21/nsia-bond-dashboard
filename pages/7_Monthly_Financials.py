@@ -516,3 +516,6 @@ if os.path.exists(BANK_CSV_PATH) and os.path.getsize(BANK_CSV_PATH) > 50:
                 "balance": st.column_config.NumberColumn(format="$%,.2f"),
             },
         )
+
+from utils import ask_about_this
+ask_about_this("Monthly Financials")

@@ -307,3 +307,6 @@ payroll costs are reimbursed automatically as CSCG employees serve the rink.
     """
 )
 
+from utils import ask_about_this
+ask_about_this("Operations")
+

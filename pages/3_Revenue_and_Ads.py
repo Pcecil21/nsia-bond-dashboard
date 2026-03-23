@@ -366,3 +366,6 @@ if not revenue_rows.empty:
     )
     style_chart(fig_sb, 450)
     st.plotly_chart(fig_sb, use_container_width=True)
+
+from utils import ask_about_this
+ask_about_this("Revenue and Ads")

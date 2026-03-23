@@ -220,3 +220,6 @@ if not current_vals.empty and not alt_vals.empty:
         f"**Cheaper alternative** 10-year total: **${total_alt:,.0f}** | "
         f"**Savings: ${diff:,.0f}** in favor of the cheaper alternative"
     )
+
+from utils import ask_about_this
+ask_about_this("Bond and Debt")
