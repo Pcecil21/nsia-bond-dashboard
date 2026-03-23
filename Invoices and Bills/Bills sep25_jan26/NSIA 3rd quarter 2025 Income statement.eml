@@ -1,0 +1,412 @@
+Delivered-To: seanlutz@gmail.com
+Received: by 2002:aa7:de87:0:b0:639:3d21:5c14 with SMTP id j7csp8185999edv;
+        Mon, 20 Oct 2025 12:48:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFdFo2CKf5ToViDSts0zJ0hfzFCE4IhFQZa7j7ZZ3X34ixrt3wt4wy9KpeAh4lA8/1AyzU1
+X-Received: by 2002:a05:6830:4987:b0:78a:1d62:ff20 with SMTP id 46e09a7af769-7c27cba0d74mr6682310a34.30.1760989693935;
+        Mon, 20 Oct 2025 12:48:13 -0700 (PDT)
+ARC-Seal: i=2; a=rsa-sha256; t=1760989693; cv=fail;
+        d=google.com; s=arc-20240605;
+        b=P+BVi8cKhv+k6GlwCiJ6eGvT0XW3YiXkJo7SrQ08eJnrfaYI7ZQ2qLwN+5gP1T/tnd
+         5xtJIscPGEfGcCafcEb4RV+YCvejDzkCIRjCPesAH1T9Bd9X9OO5i+aU+IAT7n8+ZV3A
+         cdUOfeBimJvPwMHnELpyYqoU8U00FIUFmoIJKkYoA89II2gYDCarvQ3ldxSLLUQK9icZ
+         F6xdKMS4ZjaBeSbYC6E+olUJi9MQ50Uwcn4gn2bgbd3xW3CtzlEQAGTK4/mHUBAtpz67
+         3EG04YDAOgXFPW3IO/oAuRpFIzK6soZF2cIPiM0q0r2/Vr4YkJ1GMFGhlQnLQ3WO3duU
+         cPxg==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=mime-version:content-language:accept-language:in-reply-to
+         :references:message-id:date:thread-index:thread-topic:subject:cc:to
+         :from:dkim-signature;
+        bh=Gm04l3+BK/rO1e/J3q9dgDsbd03xdFaEjFwnFmaLCNE=;
+        fh=baHytEGH6r2reqhYoPeUHaC+UxnFqcFct7xiv6nD09k=;
+        b=iyJzKuYZQCzpuvnKc9mYwZeStA3nD+9Bnivc39ewGmFeAyRJoTKVeLZk0V2IciPYF5
+         D6D2G3f2V+nEs5bR/+1uUdwJ+llEEFbTrYY7xQlGtAV8OjiqBCmLPXDb6vyjfkdPoaGW
+         v1De5NiRj3IvlF+P5ZmWBytYi+DLKhPizulYoFJDb1IplVUfweKEytG7suvaQzbXilil
+         yqeM2RplZxa3MuyP1dc7FuW5viS48BAvxau8qcovsGcE7z91KLRWfZUsHdtQiYuiFmgt
+         pZ7A12JFq2qXPZ51ej6TXmttAsWHhMm3+XKM8FTTyppF+QVid6770nc+A3mzEbiVSQHQ
+         Jj4w==;
+        dara=google.com
+ARC-Authentication-Results: i=2; mx.google.com;
+       dkim=pass header.i=@umb.com header.s=20240326 header.b=qPDOXKF5;
+       arc=fail (body hash mismatch);
+       spf=pass (google.com: domain of jacque.schwartz@umb.com designates 198.153.253.80 as permitted sender) smtp.mailfrom=Jacque.Schwartz@umb.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=umb.com
+Return-Path: <Jacque.Schwartz@umb.com>
+Received: from toc-mail.umb.com (toc-mail.umb.com. [198.153.253.80])
+        by mx.google.com with ESMTPS id 46e09a7af769-7c2887b5dc5si2058820a34.16.2025.10.20.12.48.13
+        for <seanlutz@gmail.com>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 20 Oct 2025 12:48:13 -0700 (PDT)
+Received-SPF: pass (google.com: domain of jacque.schwartz@umb.com designates 198.153.253.80 as permitted sender) client-ip=198.153.253.80;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@umb.com header.s=20240326 header.b=qPDOXKF5;
+       arc=fail (body hash mismatch);
+       spf=pass (google.com: domain of jacque.schwartz@umb.com designates 198.153.253.80 as permitted sender) smtp.mailfrom=Jacque.Schwartz@umb.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=umb.com
+Received: from pps.filterd (vrtpo90316.sec.umb.com [127.0.0.1])
+	by vrtpo90316.sec.umb.com (8.18.1.2/8.18.1.2) with ESMTP id 59KJlrMW014337;
+	Mon, 20 Oct 2025 14:48:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=umb.com; h=cc : content-type : date
+ : from : in-reply-to : message-id : mime-version : references : subject :
+ to; s=20240326; bh=Gm04l3+BK/rO1e/J3q9dgDsbd03xdFaEjFwnFmaLCNE=;
+ b=qPDOXKF5vyUIJrb+77nx4ONMc/MxAz+YWzlDui2MGa0TfUpBwwBO2JhHytN9wL3ECXC3
+ aZV5Sa5tBjYDfDpA65RxsrHIaq/GKtg5jD4mmxRPFL2eNEtn7Ut1qoMsBpfRVckmnArZ
+ 5U0AquWqEcEVfnW5Y4WKg6BnyiXksATEanViVzLmzyIlddt0yIC0eOCIWlRxXhDoPzkH
+ zPHUkoYj8Dqp9SEImmWHfoJrcyW6p7UYNlCoE7W2sqZ9KBJ4Spzvb0xDfk+t6BClRjCa
+ 77DcNsPDybiCv5dHbdcQ8t4dYg3xdtJQY1J1mkV3vTrEimSsf8rswFJr/4tROd+jEOHo EQ== 
+Received: from vrtpw60030.corp.umb.com ([192.168.145.4])
+	by vrtpo90316.sec.umb.com (PPS) with ESMTPS id 49v743ywbg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Mon, 20 Oct 2025 14:48:11 -0500
+Received: from vrtpw60040.corp.umb.com (10.174.8.42) by
+ vrtpw60030.corp.umb.com (10.174.8.165) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.58; Mon, 20 Oct 2025 14:48:10 -0500
+Received: from DM2PR0701CU001.outbound.protection.outlook.com (10.174.34.55)
+ by sts.umb.com (10.174.8.42) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.58 via Frontend
+ Transport; Mon, 20 Oct 2025 14:48:10 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eXH79Y0oaTQBYhl2m8LUX8CDu/JQ5JpWrC/6uoxXaNM3B3uyLbjHasTgUSYP7M/tIbnkmWbwpQA+AG9fmqB3aOWwjvpWPywM3uBlYw0DyH0+ThVgxUXXWEpONjKPhYnrTZ7s5QN5jE1s6EWmnYLAHq/Qf2Kjsbk9N2iYd90ZheKxWg9646t/gLujC7j741DDFv2J/fDhW+KwWtn+vtFdGJkvQ77/Up2GYTVCCs/0fTPAUaIi3FnakEUu+ccb08U8YvXRyosTTy8xMzWG9It5SYkOc9mydVYs7DodSKeyRl3IEFwSQgEqQAZnhV5E+9KrhvmpG2s9EN2uFq7Ekfbn2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=6noy4I8GeAVYpe5nsQiUApWjO4zcJO7lBn+zTnsY94g=;
+ b=Df5JJkb3wWP5696/CFYlj/UHYTUKhs3eXgMI2O6KZuvA5vFoV2QK9UrKW6Tz9F7mwivkgyhZXVw4a8xJnSKNwLEDW2B+g1+20tw12KgoaVamJRhrUxqv5sDAOo/T6n+G6wi87GaLTEHt0k9kFXaloloCOdjPc8qdviEihbS6GbwIE4wmhBMJccRSGNTwnU4MM/kyDzeJ4ZdHBIcl4Q2kWsbihVTTvh7Md74VWJdTdrrV/wjhQN2L9Owk8FVX8geUqITAwLjK4WJl1uGHR2jOz6LfXkncqVV02uYycMbtWB43UaIR37KXhBf0xHmZ/zMMyyoJNB90Nvxe0u4uxHso/g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=umb.com; dmarc=pass action=none header.from=umb.com; dkim=pass
+ header.d=umb.com; arc=none
+Received: from CH0PR13MB5187.namprd13.prod.outlook.com (2603:10b6:610:f6::20)
+ by SA6PR13MB6987.namprd13.prod.outlook.com (2603:10b6:806:40b::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.15; Mon, 20 Oct
+ 2025 19:48:09 +0000
+Received: from CH0PR13MB5187.namprd13.prod.outlook.com
+ ([fe80::c374:dfd5:f037:664f]) by CH0PR13MB5187.namprd13.prod.outlook.com
+ ([fe80::c374:dfd5:f037:664f%5]) with mapi id 15.20.9228.015; Mon, 20 Oct 2025
+ 19:48:09 +0000
+From: "Schwartz, Jacque" <Jacque.Schwartz@umb.com>
+To: Hailey Kenny <hkenny@clubsportsconsultinggroup.com>
+CC: 'Sean Lutz' <seanlutz@gmail.com>,
+        Don LaPato
+	<dlapato@clubsportsconsultinggroup.com>
+Subject: RE: NSIA 3rd quarter 2025 Income statement
+Thread-Topic: NSIA 3rd quarter 2025 Income statement
+Thread-Index: AdxB3HlDb/00LJWbQ3SGRrNWFJ5JYwAHfFvw
+Date: Mon, 20 Oct 2025 19:48:09 +0000
+Message-ID: <CH0PR13MB5187BF3718505F2E85B07160FAF5A@CH0PR13MB5187.namprd13.prod.outlook.com>
+References: <BYAPR18MB2774C244977C347B5F1E5D96C8F5A@BYAPR18MB2774.namprd18.prod.outlook.com>
+In-Reply-To: <BYAPR18MB2774C244977C347B5F1E5D96C8F5A@BYAPR18MB2774.namprd18.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: CH0PR13MB5187:EE_|SA6PR13MB6987:EE_
+x-ms-office365-filtering-correlation-id: 84b26546-f5e8-4860-08e9-08de1011986b
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|8096899003|7053199007|38070700021;
+x-microsoft-antispam-message-info: =?us-ascii?Q?Lh4RzgnXw1gwwq3UqRKwPHI9YOfrKsfnPvCkSBtzj8zw6gwYt4LzamGW6wJi?=
+ =?us-ascii?Q?SxsJXXqxBgH9i+0boIkFzkPwR/fFI8N612PeBWsbuLTzMGO8R/iI5aS7JKy+?=
+ =?us-ascii?Q?8M7adWiGLHHZG4JT+ufDTfNsM7j2rSbeNJW+CzlA/zfNDPdU171dHECQK0VT?=
+ =?us-ascii?Q?auOlZLM7oiysFfZvxz5VrRMtMJx+no0nrLoJiWSFic+JMVKRuIRcAa1wWhWI?=
+ =?us-ascii?Q?czigdf0TlKs+jmdkIc7mK7dTibk9c9ZGGI3TKKz4wjwyR9LW9P1w9u3ePAq+?=
+ =?us-ascii?Q?pyhK85qSux/a9KqUrukXHI8kWJkvDPUQPlHaAI7w1PJUKKvkOaliCNO1EOUJ?=
+ =?us-ascii?Q?PsMH3U1sSrp2u43m+vCQ5nlTXKyZtO1cUgeAdZU8B6lnsmKmn0gLk5ZK/+++?=
+ =?us-ascii?Q?DwhUhgREXb2Ctrk+LPWRWmr+K5Y+9zBnWgn+iNSxTBXUG2YWr2rr6AfejnaS?=
+ =?us-ascii?Q?J4Xamo/qvc3TDPBMgg3Yszlb/bFxXPPZDnE3QPYm6SPWJnHcg1U/2S+Gf/zX?=
+ =?us-ascii?Q?450+Xond80rXPbZIk5EF/62T9gLHyIrDS66LcTRiV22hSLkbuh4uyDwgOd4N?=
+ =?us-ascii?Q?V8djc8SIe8rdGZMiFu01CBolXWXJoUrJ0NTaIw2/HaiRrSvHj+GY4ZezUgRA?=
+ =?us-ascii?Q?o8zB9+rveGktAKJWtSljYF2yaGKbhzHMOwTeMDaT4PiKGXw6ZMjo0zpor6J2?=
+ =?us-ascii?Q?uVKQbgIGFmDTrKnVk8DYC5mbTL+yL0EstVHf+SruR7IGWim/kJa7Zqkt3k6B?=
+ =?us-ascii?Q?h9NeiO+ZKgAmbzsb2xQ7YSZyB2NU1inatqaO5Rp0ORJvKuW1YqgGmoVqT3EE?=
+ =?us-ascii?Q?Ak5Gi/m8YnEL7oOif2FlPxPODtNT7qHiU91nObjihu19Rr0f2V12O61dgJRh?=
+ =?us-ascii?Q?aJ0DGw8SJoJSQ14gANFsclLdagmIUnGxom6o0kxDaQtRWhgBl8FI/hNkQmDM?=
+ =?us-ascii?Q?uotc4Qmw6culPqUIsbtlUmV78UqUsFVJqBqKejFVZkZ/LlNEUA6zTdiA9QsU?=
+ =?us-ascii?Q?/sS7fBtFBf/SQdD0f4Dbnd9mrvBKW2Hj/hr9cOVgMvPDhlYHXVlbx5sr40JZ?=
+ =?us-ascii?Q?qtNOuO6WeNaWTk3X/Q6dJSy4cSM13nfHM2Dn2hcWXJZo+VeBs+ebI70T63F+?=
+ =?us-ascii?Q?hpV4zkBzAH/3OfHC+xQkFVyye/rafDUqNGMS9BCcGIJYglpIHrboKj0cBw4a?=
+ =?us-ascii?Q?bubGGFADG5se8AX3ZeHQGvjCM2bRWRmiLaaEIxTgrXTe9GUD533E0ZBO3ZmE?=
+ =?us-ascii?Q?4u+6DvWDh4hGNQ5wjZ8YncKfmqfdrMAYUyBRuMoVB5P4HjG4bA1h3iJ92HRP?=
+ =?us-ascii?Q?YAExuzKIE8EjwlQ+V7ZT82odJdkBfhlOyPxeuIx/zhOTnqLSBVpQMu5hmnC2?=
+ =?us-ascii?Q?sapImvKtC9L44ktpC0J9MrYO8mHn8nuMieT3HuN4BNaU7PxWet78Wj1GMgWR?=
+ =?us-ascii?Q?4aHlCiK3cDCiwOR+61Uw+b5Ow3oqREVcza6mq36/Gz9amhhda+ML3q2/lWxt?=
+ =?us-ascii?Q?mATWbqPegwJ0/cML9w5MvYAGDZwX5+GLyVe1?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR13MB5187.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(8096899003)(7053199007)(38070700021);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?zIDUIDg6sFOAeR6mkp8aaqlBpcrlLuzc2IHCcbjWkx5mJJpuBGm5kPDfiaPw?=
+ =?us-ascii?Q?0llImHqRSjmwMSozmuXz1reODtBweYjQvgCKDEiq11O1OotMxdoUOm03raTI?=
+ =?us-ascii?Q?kyMFQz2yPyXBdTjPzLifC38aJY0pSdqxFnqpJ+pnZ4PU9BjHhz4u/TURdPMq?=
+ =?us-ascii?Q?0TlOcHfY3grySb8jvlY6BD8QzmM2/+u710mBhI94nMvtNd7h6YfnAAWuhs1Y?=
+ =?us-ascii?Q?HZT6QccInvi7+Yt+zydXjuNCTHEwd3wSx9WtaOEYxWU8l3x5djZ3B3d+X/Bm?=
+ =?us-ascii?Q?KV6XxoNle9vm4oAmSaYb6QhMX3gQfXLaTYWMMwEFjAv6JhioLrRHh5FOul9K?=
+ =?us-ascii?Q?c3hUWieTHsxM2Iz3+ckdE0bh9m1CDuPLTEfGMBIPzLc2Viuf8qrY7REo7/5t?=
+ =?us-ascii?Q?X/yUb35vmmEiBLdWUcgs/I7N2Rl0TWz+0JnIUfTWdYdd0JRa3y/YbqwD/cpC?=
+ =?us-ascii?Q?Dn3XnblGSsqSkRmvul3NeuTQIgDgPeiDXpORpZh8nynbDuWt7cSKRppL0j76?=
+ =?us-ascii?Q?exuqY2JAT/lw1EKpOVe3BoANK5Ww8EfOzfL0fhV/uu3/dF+Tw2elzW4eqY6a?=
+ =?us-ascii?Q?qN1cSD8EvzCfuFXexUEFCnfmYYW88I8ySLKhP9ZdcRhgfCf3nqWOBd4DnFty?=
+ =?us-ascii?Q?7T1aQuB9m9iNb+HzecYvjcGM+TMRilmhKgRUK/kqyLlKwItRw/+oC0VqcCCl?=
+ =?us-ascii?Q?Wjxz8lMADfhAEgNqX5yiTKomVqjaqWZKZdY0SR3Lg67oUAD+OrZG+EayhK8l?=
+ =?us-ascii?Q?DbpIdK4E5IOJgw9yiC2H0oR3xnx6LRBGKNYiX1zi+mcEcJUth0v6oqqjT9NX?=
+ =?us-ascii?Q?e0xPDTbc2LqOsL3x+AO4VKMWpX4Yex6GFaki2Ye/pPzxVjX6Q5JtoVZxWZxC?=
+ =?us-ascii?Q?rFJ1kfWNashqYaapz9URwsvdjHzk9UGzBQLlZerR1+3uHfb5Y7v77ynt01/E?=
+ =?us-ascii?Q?IoQdd/3MHTw+4nC8k4py739sFpaEvRYmVMtNF/XDYn95ck/38y+ZNeHIDn6N?=
+ =?us-ascii?Q?cwGPYlJ91qLYUrpSoZpQx6rctDo3+xleHaI2IKFHPAbOL9BoQkBX21kXc2KX?=
+ =?us-ascii?Q?PPy/9RwNnEta4HkoDhwEKb/kaTMraq0SgruKIwG+DR4sFOS/7rmLT/N3ZC1P?=
+ =?us-ascii?Q?pXmgx6f5n4WSjfo8ttpqKLEZkpgSQtnaelSVPfpurjHe6Xf1H8/v3UeDm1EV?=
+ =?us-ascii?Q?eSdbdsNeKWEGBC2jzx3ypct2k/MAGnqQIfDmwboerc+XFJFU5NsXz+IUnYaG?=
+ =?us-ascii?Q?Rvca7WXOC3DLYbHbUMT9jZ5bHoYPd8Yb7h5qVMZtXhCqfrRyi3yP9c0sJAfa?=
+ =?us-ascii?Q?QbX2Qn716cy9msUYl6O3xOcrq5kMKEZy9+9w2ZRP6u5MYnJcAa5kAJHDomIx?=
+ =?us-ascii?Q?xGA/TdEAjUNjD/AUmWUsAoP10wDswIHSymFA+Rqjet4SqyLvdaKl/bnuGHnB?=
+ =?us-ascii?Q?om2oOALMyzDGPJ5rWEaGaZJnP24/f+SD3Jr362noXkQDePH5BgdYaYu1DHjv?=
+ =?us-ascii?Q?k/07VvexGcKrAKbg397HmdHH2kWoY6uqRixsIPXS9kly6HygYHyrPRDOoBrh?=
+ =?us-ascii?Q?5X1MwNipdCu0h6mDbQ0=3D?=
+Content-Type: multipart/alternative;
+	boundary="_000_CH0PR13MB5187BF3718505F2E85B07160FAF5ACH0PR13MB5187namp_"
+MIME-Version: 1.0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: sImc9j7rX57mOEygUGwr2xndSFkpnZnCFvDAue0CFPC9lBWUUNoN6eduYKiCZ8DKyS0+It8GgD1YIEqPpNH6oEkoElO2C898UtvVU7JGWqatlSaVRoP7ys9+jIgXcWn7u7dhYzkdH0aSt6pur6wwtuj+Ct+xHCRS/bSxXoE5fTuKrGycygHWCtiht+ny5U7DiPEFLXZvkh2G/+nB0VwgF3I5rVzXTOFTWPjmUdWHoj05nB2mWACYFA/f4Ws3/fegT2F/aRFUcbotFXiQlNKWRY/apNpqCZACLWB92Pid5yGfXdHwQ4/fADu/U2eF9sfPji7YyM1Txm4YPu1Tb7zuXuk1GiawsiNmiYSeRPsMPr3//EzT6N08onSCQqbHTqW2/3Bb4EoIinBEktMqct4toO8B2pMfDTlls2mmYU8IdNOqjLI0A/W1GN2g4k4a74w5ygbQ8EyWQ9Dj1hzCsMuHhIk5QsQl1IoIGi1PtROIsqJ0SwpuTorRQTqK1J6sNa3/+jxX1eGjMlMJpohqsa5fpe1D26bsmCdDigsPso++vSgXJE23LhXuXgQOGLSV0hrYnV/H3X0+MeP7kwjL9NBBwBe/bT/oQPmHP0QD+dJ7pPCGUsAeihz9vWFEqDe9TlGwTx5hOcCj0U/W2Afu4g+wHA==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR13MB5187.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 84b26546-f5e8-4860-08e9-08de1011986b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Oct 2025 19:48:09.0663
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 492328de-db5a-4ec0-a661-2ac9735a0e2d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 1RB7Hl5ixY8GrXr4Db9A+wEJdg109SsHYgtmfur9ABllJCGzB2Ss6CG1I/XJxUr9
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA6PR13MB6987
+Received-SPF: None (vrtpw60030.corp.umb.com: Jacque.Schwartz@umb.com does not
+ designate permitted sender hosts)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-20_05,2025-10-13_01,2025-03-28_01
+
+--_000_CH0PR13MB5187BF3718505F2E85B07160FAF5ACH0PR13MB5187namp_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Received and posted to EMMA.
+
+Thanks - Jacque
+
+Jacque Schwartz | Vice President | Corporate Trust & Escrow Services
+
+UMB Bank | 928 Grand Blvd 12th Floor | Kansas City, MO 64106
+816.860.7520 Office | 303.764.3699 Fax
+jacque.schwartz@umb.com<mailto:jacque.schwartz@umb.com> | umb.com
+
+Beware of fraud attempts. UMB Bank does not change its cash receipt instruc=
+tions for wires or ACH payments.  If you receive any communication that ind=
+icates a change in payment instructions to UMB, please reach out immediatel=
+y to me at the contact info above.
+
+From: Hailey Kenny <hkenny@clubsportsconsultinggroup.com>
+Sent: Monday, October 20, 2025 11:14 AM
+To: Schwartz, Jacque <Jacque.Schwartz@umb.com>
+Cc: 'Sean Lutz' <seanlutz@gmail.com>; Don LaPato <dlapato@clubsportsconsult=
+inggroup.com>
+Subject: NSIA 3rd quarter 2025 Income statement
+
+This is an EXTERNAL email. Do not open attachments or click on links unless=
+ you have confirmed the identity of the sender.
+Hi Jacque,
+
+Please see attached 3rd quarter, 2025 income statement for North Shore Ice =
+Arena.
+
+Hailey
+
+
+
+
+
+Hailey Kenny
+Club Sport Consulting Group
+
+NOTICE:  This electronic mail message and any attached files are confidenti=
+al.  The information is exclusively for the use of the individual or entity=
+ intended as the recipient.  If you are not the intended recipient, any use=
+, copying, printing, reviewing, retention, disclosure, distribution or forw=
+arding of the message or any attached file is not authorized and is strictl=
+y prohibited.  If you have received this electronic mail message in error, =
+please advise the sender by reply electronic mail immediately and permanent=
+ly delete the original transmission, any attachments and any copies of this=
+ message from your computer system. Thank you.
+
+--_000_CH0PR13MB5187BF3718505F2E85B07160FAF5ACH0PR13MB5187namp_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii">
+<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Helvetica;
+	panose-1:2 11 6 4 2 2 2 2 2 4;}
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Aptos;}
+@font-face
+	{font-family:"Lucida Handwriting";
+	panose-1:3 1 1 1 1 1 1 1 1 1;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	font-size:12.0pt;
+	font-family:"Aptos",sans-serif;
+	mso-ligatures:standardcontextual;}
+span.EmailStyle19
+	{mso-style-type:personal-reply;
+	font-family:"Aptos",sans-serif;
+	color:#0E2841;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-size:10.0pt;
+	mso-ligatures:none;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"#467886" vlink=3D"#96607D" style=3D"word-wrap:=
+break-word">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#0E2841">Recei=
+ved and posted to EMMA.
+<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#0E2841"><o:p>=
+&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#0E2841">Thank=
+s - Jacque<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#0E2841"><o:p>=
+&nbsp;</o:p></span></p>
+<div>
+<p class=3D"MsoNormal" style=3D"background:white"><b><span lang=3D"EN" styl=
+e=3D"font-family:&quot;Arial&quot;,sans-serif;color:#003C6E">Jacque Schwart=
+z</span></b><span lang=3D"EN" style=3D"font-family:&quot;Arial&quot;,sans-s=
+erif;color:#747678"> | Vice President | Corporate Trust &amp; Escrow
+ Services</span><span lang=3D"EN" style=3D"font-size:11.0pt;font-family:&qu=
+ot;Arial&quot;,sans-serif;color:#747678;mso-ligatures:none"><o:p></o:p></sp=
+an></p>
+<p class=3D"MsoNormal" style=3D"background:white"><span lang=3D"EN" style=
+=3D"font-family:&quot;Helvetica&quot;,sans-serif;color:#1F497D"><o:p>&nbsp;=
+</o:p></span></p>
+<p class=3D"MsoNormal" style=3D"background:white"><b><span lang=3D"EN" styl=
+e=3D"font-family:&quot;Arial&quot;,sans-serif;color:#003C6E">UMB Bank</span=
+></b><span lang=3D"EN" style=3D"font-family:&quot;Arial&quot;,sans-serif;co=
+lor:#747678"> | 928 Grand Blvd 12<sup>th</sup> Floor | Kansas City,
+ MO 64106</span><span lang=3D"EN" style=3D"font-size:11.0pt;font-family:&qu=
+ot;Arial&quot;,sans-serif;color:#747678"><o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"background:white"><span lang=3D"EN" style=
+=3D"font-family:&quot;Arial&quot;,sans-serif;color:#747678">816.860.7520 Of=
+fice | 303.764.3699 Fax<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"background:white"><span style=3D"color:#1F4=
+E79"><a href=3D"mailto:jacque.schwartz@umb.com"><span lang=3D"EN" style=3D"=
+font-family:&quot;Arial&quot;,sans-serif;color:#0563C1">jacque.schwartz@umb=
+.com</span></a></span><span lang=3D"EN" style=3D"font-family:&quot;Arial&qu=
+ot;,sans-serif;color:#747678">
+ | umb.com<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-family:&quot;Calibri&quot;,sans-=
+serif;color:#1F4E79"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal"><i><span style=3D"color:#0E2841">Beware of fraud att=
+empts. UMB Bank does not change its cash receipt instructions for wires or =
+ACH payments.&nbsp; If you receive any communication that indicates a chang=
+e in payment instructions to UMB, please
+ reach out immediately to me at the contact info above.<o:p></o:p></span></=
+i></p>
+</div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;color:#0E2841"><o:p>=
+&nbsp;</o:p></span></p>
+<div>
+<div style=3D"border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in =
+0in 0in">
+<p class=3D"MsoNormal"><b><span style=3D"font-size:11.0pt;font-family:&quot=
+;Calibri&quot;,sans-serif;mso-ligatures:none">From:</span></b><span style=
+=3D"font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif;mso-ligatur=
+es:none"> Hailey Kenny &lt;hkenny@clubsportsconsultinggroup.com&gt;
+<br>
+<b>Sent:</b> Monday, October 20, 2025 11:14 AM<br>
+<b>To:</b> Schwartz, Jacque &lt;Jacque.Schwartz@umb.com&gt;<br>
+<b>Cc:</b> 'Sean Lutz' &lt;seanlutz@gmail.com&gt;; Don LaPato &lt;dlapato@c=
+lubsportsconsultinggroup.com&gt;<br>
+<b>Subject:</b> NSIA 3rd quarter 2025 Income statement<o:p></o:p></span></p>
+</div>
+</div>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<div>
+<p class=3D"MsoNormal"><span style=3D"color:red;mso-ligatures:none">This is=
+ an EXTERNAL email. Do not open attachments or click on links unless you ha=
+ve confirmed the identity of the sender.
+</span><span style=3D"mso-ligatures:none"><o:p></o:p></span></p>
+</div>
+<p class=3D"MsoNormal">Hi Jacque, <o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Please see attached 3<sup>rd</sup> quarter, 2025 inc=
+ome statement for North Shore Ice Arena.<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Hailey<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;font-family:&quot;Ca=
+libri&quot;,sans-serif;color:black;mso-ligatures:none"><o:p>&nbsp;</o:p></s=
+pan></p>
+</div>
+<div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;font-family:&quot;Ca=
+libri&quot;,sans-serif;color:black;mso-ligatures:none"><o:p>&nbsp;</o:p></s=
+pan></p>
+</div>
+<div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;font-family:&quot;Ca=
+libri&quot;,sans-serif;color:black;mso-ligatures:none"><o:p>&nbsp;</o:p></s=
+pan></p>
+</div>
+<div>
+<p class=3D"MsoNormal"><span style=3D"font-size:11.0pt;font-family:&quot;Ca=
+libri&quot;,sans-serif;color:black;mso-ligatures:none"><o:p>&nbsp;</o:p></s=
+pan></p>
+</div>
+<div>
+<p class=3D"MsoNormal"><span style=3D"font-family:&quot;Lucida Handwriting&=
+quot;;color:#0C64C0;background:white;mso-ligatures:none">Hailey Kenny</span=
+><span style=3D"font-size:11.0pt;font-family:&quot;Calibri&quot;,sans-serif=
+;color:black;mso-ligatures:none"><o:p></o:p></span></p>
+</div>
+<p class=3D"MsoNormal"><span style=3D"font-family:&quot;Lucida Handwriting&=
+quot;;color:#0C64C0;background:white;mso-ligatures:none">Club Sport Consult=
+ing Group</span><o:p></o:p></p>
+</div>
+
+<DIV>
+NOTICE:  This electronic mail message and any attached files are confidenti=
+al.  The information is exclusively for the use of the individual or entity=
+ intended as the recipient.  If you are not the intended recipient, any use=
+, copying, printing, reviewing, retention, disclosure, distribution or forw=
+arding of the message or any attached file is not authorized and is strictl=
+y prohibited.  If you have received this electronic mail message in error, =
+please advise the sender by reply electronic mail immediately and permanent=
+ly delete the original transmission, any attachments and any copies of this=
+ message from your computer system. Thank you.<BR>
+</DIV></body>
+</html>
+
+--_000_CH0PR13MB5187BF3718505F2E85B07160FAF5ACH0PR13MB5187namp_--
