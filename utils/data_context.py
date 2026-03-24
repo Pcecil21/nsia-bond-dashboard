@@ -365,7 +365,9 @@ def _get_drive_service():
         creds.refresh(Request())
         return build("drive", "v3", credentials=creds)
     except Exception as e:
-        logger.error("Failed to build Drive service: %s", e)
+        logger.error("Failed to build Drive service: %s (type: %s)", e, type(e).__name__)
+        # Store the error so search_documents can report it
+        _get_drive_service._last_error = str(e)
         return None
 
 
@@ -374,7 +376,14 @@ def search_documents(search_query: str) -> str:
     try:
         service = _get_drive_service()
         if not service:
-            return "Google Drive is not configured. Documents are not available."
+            # Return more detail about why it failed
+            last_err = getattr(_get_drive_service, "_last_error", "unknown")
+            try:
+                sec = st.secrets.get("google_drive", {})
+                has_keys = bool(sec.get("refresh_token") and sec.get("client_id"))
+                return f"Google Drive connection failed. Secrets present: {has_keys}. Error: {last_err}"
+            except Exception:
+                return f"Google Drive secrets are not configured. Error: {last_err}"
 
         folder_id = st.secrets["google_drive"]["folder_id"]
 
