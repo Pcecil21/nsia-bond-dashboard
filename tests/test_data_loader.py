@@ -805,7 +805,7 @@ class TestComputeBoardAttention:
         monkeypatch.setattr(self._dl, "compute_variance_alerts", lambda: pd.DataFrame(columns=["Severity"]))
         monkeypatch.setattr(self._dl, "compute_cscg_scorecard", lambda: pd.DataFrame(columns=["Status"]))
         result = self._dl.compute_board_attention()
-        hidden_items = [i for i in result if "hidden" in i["text"]]
+        hidden_items = [i for i in result if "off-budget" in i["text"]]
         assert len(hidden_items) == 1
 
     def test_returns_empty_when_all_healthy(self, monkeypatch):

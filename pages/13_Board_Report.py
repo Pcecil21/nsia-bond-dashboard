@@ -100,7 +100,7 @@ with col2:
     st.metric("Net Cash Flow (est.)", f"${kpis['net_cash_flow']:,.0f}")
     st.metric("YELLOW Alerts", len(yellow_alerts))
 with col3:
-    st.metric("Hidden Outflows", f"${kpis['hidden_cash_outflows']:,.0f}/yr")
+    st.metric("Off-Budget Outflows", f"${kpis['hidden_cash_outflows']:,.0f}/yr")
     non_compliant = len(scorecard[scorecard["Status"] == "NON-COMPLIANT"])
     st.metric("Non-Compliant Items", non_compliant)
 
@@ -122,7 +122,7 @@ with col_opt2:
             "Executive Summary & DSCR",
             "Variance Alerts (RED/YELLOW)",
             "CSCG Scorecard & Compliance",
-            "Hidden Cash Flows",
+            "Off-Budget Cash Flows",
             "Cash Forecast & Financial Health",
             "Unauthorized Budget Modifications",
             "Governance Recommendations",
@@ -131,7 +131,7 @@ with col_opt2:
             "Executive Summary & DSCR",
             "Variance Alerts (RED/YELLOW)",
             "CSCG Scorecard & Compliance",
-            "Hidden Cash Flows",
+            "Off-Budget Cash Flows",
             "Cash Forecast & Financial Health",
             "Unauthorized Budget Modifications",
             "Governance Recommendations",
@@ -165,7 +165,7 @@ if st.button("Generate Board Report", type="primary", use_container_width=True):
         report_data.append(f"Total Annual Revenue (est.): ${kpis['total_annual_revenue']:,.0f}")
         report_data.append(f"Total Annual Expenses (est.): ${kpis['total_annual_expenses']:,.0f}")
         report_data.append(f"Net Cash Flow (est.): ${kpis['net_cash_flow']:,.0f}")
-        report_data.append(f"Hidden Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}/yr")
+        report_data.append(f"Off-Budget Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}/yr")
         report_data.append(f"Board-Approved Expenses: {kpis['pct_board_approved']*100:.1f}%")
         report_data.append("")
 
@@ -198,12 +198,12 @@ if st.button("Generate Board Report", type="primary", use_container_width=True):
         report_data.append(f"Undisclosed (Auto-Pay): ${total_cscg - mgmt_fee:,.0f}")
         report_data.append("")
 
-    if "Hidden Cash Flows" in include_sections:
+    if "Off-Budget Cash Flows" in include_sections:
         report_data.append("=" * 60)
-        report_data.append("SECTION: HIDDEN CASH FLOWS")
+        report_data.append("SECTION: OFF-BUDGET CASH FLOWS")
         report_data.append("=" * 60)
         report_data.append(hidden.to_csv(index=False))
-        report_data.append(f"\nTotal Hidden Outflows: ${hidden['Annual Impact'].sum():,.0f}/yr")
+        report_data.append(f"\nTotal Off-Budget Outflows: ${hidden['Annual Impact'].sum():,.0f}/yr")
         report_data.append("")
 
     if "Cash Forecast & Financial Health" in include_sections:

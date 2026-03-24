@@ -218,7 +218,7 @@ st.sidebar.markdown(
 
 **Reference**
 - **Board Guide** — New member orientation & glossary
-- **Bond & Debt** — Obligations & hidden flows
+- **Bond & Debt** — Obligations & off-budget flows
 - **Revenue & Ads** — Advertising pipeline
 - **Multi-Year Trends** — 3yr Analysis
 - **Ice Utilization** — Allocation & Gaps
