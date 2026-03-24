@@ -19,4 +19,4 @@ def ask_about_this(page_name: str):
         if question:
             st.session_state["pending_question"] = question
             st.session_state["page_context"] = page_name
-            st.switch_page("pages/17_Ask_NSIA.py")
+            st.switch_page("pages/19_Ask_NSIA.py")

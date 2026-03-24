@@ -200,31 +200,38 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 if st.sidebar.button("Open Ask NSIA", use_container_width=True, type="primary"):
-    st.switch_page("pages/17_Ask_NSIA.py")
+    st.switch_page("pages/19_Ask_NSIA.py")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     """
-**Dig Deeper**
+**New here?**
+- **Board Guide** — Orientation & glossary
+
+**How are we doing?**
 - **Financial Overview** — Budget variances
 - **Monthly Financials** — P&L, Cash, Receivables
-- **Variance Alerts** — Stoplight flags
-- **Operations** — Ice Revenue & CSCG
+- **Multi-Year Trends** — 3yr Analysis
 
-**Oversight**
-- **CSCG Scorecard** — Contract compliance
-- **Reconciliation** — 4-way audit trail
+**What needs attention?**
+- **Variance Alerts** — Stoplight flags
+- **CSCG Scorecard** — Management compliance
 - **Board Actions** — Motions & action items
 
-**Reference**
-- **Board Guide** — New member orientation & glossary
-- **Bond & Debt** — Obligations & off-budget flows
+**Operations**
 - **Revenue & Ads** — Advertising pipeline
-- **Multi-Year Trends** — 3yr Analysis
 - **Ice Utilization** — Allocation & Gaps
-- **Vendor Master** — Vendor registry
-- **Document Library** — Board documents
+- **Operations** — Ice Revenue & CSCG
+
+**Debt & Reserves**
+- **Bond & Debt** — Obligations & off-budget flows
 - **DSRF Tracker** — CD holdings & maturity ladder
+
+**Reference**
+- **Document Library** — Board documents
+- **Vendor Master** — Vendor registry
+- **Reconciliation** — 4-way audit trail
+- **Board Report** — Printable summary
     """
 )
 st.sidebar.markdown("---")
