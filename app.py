@@ -184,7 +184,27 @@ st.sidebar.markdown(
     """
 **Start Here**
 - **Home** — Monthly summary (this page)
+    """
+)
 
+# Prominent Ask NSIA button in sidebar
+st.sidebar.markdown(
+    """
+<div style="background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%);
+     border-radius: 10px; padding: 14px 16px; margin: 8px 0 16px 0; text-align: center;">
+    <div style="font-size: 1.4rem; margin-bottom: 4px;">💬</div>
+    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">Ask NSIA</div>
+    <div style="color: rgba(255,255,255,0.8); font-size: 0.8rem;">Ask any question about NSIA finances</div>
+</div>
+    """,
+    unsafe_allow_html=True,
+)
+if st.sidebar.button("Open Ask NSIA", use_container_width=True, type="primary"):
+    st.switch_page("pages/17_Ask_NSIA.py")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
 **Dig Deeper**
 - **Financial Overview** — Budget variances
 - **Monthly Financials** — P&L, Cash, Receivables
@@ -203,7 +223,7 @@ st.sidebar.markdown(
 - **Ice Utilization** — Allocation & Gaps
 - **Vendor Master** — Vendor registry
 - **Document Library** — Board documents
-- **Ask NSIA** — AI Q&A
+- **DSRF Tracker** — CD holdings & maturity ladder
     """
 )
 st.sidebar.markdown("---")
