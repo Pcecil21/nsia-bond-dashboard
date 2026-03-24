@@ -8,20 +8,20 @@ credentials:
     admin:
       email: admin@nsia.org
       name: NSIA Admin
-      password: $2b$12$QjyjLnEseMSldoAzi10Bfej2eqdw28s15bFRX5TqOibJ1CZG0YTAq
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: admin
     board:
       email: board@nsia.org
       name: Board Member
-      password: $2b$12$6Tgi/RbZMLePN8gOGOpdSuP25bTZlPA43n0SaRWHlF9MbGDDV/sGy
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: board
     winnetka:
       email: winnetka@nsia.org
       name: Winnetka Rep
-      password: $2b$12$581JPPgafN6y797f8khGLeC7Iv6KcodyeXIRTcM1LFkSsUzVboYqy
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: club_rep
     wilmette:
       email: wilmette@nsia.org
       name: Wilmette Rep
-      password: $2b$12$PpoIyIjZnvo6HsyAMAHsa.1OuGrNCXeafyAm.NVC6QEX6XwnllmSS
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: club_rep
