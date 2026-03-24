@@ -5,10 +5,10 @@ cookie:
 
 credentials:
   usernames:
-    admin:
+    PC:
       email: admin@nsia.org
-      name: NSIA Admin
-      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
+      name: Pete Cecil
+      password: $2b$12$zY3m0Mh4YlEC.I5904XvyuDALk0yzGGRgerxfrzvmIsHVIYaeXIbq
       role: admin
     board:
       email: board@nsia.org
