@@ -32,6 +32,9 @@ data/documents/service_account.json
 data/documents/token.json
 sync_state.json
 
+# Board documents directory — confidential, local only
+data/documents/
+
 # Analysis DB
 data/analysis_history.db
 

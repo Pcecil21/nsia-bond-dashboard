@@ -215,7 +215,7 @@ def build_data_summary() -> str:
             "## KPIs",
             f"DSCR: {kpis['dscr']:.2f}x",
             f"Annual Revenue (projected): ${kpis['total_annual_revenue']:,.0f}",
-            f"Hidden Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}",
+            f"Off-Budget Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}",
             f"Board-Approved Expenses: {kpis['pct_board_approved'] * 100:.1f}%",
         ]
         sections.append("\n".join(kpi_lines))
@@ -809,8 +809,8 @@ def _query_kpis(filters: dict) -> str:
             f"Debt Service (annual): ${kpis['debt_service']:,.0f}",
             f"Annual Revenue (projected): ${kpis['total_annual_revenue']:,.0f}",
             f"Annual Expenses (projected): ${kpis['total_annual_expenses']:,.0f}",
-            f"Net Cash Flow (after hidden): ${kpis['net_cash_flow']:,.0f}",
-            f"Hidden Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}",
+            f"Net Cash Flow (after off-budget): ${kpis['net_cash_flow']:,.0f}",
+            f"Off-Budget Cash Outflows: ${kpis['hidden_cash_outflows']:,.0f}",
             f"Board-Approved Expenses: {kpis['pct_board_approved'] * 100:.1f}%",
         ]
         return "\n".join(lines)

@@ -22,6 +22,14 @@ require_auth()
 st.title("CSCG Contract Scorecard")
 st.caption("Management agreement compliance and financial relationship transparency")
 
+st.info(
+    "This page supports the board's fiduciary oversight of CSCG (Club Sports Consulting Group), "
+    "the management company hired to run daily operations. It tracks whether CSCG is operating "
+    "within the terms the board approved. Items marked 'non-compliant' or 'unauthorized' mean "
+    "they were not formally voted on by the board — this is a governance tracking tool, not an "
+    "accusation of wrongdoing."
+)
+
 from utils.data_loader import (
     compute_board_demands,
     compute_cscg_scorecard,
@@ -112,6 +120,7 @@ st.plotly_chart(fig_gauge, use_container_width=True)
 # ── Disclosed vs Undisclosed ──────────────────────────────────────────────
 st.markdown("---")
 st.header("Disclosed vs. Undisclosed CSCG Payments")
+st.caption("Payments or compensation arrangements not included in the management fee disclosure to the board.")
 st.markdown(
     "The management agreement discloses a **$42,000/year management fee**. "
     "But the total CSCG financial relationship is significantly larger."
@@ -223,6 +232,7 @@ st.plotly_chart(fig_detail, use_container_width=True)
 # ── Unauthorized Modifications by CSCG ────────────────────────────────────
 st.markdown("---")
 st.header("CSCG Budget Modifications Without Board Approval")
+st.caption("Budget changes made by CSCG that were not formally approved by board vote.")
 st.markdown(
     "Line items where CSCG changed the operational budget without a formal board amendment. "
     "These modifications represent CSCG exercising budget authority beyond their contract scope."
@@ -277,6 +287,7 @@ if not mods_filtered.empty:
 # ── Board Demands ─────────────────────────────────────────────────────────
 st.markdown("---")
 st.header("Board Demands — What NSIA Needs From CSCG")
+st.caption("Action items the board has formally requested from CSCG, with current status.")
 st.markdown(
     "Specific documents, reports, and actions the board should require from the management company. "
     "Status is auto-detected from dashboard data where possible."

@@ -22,6 +22,13 @@ require_auth()
 st.title("DSRF Tracker")
 st.caption("Debt Service Reserve Fund — CD & Treasury holdings, maturity ladder, FDIC exposure")
 
+st.info(
+    "The Debt Service Reserve Fund (DSRF) is a reserve account required by NSIA's bond agreement. "
+    "It holds approximately $650K in FDIC-insured CDs at UMB Bank, serving as a safety cushion for "
+    "bond debt payments. When a CD matures, the board works with the trustee (UMB Bank) to reinvest "
+    "the proceeds. The alerts below flag upcoming maturities that need attention."
+)
+
 # ── Load Data ─────────────────────────────────────────────────────────────
 
 DATA_PATH = "data/dsrf_holdings.csv"
@@ -85,6 +92,12 @@ if not upcoming.empty:
             f"on {row['Maturity_Date'].strftime('%m/%d/%Y')}"
         )
 
+if not urgent.empty or not upcoming.empty:
+    st.markdown(
+        ":telephone_receiver: **Trustee Contact:** Gena Mayer, VP Capital Markets, UMB Bank — "
+        "314.612.8016 / gena.mayer@umb.com"
+    )
+
 # ── KPI Row ───────────────────────────────────────────────────────────────
 
 cash_balance = cash_rows["Par"].sum() if not cash_rows.empty else 0
@@ -129,6 +142,7 @@ with col4:
 # ── Active Holdings Table ─────────────────────────────────────────────────
 
 st.header("Active Holdings")
+st.caption("These are the current investments in the DSRF trust account. 'Days Left' shows how long until each CD matures and needs to be reinvested.")
 
 display_active = active[["Issuer", "Security_Type", "CUSIP", "Purchase_Date", "Maturity_Date", "Par", "Yield", "Days_Remaining", "Notes"]].copy()
 display_active = display_active.sort_values("Maturity_Date")
@@ -209,6 +223,7 @@ st.plotly_chart(fig_ladder, use_container_width=True)
 
 st.header("FDIC Concentration by Issuer")
 st.caption(f"FDIC insurance limit: {fmt_dollar(FDIC_LIMIT)} per issuer")
+st.caption("FDIC insurance covers up to $250,000 per bank. If we hold more than that at one institution and it fails, the excess is uninsured. This chart shows our exposure by issuer.")
 
 issuer_totals = active.groupby("Issuer")["Par"].sum().reset_index()
 issuer_totals.columns = ["Issuer", "Total_Par"]

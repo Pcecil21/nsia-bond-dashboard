@@ -217,6 +217,7 @@ st.sidebar.markdown(
 - **Board Actions** — Motions & action items
 
 **Reference**
+- **Board Guide** — New member orientation & glossary
 - **Bond & Debt** — Obligations & hidden flows
 - **Revenue & Ads** — Advertising pipeline
 - **Multi-Year Trends** — 3yr Analysis
@@ -324,6 +325,8 @@ st.markdown("---")
 verdict_class = "verdict-good" if month_net > month_budget_net else (
     "verdict-ok" if month_net > 0 else "verdict-bad"
 )
+
+st.markdown('<div class="section-header">This Month at a Glance</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 
@@ -454,6 +457,7 @@ st.markdown("---")
 # SECTION 3: WHAT'S WRONG (Variance Flags)
 # ═════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-header">What Needs Attention</div>', unsafe_allow_html=True)
+st.caption("Items flagged here are budget lines that are significantly over or under the approved plan. Red items need board discussion; yellow items should be monitored.")
 
 flags = compute_monthly_flags()
 
@@ -545,7 +549,7 @@ Use the sidebar to access detailed analysis pages:
 | Page | What It Shows |
 |------|---------------|
 | **Financial Overview** | Budget vs CSCG variance analysis |
-| **Bond & Debt** | Hidden cash flows, fixed obligations, scoreboard economics |
+| **Bond & Debt** | Off-budget cash flows, fixed obligations, scoreboard economics |
 | **Revenue & Ads** | Advertising pipeline, contract receivables |
 | **Operations** | Ice revenue breakdown, CSCG relationship |
 | **Variance Alerts** | RED/YELLOW/GREEN stoplight on every budget line |
