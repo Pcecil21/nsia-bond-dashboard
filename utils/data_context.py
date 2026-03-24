@@ -5,7 +5,9 @@ Bridges board member questions to the 47 data loaders by:
 1. Building a structured text summary for Claude's system prompt
 2. Providing tool definitions for on-demand data queries
 3. Executing queries and returning formatted text results
+4. Searching and retrieving board documents from Google Drive
 """
+import io
 import logging
 
 import pandas as pd
@@ -261,7 +263,54 @@ def get_tool_definitions() -> list[dict]:
                 },
                 "required": ["query_type"],
             },
-        }
+        },
+        {
+            "name": "search_documents",
+            "description": (
+                "Search NSIA board documents stored in Google Drive. Use this when "
+                "a board member asks about contracts, agreements, leases, insurance, "
+                "audit documents, invoices, board meeting materials, budgets, or any "
+                "other governance document. Returns a list of matching file names "
+                "with their Google Drive IDs."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "search_query": {
+                        "type": "string",
+                        "description": (
+                            "Search terms to find documents. Examples: 'chiller contract', "
+                            "'ground lease', 'insurance policy', 'board meeting January', "
+                            "'audit report', 'budget 2026'"
+                        ),
+                    },
+                },
+                "required": ["search_query"],
+            },
+        },
+        {
+            "name": "read_document",
+            "description": (
+                "Download and read the text content of a specific document from "
+                "Google Drive by its file ID. Use this after search_documents to "
+                "read a specific file. Works with PDFs, spreadsheets, and text files. "
+                "Returns the extracted text content."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "file_id": {
+                        "type": "string",
+                        "description": "The Google Drive file ID returned by search_documents",
+                    },
+                    "file_name": {
+                        "type": "string",
+                        "description": "The file name (used to determine file type)",
+                    },
+                },
+                "required": ["file_id", "file_name"],
+            },
+        },
     ]
 
 
@@ -291,6 +340,159 @@ def query_data(query_type: str, filters: dict = None) -> str:
     except Exception as e:
         logger.error("query_data(%s) failed: %s", query_type, e)
         return f"Error querying {query_type}: {str(e)}"
+
+
+# ---------------------------------------------------------------------------
+# Google Drive document search & retrieval
+# ---------------------------------------------------------------------------
+
+def _get_drive_service():
+    """Build a Google Drive API service using credentials from st.secrets."""
+    try:
+        from google.oauth2.credentials import Credentials
+        from google.auth.transport.requests import Request
+        from googleapiclient.discovery import build
+
+        sec = st.secrets["google_drive"]
+        creds = Credentials(
+            token=None,
+            refresh_token=sec["refresh_token"],
+            token_uri=sec["token_uri"],
+            client_id=sec["client_id"],
+            client_secret=sec["client_secret"],
+            scopes=["https://www.googleapis.com/auth/drive.readonly"],
+        )
+        creds.refresh(Request())
+        return build("drive", "v3", credentials=creds)
+    except Exception as e:
+        logger.error("Failed to build Drive service: %s", e)
+        return None
+
+
+def search_documents(search_query: str) -> str:
+    """Search for documents in the NSIA Google Drive folder."""
+    try:
+        service = _get_drive_service()
+        if not service:
+            return "Google Drive is not configured. Documents are not available."
+
+        folder_id = st.secrets["google_drive"]["folder_id"]
+
+        # Search in the folder and all subfolders
+        # Use fullText search which searches file names and content
+        query = (
+            f"fullText contains '{search_query}' and trashed = false"
+        )
+
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, mimeType, modifiedTime, parents, webViewLink)",
+            pageSize=20,
+            orderBy="modifiedTime desc",
+        ).execute()
+
+        files = results.get("files", [])
+        if not files:
+            return f"No documents found matching '{search_query}'."
+
+        lines = [f"Found {len(files)} document(s) matching '{search_query}':\n"]
+        for f in files:
+            name = f["name"]
+            file_id = f["id"]
+            modified = f.get("modifiedTime", "")[:10]
+            mime = f.get("mimeType", "")
+            file_type = "PDF" if "pdf" in mime else "XLSX" if "spreadsheet" in mime else "DOC" if "document" in mime else mime.split("/")[-1]
+            lines.append(f"- [{file_type}] {name} (ID: {file_id}, modified: {modified})")
+
+        lines.append("\nUse read_document with a file ID to read the contents of a specific document.")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.error("search_documents failed: %s", e)
+        return f"Error searching documents: {e}"
+
+
+def read_document(file_id: str, file_name: str) -> str:
+    """Download and extract text from a Google Drive document."""
+    try:
+        service = _get_drive_service()
+        if not service:
+            return "Google Drive is not configured."
+
+        # Determine how to download based on mime type
+        file_meta = service.files().get(fileId=file_id, fields="mimeType,name").execute()
+        mime_type = file_meta.get("mimeType", "")
+
+        # Google Docs/Sheets/Slides need export
+        google_export_mimes = {
+            "application/vnd.google-apps.document": "text/plain",
+            "application/vnd.google-apps.spreadsheet": "text/csv",
+            "application/vnd.google-apps.presentation": "text/plain",
+        }
+
+        if mime_type in google_export_mimes:
+            export_mime = google_export_mimes[mime_type]
+            request = service.files().export_media(fileId=file_id, mimeType=export_mime)
+        else:
+            request = service.files().get_media(fileId=file_id)
+
+        content = request.execute()
+
+        # Handle PDF — use Claude's native PDF support isn't available here,
+        # so extract text with a simple approach
+        if mime_type == "application/pdf" or file_name.lower().endswith(".pdf"):
+            try:
+                import fitz  # PyMuPDF
+
+                doc = fitz.open(stream=content, filetype="pdf")
+                text_parts = []
+                for page_num, page in enumerate(doc, 1):
+                    text = page.get_text()
+                    if text.strip():
+                        text_parts.append(f"--- Page {page_num} ---\n{text}")
+                doc.close()
+                if text_parts:
+                    full_text = "\n".join(text_parts)
+                    # Truncate if too long
+                    if len(full_text) > 8000:
+                        full_text = full_text[:8000] + "\n\n[... truncated — document is too long to display fully]"
+                    return f"Document: {file_name}\n\n{full_text}"
+                return f"Document '{file_name}' is a PDF but no text could be extracted (may be a scanned image)."
+            except ImportError:
+                return (
+                    f"Document '{file_name}' is a PDF. PDF text extraction is not available. "
+                    f"The document can be viewed at: https://drive.google.com/file/d/{file_id}/view"
+                )
+
+        # Handle spreadsheets
+        if file_name.lower().endswith((".xlsx", ".xls", ".csv")) or "spreadsheet" in mime_type:
+            try:
+                if file_name.lower().endswith(".csv") or mime_type == "text/csv":
+                    df = pd.read_csv(io.BytesIO(content))
+                else:
+                    df = pd.read_excel(io.BytesIO(content))
+                result = df.head(50).to_string(index=False)
+                if len(df) > 50:
+                    result += f"\n\n[Showing 50 of {len(df)} rows]"
+                return f"Document: {file_name}\n\n{result}"
+            except Exception as e:
+                return f"Error reading spreadsheet '{file_name}': {e}"
+
+        # Handle text/plain and other text formats
+        if isinstance(content, bytes):
+            try:
+                text = content.decode("utf-8")
+            except UnicodeDecodeError:
+                text = content.decode("latin-1")
+        else:
+            text = str(content)
+
+        if len(text) > 8000:
+            text = text[:8000] + "\n\n[... truncated]"
+
+        return f"Document: {file_name}\n\n{text}"
+    except Exception as e:
+        logger.error("read_document failed: %s", e)
+        return f"Error reading document '{file_name}': {e}"
 
 
 # ---------------------------------------------------------------------------

@@ -32,7 +32,10 @@ from utils.fiscal_period import get_current_month
 
 # Optional imports — data_context may not exist yet
 try:
-    from utils.data_context import build_data_summary, get_tool_definitions, query_data
+    from utils.data_context import (
+        build_data_summary, get_tool_definitions, query_data,
+        search_documents, read_document,
+    )
 
     DATA_CONTEXT_AVAILABLE = True
 except ImportError:
@@ -46,6 +49,12 @@ except ImportError:
 
     def query_data(query_type: str = "", filters: dict = None) -> str:
         return "(Data query module not yet available.)"
+
+    def search_documents(search_query: str = "") -> str:
+        return "(Document search not available.)"
+
+    def read_document(file_id: str = "", file_name: str = "") -> str:
+        return "(Document reading not available.)"
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +129,8 @@ def _build_system_prompt(page_context: str = "") -> str:
 - Keep answers concise — board members are busy professionals
 - When comparing periods, always show both numbers
 - If a question requires more detailed data, use the query_financial_data tool
+- If a question is about contracts, agreements, leases, insurance, audits, board meeting materials, or any governance document, use search_documents to find it, then read_document to retrieve its contents
+- When referencing a document, include the Google Drive link so the board member can view the original
 - Present financial data in clean tables when appropriate
 - Never provide legal, tax, or accounting advice — recommend consulting a CPA or attorney for those questions
 - You are an oversight tool, not a decision-maker — present options with trade-offs, don't recommend specific actions
@@ -254,12 +265,22 @@ if prompt:
 
                 for block in response.content:
                     if block.type == "tool_use":
-                        # Execute the tool
+                        # Execute the appropriate tool
                         try:
-                            result = query_data(
-                                query_type=block.input.get("query_type", ""),
-                                filters=block.input.get("filters", {}),
-                            )
+                            if block.name == "search_documents":
+                                result = search_documents(
+                                    search_query=block.input.get("search_query", ""),
+                                )
+                            elif block.name == "read_document":
+                                result = read_document(
+                                    file_id=block.input.get("file_id", ""),
+                                    file_name=block.input.get("file_name", ""),
+                                )
+                            else:
+                                result = query_data(
+                                    query_type=block.input.get("query_type", ""),
+                                    filters=block.input.get("filters", {}),
+                                )
                         except Exception as e:
                             result = f"Error executing query: {e}"
 
