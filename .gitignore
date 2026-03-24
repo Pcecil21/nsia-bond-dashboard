@@ -1,6 +1,29 @@
 __pycache__/
 *.pyc
 
+# Board documents — confidential, local only
+2024 Chiller Contract and related matters/
+Bank Statements/
+Board Meetings/
+Budgets/
+Capital Improvements/
+Chiller contract/
+Club Sports Consulting Group Contract/
+Club Sports Payroll issue/
+Energy contracts/
+Ice resurfacer Quotes/
+Ice utilization/
+Invoices and Bills/
+NSIA Audit Docs/
+NSIA Bond Documents/
+NSIA Financials and Budgets/
+NSIA Ground Leases/
+NSIA Ice contract/
+NSIA Insurance contract/
+NSIA Operating Agreement/
+NSIA Restaurant/
+NSIA Website/
+
 # Google Drive credentials
 credentials.json
 token.json
