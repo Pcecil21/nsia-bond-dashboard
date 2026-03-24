@@ -1,6 +1,6 @@
 cookie:
   expiry_days: 30
-  key: CHANGE_ME_use_streamlit_secrets_toml
+  key: 792c510237e54f46643cd8bc72e7554e7fbf7c11e76157263e5ef8a4de4b309a
   name: nsia_auth
 
 credentials:
