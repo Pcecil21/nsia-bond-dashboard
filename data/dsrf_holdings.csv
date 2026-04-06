@@ -1,0 +1,7 @@
+Issuer,Security_Type,CUSIP,Purchase_Date,Maturity_Date,Par,Yield,Status,Notes
+US Dollar Currency,Cash,,,,675.07,,Cash,Trust account cash balance
+Merrick Bank,CD,59013K6G6,2025-03-28,2026-03-27,239000,4.15,Matured,Replaced by Morgan Stanley 61778ERX1
+Mountain Commerce Bank,CD,62400PKP4,2023-12-20,2026-12-21,200000,4.50,Active,Erwin TN — near-term optionality
+State Bk of Toledo,CD,85642NAB0,2023-12-22,2026-12-22,200000,4.40,Active,Iowa — near-term optionality
+Morgan Stanley,Treasury,61747C582,,,7701.32,,Active,Treasury sweep / money market
+Morgan Stanley,CD,61778ERX1,2026-03-27,2029-04-02,245000,4.00,Active,Merrick replacement — 3yr lock (signed 3/24/26)

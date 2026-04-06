@@ -1,27 +1,27 @@
 cookie:
   expiry_days: 30
-  key: CHANGE_ME_use_streamlit_secrets_toml
+  key: 792c510237e54f46643cd8bc72e7554e7fbf7c11e76157263e5ef8a4de4b309a
   name: nsia_auth
 
 credentials:
   usernames:
-    admin:
+    PC:
       email: admin@nsia.org
-      name: NSIA Admin
-      password: $2b$12$QjyjLnEseMSldoAzi10Bfej2eqdw28s15bFRX5TqOibJ1CZG0YTAq
+      name: Pete Cecil
+      password: $2b$12$zY3m0Mh4YlEC.I5904XvyuDALk0yzGGRgerxfrzvmIsHVIYaeXIbq
       role: admin
     board:
       email: board@nsia.org
       name: Board Member
-      password: $2b$12$6Tgi/RbZMLePN8gOGOpdSuP25bTZlPA43n0SaRWHlF9MbGDDV/sGy
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: board
     winnetka:
       email: winnetka@nsia.org
       name: Winnetka Rep
-      password: $2b$12$581JPPgafN6y797f8khGLeC7Iv6KcodyeXIRTcM1LFkSsUzVboYqy
+      password: $2b$12$1j71SgilOUXwaVkbX56A0.KOVkaelh3LO2hKYhttcjLjBrruTuF3.
       role: club_rep
     wilmette:
       email: wilmette@nsia.org
       name: Wilmette Rep
-      password: $2b$12$PpoIyIjZnvo6HsyAMAHsa.1OuGrNCXeafyAm.NVC6QEX6XwnllmSS
+      password: $2b$12$oohJwGwVLI2d7s0B.8bWj.XhpiZ4uH/cVB3agW5wlwWkwzuxSUMxi
       role: club_rep

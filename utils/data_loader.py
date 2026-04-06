@@ -536,7 +536,7 @@ def compute_board_attention() -> list[dict]:
     if kpis["hidden_cash_outflows"] > 500_000:
         items.append({
             "icon": "🔴",
-            "text": f"${kpis['hidden_cash_outflows']:,.0f}/yr in hidden cash outflows not on board P&L",
+            "text": f"${kpis['hidden_cash_outflows']:,.0f}/yr in off-budget cash outflows not on board P&L",
             "page": "Bond & Debt",
         })
 

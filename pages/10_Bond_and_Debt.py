@@ -1,6 +1,6 @@
 """
 Page 2: Bond & Debt Obligations
-Hidden cash flows, debt service, fixed obligations, and scoreboard economics.
+Off-budget cash flows, debt service, fixed obligations, and scoreboard economics.
 """
 import streamlit as st
 import plotly.express as px
@@ -16,7 +16,7 @@ inject_css()
 require_auth()
 
 st.title("Bond & Debt Obligations")
-st.caption("Cash flow items excluded from the board's primary Budget vs. Actuals report")
+st.caption("Cash flow items managed outside the board's primary operating budget")
 
 from utils.data_loader import (
     load_hidden_cash_flows,
@@ -25,11 +25,12 @@ from utils.data_loader import (
     load_scoreboard_alternative,
 )
 
-# ── Hidden Cash Flows ─────────────────────────────────────────────────────
-st.header("Hidden Cash Flows")
+# ── Off-Budget Cash Flows ─────────────────────────────────────────────────
+st.header("Off-Budget Cash Flows")
 st.markdown(
-    "These items impact NSIA's cash position but are **invisible** in the "
-    "board's primary Budget vs. Actuals performance tracking report."
+    "These items impact NSIA's cash position but are managed outside the board's "
+    "primary operating budget. They include debt service, ground lease, and trustee "
+    "fees — all fully documented but tracked separately from CSCG's operating budget."
 )
 
 hidden = load_hidden_cash_flows()
@@ -49,12 +50,12 @@ with col1:
 
 with col2:
     total_hidden = hidden["Annual Impact"].sum()
-    st.metric("Total Annual Hidden Outflows", f"${total_hidden:,.0f}")
-    st.markdown("**Per year** not visible in Budget vs. Actuals")
+    st.metric("Total Annual Off-Budget Outflows", f"${total_hidden:,.0f}")
+    st.markdown("**Per year** tracked outside the primary operating budget")
 
 # Waterfall chart
 st.subheader("Annual Debt Service Waterfall")
-st.caption("Cumulative annual cash outflows not visible in the board's primary performance report")
+st.caption("Cumulative annual cash outflows managed outside the primary operating budget")
 hidden_sorted = hidden.sort_values("Annual Impact", ascending=False)
 items = hidden_sorted["Item"].tolist()
 values = hidden_sorted["Annual Impact"].tolist()
@@ -77,7 +78,7 @@ fig_waterfall = go.Figure(go.Waterfall(
                         "line": {"color": "rgba(255,255,255,0.3)", "width": 1}}},
 ))
 fig_waterfall.update_layout(
-    title="Hidden Cash Outflows — Annual Impact",
+    title="Off-Budget Cash Outflows — Annual Impact",
     yaxis_title="Dollars",
     showlegend=False,
     xaxis_tickangle=-25,
@@ -220,3 +221,6 @@ if not current_vals.empty and not alt_vals.empty:
         f"**Cheaper alternative** 10-year total: **${total_alt:,.0f}** | "
         f"**Savings: ${diff:,.0f}** in favor of the cheaper alternative"
     )
+
+from utils import ask_about_this
+ask_about_this("Bond and Debt")

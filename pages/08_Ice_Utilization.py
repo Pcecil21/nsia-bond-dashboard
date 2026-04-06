@@ -870,3 +870,6 @@ st.warning(
     "This represents contracted ice time that Winnetka is paying for but not using — "
     "an opportunity for either schedule optimization or reallocation to other clubs.".format(total_gap)
 )
+
+from utils import ask_about_this
+ask_about_this("Ice Utilization")

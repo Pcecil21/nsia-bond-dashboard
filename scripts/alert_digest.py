@@ -96,7 +96,7 @@ def build_digest_data():
     data.append("=== KEY METRICS ===")
     data.append(f"DSCR: {kpis['dscr']:.2f}x")
     data.append(f"Net Cash Flow (est.): ${kpis['net_cash_flow']:,.0f}")
-    data.append(f"Hidden Outflows: ${kpis['hidden_cash_outflows']:,.0f}/yr")
+    data.append(f"Off-Budget Outflows: ${kpis['hidden_cash_outflows']:,.0f}/yr")
     data.append(f"Board-Approved Expenses: {kpis['pct_board_approved']*100:.1f}%")
     data.append("")
 

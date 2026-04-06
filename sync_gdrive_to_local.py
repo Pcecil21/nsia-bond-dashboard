@@ -167,6 +167,11 @@ def sync_once(service, folder_id: str, dest_dir: Path, state_path: Path) -> None
 
     save_state(state_path, current)
 
+    # Write .last_sync timestamp for dashboard staleness indicator
+    from datetime import datetime, timezone
+    last_sync_path = dest_dir / ".last_sync"
+    last_sync_path.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
+
 
 # ---------------------------------------------------------------------------
 # Upload / folder-creation helpers

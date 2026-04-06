@@ -249,50 +249,108 @@ This builds trust with board members who want to verify.
 
 ---
 
-## Phase 3: Polish & Integrate
+## Phase 3: Polish & Integrate (Eng Review: 2026-03-23)
 **Purpose:** Wire the Q&A into the rest of the dashboard and add quality-of-life features.
+
+### Architecture Decisions (from eng review)
+
+```
+Phase 3 — Agreed Architecture
+════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────┐
+│                    Board Member                          │
+│                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌───────────┐ │
+│  │ Any Page     │───>│ Ask NSIA     │<───│ Sidebar   │ │
+│  │ (expander +  │    │ (single chat │    │ link      │ │
+│  │  redirect)   │    │  engine)     │    └───────────┘ │
+│  └──────────────┘    └──────┬───────┘                   │
+│                             │                            │
+│  ┌──────────────┐    ┌──────v───────┐    ┌───────────┐ │
+│  │ Staleness    │    │ Anthropic API│    │ Session   │ │
+│  │ indicator    │    │ + tool_use   │    │ counter   │ │
+│  │ (.last_sync) │    └──────────────┘    │ (<=50)    │ │
+│  └──────────────┘                        └───────────┘ │
+│                                                          │
+│  ┌──────────────┐    DEFERRED:                          │
+│  │ Mobile CSS   │    - Email digest (separate PR)       │
+│  │ (home page)  │    - Full mobile audit                │
+│  └──────────────┘                                       │
+└─────────────────────────────────────────────────────────┘
+```
 
 ### Tasks
 
 #### 3.1 Add "Ask about this" to Every Page
-Each existing page gets a small chat widget at the bottom:
-```python
-with st.expander("💬 Ask a question about this data"):
-    question = st.text_input("What would you like to know?")
-    if question:
-        # Route to Ask NSIA with page context pre-loaded
-```
+**Approach: Redirect pattern (not inline chat)**
+- Each page gets a 5-line expander with `st.text_input`
+- On submit: write question + page context to `st.session_state`
+- `st.switch_page("pages/17_Ask_NSIA.py")` — single chat engine handles all questions
+- `17_Ask_NSIA.py` reads `page_context` from session_state, appends to system prompt
+- No API call duplication, no new shared helpers
 
 #### 3.2 Add "Last Updated" Indicator
-- Show when data was last synced from Google Drive
-- Show data freshness on every page header
-- Warn if data is >7 days stale
+**Approach: GDrive sync log file**
+- Modify `sync_gdrive_to_local.py` to write `data/.last_sync` timestamp after successful sync
+- `app.py` reads `.last_sync`, computes age, displays on home page
+- If >7 days stale: warning banner. If missing: "Never synced" message
+- Defensive handling for missing/corrupt `.last_sync` file
 
-#### 3.3 Email Digest (Optional)
-- Weekly summary email to board members
-- Top RED/YELLOW flags
-- Cash position
-- "Ask the dashboard" CTA link
+#### 3.3 Email Digest — DEFERRED
+Deferred to separate PR. Data layer exists (variance_engine, data_context). See TODOS.md.
 
-#### 3.4 Mobile Optimization
-- Test all pages on mobile viewport
-- Ensure chat interface works on phone
-- Board members often check on phones before meetings
+#### 3.4 Mobile Optimization — Targeted CSS Only
+- Add responsive media queries to `app.py`'s custom HTML (verdict cards, payment bars)
+- ~20 lines of CSS with `@media (max-width: 768px)` breakpoints
+- Native Streamlit pages already auto-adapt — don't touch them
+- Full mobile audit deferred to TODOS.md
+
+#### 3.5 Session Counter (from eng review)
+- Track questions per session in `st.session_state.question_count`
+- After 50 questions: friendly "limit reached" message, don't call API
+- ~10 lines in `17_Ask_NSIA.py`
+
+#### 3.6 Cache Data Summary (from eng review)
+- Add `@st.cache_data` to `build_data_summary()` in `data_context.py`
+- Avoids redundant string assembly on every question
+- Enables clean page context append without re-reading data
+
+#### 3.7 Audit Logging Fix (from eng review)
+- Replace `except Exception: pass` with `logger.warning(...)` in chat history save
+- Silent failures become visible in server logs
+
+#### 3.8 Fix FY Hardcoding in Multi-Year Trends (from eng review)
+- `8_Multi_Year_Trends.py` has 7+ hardcoded `FY2024/FY2025/FY2026` references
+- Detect FY columns dynamically from CSV headers: `re.match(r'^FY\d{4}$', col)`
+- Take last 3 matching columns, assign colors dynamically
+- Prevents breakage when FY2027 data arrives
+
+#### 3.9 Tests for Phase 3 Logic (from eng review)
+- New `tests/test_phase3.py` covering:
+  - Staleness calculation (fresh, stale, missing file)
+  - Session counter (increment, limit, reset)
+  - FY column detection (normal, empty, extra columns)
+  - Page context injection (present, absent)
 
 ### Verification Checklist — Phase 3
-- [ ] "Ask about this" works from at least 3 pages
+- [ ] "Ask about this" works from at least 3 pages (redirect + page context)
 - [ ] Last updated indicator shows on home page
-- [ ] Mobile layout is usable
-- [ ] Full end-to-end test: sync data → dashboard updates → chat answers correctly
+- [ ] Stale data warning appears when `.last_sync` > 7 days old
+- [ ] Session counter blocks after 50 questions with friendly message
+- [ ] Mobile verdict cards stack on narrow viewport
+- [ ] Dynamic FY columns work in Multi-Year Trends
+- [ ] `test_phase3.py` passes
+- [ ] Full end-to-end: sync data -> dashboard updates -> chat answers correctly
 
 ---
 
 ## Execution Order
-1. **Phase 1 first** — foundational, makes everything else easier
-2. **Phase 2 next** — the "centralized brain" feature
-3. **Phase 3 last** — polish, can be incremental
+1. **Phase 1** — COMPLETE (2026-03-19)
+2. **Phase 2** — COMPLETE (2026-03-19)
+3. **Phase 3** — In progress (2026-03-23)
 
 ## Estimated Scope
-- Phase 1: ~2 sessions (config module + update all pages)
-- Phase 2: ~2 sessions (data context + chat page + tool use)
-- Phase 3: ~1 session (integration + polish)
+- Phase 1: DONE
+- Phase 2: DONE
+- Phase 3: ~1 session (integration + polish + tests)

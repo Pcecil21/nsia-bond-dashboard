@@ -5,7 +5,9 @@ Plain-english monthly summary for board members.
 import streamlit as st
 import plotly.graph_objects as go
 import os
+import logging
 import pandas as pd
+from datetime import datetime, timezone
 
 from utils.fiscal_period import get_current_month, get_month_label, get_sidebar_caption, get_latest_receivable_month, get_cash_forecast_months
 from utils.variance_engine import compute_monthly_flags, compute_discussion_items
@@ -135,6 +137,34 @@ st.markdown("""
         content: "\25B8  ";
         color: #64ffda;
     }
+    .staleness-fresh {
+        color: #00d084;
+        font-size: 0.8rem;
+    }
+    .staleness-stale {
+        color: #fcb900;
+        font-size: 0.8rem;
+    }
+    .staleness-critical {
+        color: #eb144c;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    @media (max-width: 768px) {
+        .verdict-card {
+            padding: 16px 14px;
+            margin: 4px 0 8px 0;
+        }
+        .verdict-number {
+            font-size: 1.8rem;
+        }
+        .verdict-label {
+            font-size: 0.85rem;
+        }
+        .verdict-context {
+            font-size: 0.75rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -154,26 +184,54 @@ st.sidebar.markdown(
     """
 **Start Here**
 - **Home** — Monthly summary (this page)
+    """
+)
 
-**Dig Deeper**
+# Prominent Ask NSIA button in sidebar
+st.sidebar.markdown(
+    """
+<div style="background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%);
+     border-radius: 10px; padding: 14px 16px; margin: 8px 0 16px 0; text-align: center;">
+    <div style="font-size: 1.4rem; margin-bottom: 4px;">💬</div>
+    <div style="color: #fff; font-weight: 700; font-size: 0.95rem;">Ask NSIA</div>
+    <div style="color: rgba(255,255,255,0.8); font-size: 0.8rem;">Ask any question about NSIA finances</div>
+</div>
+    """,
+    unsafe_allow_html=True,
+)
+if st.sidebar.button("Open Ask NSIA", use_container_width=True, type="primary"):
+    st.switch_page("pages/19_Ask_NSIA.py")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
+**New here?**
+- **Board Guide** — Orientation & glossary
+
+**How are we doing?**
 - **Financial Overview** — Budget variances
 - **Monthly Financials** — P&L, Cash, Receivables
-- **Variance Alerts** — Stoplight flags
-- **Operations** — Ice Revenue & CSCG
+- **Multi-Year Trends** — 3yr Analysis
 
-**Oversight**
-- **CSCG Scorecard** — Contract compliance
-- **Reconciliation** — 4-way audit trail
+**What needs attention?**
+- **Variance Alerts** — Stoplight flags
+- **CSCG Scorecard** — Management compliance
 - **Board Actions** — Motions & action items
 
-**Reference**
-- **Bond & Debt** — Obligations & hidden flows
+**Operations**
 - **Revenue & Ads** — Advertising pipeline
-- **Multi-Year Trends** — 3yr Analysis
 - **Ice Utilization** — Allocation & Gaps
-- **Vendor Master** — Vendor registry
+- **Operations** — Ice Revenue & CSCG
+
+**Debt & Reserves**
+- **Bond & Debt** — Obligations & off-budget flows
+- **DSRF Tracker** — CD holdings & maturity ladder
+
+**Reference**
 - **Document Library** — Board documents
-- **Ask NSIA** — AI Q&A
+- **Vendor Master** — Vendor registry
+- **Reconciliation** — 4-way audit trail
+- **Board Report** — Printable summary
     """
 )
 st.sidebar.markdown("---")
@@ -245,6 +303,27 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# ── Data Freshness Indicator ──────────────────────────────────────────────
+_last_sync_path = os.path.join(os.path.dirname(__file__), "data", ".last_sync")
+try:
+    _sync_ts = datetime.fromisoformat(open(_last_sync_path, encoding="utf-8").read().strip())
+    _age = datetime.now(timezone.utc) - _sync_ts
+    _age_days = _age.total_seconds() / 86400
+    if _age_days > 7:
+        _cls, _label = "staleness-critical", f"Data last synced {_age_days:.0f} days ago — may be stale"
+    elif _age_days > 1:
+        _label = f"Data synced {_age_days:.0f} day{'s' if _age_days >= 2 else ''} ago"
+        _cls = "staleness-stale" if _age_days > 3 else "staleness-fresh"
+    else:
+        _hours = _age.total_seconds() / 3600
+        _label = f"Data synced {_hours:.0f}h ago" if _hours >= 1 else "Data synced just now"
+        _cls = "staleness-fresh"
+    st.markdown(f'<span class="{_cls}">{_label}</span>', unsafe_allow_html=True)
+except FileNotFoundError:
+    st.markdown('<span class="staleness-stale">Data sync status unknown</span>', unsafe_allow_html=True)
+except Exception as e:
+    logging.getLogger(__name__).warning("Failed to read .last_sync: %s", e)
+
 st.markdown("---")
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -253,6 +332,8 @@ st.markdown("---")
 verdict_class = "verdict-good" if month_net > month_budget_net else (
     "verdict-ok" if month_net > 0 else "verdict-bad"
 )
+
+st.markdown('<div class="section-header">This Month at a Glance</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 
@@ -383,6 +464,7 @@ st.markdown("---")
 # SECTION 3: WHAT'S WRONG (Variance Flags)
 # ═════════════════════════════════════════════════════════════════════════
 st.markdown('<div class="section-header">What Needs Attention</div>', unsafe_allow_html=True)
+st.caption("Items flagged here are budget lines that are significantly over or under the approved plan. Red items need board discussion; yellow items should be monitored.")
 
 flags = compute_monthly_flags()
 
@@ -474,7 +556,7 @@ Use the sidebar to access detailed analysis pages:
 | Page | What It Shows |
 |------|---------------|
 | **Financial Overview** | Budget vs CSCG variance analysis |
-| **Bond & Debt** | Hidden cash flows, fixed obligations, scoreboard economics |
+| **Bond & Debt** | Off-budget cash flows, fixed obligations, scoreboard economics |
 | **Revenue & Ads** | Advertising pipeline, contract receivables |
 | **Operations** | Ice revenue breakdown, CSCG relationship |
 | **Variance Alerts** | RED/YELLOW/GREEN stoplight on every budget line |

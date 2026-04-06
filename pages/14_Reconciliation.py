@@ -389,3 +389,6 @@ gap_msg = (
     "invoice verification. This limits the board's ability to verify dollar-for-dollar spending."
 )
 st.warning(gap_msg)
+
+from utils import ask_about_this
+ask_about_this("Reconciliation")

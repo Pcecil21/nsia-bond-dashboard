@@ -319,3 +319,6 @@ st.markdown(
 - **GREEN** items are within normal tolerance
 - Ask CSCG to provide written justification for all RED and YELLOW items"""
 )
+
+from utils import ask_about_this
+ask_about_this("Variance Alerts")
