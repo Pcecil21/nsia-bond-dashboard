@@ -13,6 +13,7 @@ from utils.theme import (
     ACCENT_COLORS, style_chart, inject_css, fmt_dollar,
 )
 from utils.auth import require_auth
+from utils.data_loader import load_bond_documents
 
 st.set_page_config(page_title="DSRF Tracker | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -28,6 +29,79 @@ st.info(
     "bond debt payments. When a CD matures, the board works with the trustee (UMB Bank) to reinvest "
     "the proceeds. The alerts below flag upcoming maturities that need attention."
 )
+
+# ── Bond Covenant Reference (sidebar) ─────────────────────────────────────
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### Bond Covenant Reference")
+
+    _bc_docs = load_bond_documents()
+
+    def _sb_str(val):
+        """Flatten list/dict/str for sidebar display."""
+        if isinstance(val, list):
+            return "; ".join(str(v) for v in val if v)
+        return str(val).strip() if val and str(val).strip() not in ("nan", "None", "") else ""
+
+    def _sb_items(val):
+        """Yield display strings from list-or-string field."""
+        if isinstance(val, list):
+            for v in val:
+                if v and str(v).strip() not in ("nan", "None"):
+                    yield str(v)
+        elif val and str(val).strip() not in ("nan", "None", ""):
+            yield str(val)
+
+    if _bc_docs.empty:
+        st.sidebar.caption("No bond documents extracted yet.")
+    else:
+        # DSCR minimum and reserve requirements from the indenture
+        _has_dtype = "document_type" in _bc_docs.columns
+        _ind_rows = (
+            _bc_docs[_bc_docs["document_type"].str.lower().eq("indenture")]
+            if _has_dtype else pd.DataFrame()
+        )
+        if not _ind_rows.empty:
+            _ind = _ind_rows.iloc[0]
+            _dscr_min = _ind.get("dscr_minimum")
+            if pd.notna(_dscr_min):
+                st.sidebar.metric("DSCR Min Covenant", f"{_dscr_min:.2f}x")
+            _res_req = _sb_str(_ind.get("reserve_requirements"))
+            if _res_req:
+                st.sidebar.markdown(f"**Reserve Req:** {_res_req}")
+
+        # Reporting requirements (all docs)
+        _reporting = [
+            item
+            for _, _r in _bc_docs.iterrows()
+            for item in _sb_items(_r.get("reporting_requirements"))
+        ]
+        if _reporting:
+            with st.sidebar.expander("Reporting Requirements", expanded=False):
+                for _req in _reporting[:6]:
+                    st.markdown(f"- {_req}")
+
+        # Event of default triggers (all docs)
+        _defaults = [
+            item
+            for _, _r in _bc_docs.iterrows()
+            for item in _sb_items(_r.get("event_of_default_triggers"))
+        ]
+        if _defaults:
+            with st.sidebar.expander("Default Triggers", expanded=False):
+                for _trig in _defaults[:6]:
+                    st.markdown(f"- {_trig}")
+
+        # Board vote thresholds (all docs)
+        _votes = [
+            item
+            for _, _r in _bc_docs.iterrows()
+            for item in _sb_items(_r.get("board_vote_thresholds"))
+        ]
+        if _votes:
+            with st.sidebar.expander("Board Vote Thresholds", expanded=False):
+                for _vt in _votes[:6]:
+                    st.markdown(f"- {_vt}")
 
 # ── Load Data ─────────────────────────────────────────────────────────────
 

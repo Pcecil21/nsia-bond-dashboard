@@ -6,7 +6,10 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from utils.theme import FONT_COLOR, TITLE_COLOR, style_chart, inject_css
+from utils.theme import (
+    FONT_COLOR, TITLE_COLOR, VALUE_COLOR, style_chart, inject_css,
+    RED, YELLOW, GREEN, BG_CARD, BG_CARD_END, BORDER_COLOR,
+)
 from utils.auth import require_auth
 from utils.fiscal_period import get_period_label
 
@@ -19,6 +22,7 @@ st.title("Bond & Debt Obligations")
 st.caption("Cash flow items managed outside the board's primary operating budget")
 
 from utils.data_loader import (
+    load_bond_documents,
     load_hidden_cash_flows,
     load_fixed_obligations,
     load_scoreboard_10yr,
@@ -221,6 +225,162 @@ if not current_vals.empty and not alt_vals.empty:
         f"**Cheaper alternative** 10-year total: **${total_alt:,.0f}** | "
         f"**Savings: ${diff:,.0f}** in favor of the cheaper alternative"
     )
+
+# ── Governing Documents ────────────────────────────────────────────────────
+st.markdown("---")
+st.header("Governing Documents")
+st.caption("Key terms and obligations extracted from NSIA's legal and bond documents.")
+
+_bond_docs = load_bond_documents()
+if _bond_docs.empty:
+    st.info("No extracted bond document data found. Run PDF extraction to populate this section.")
+else:
+    _bond_docs = _bond_docs.copy()
+    _today_ts = pd.Timestamp.now()
+
+    # Sort: ground_lease → indenture → operating_agreement → others
+    _TYPE_ORDER = {"ground_lease": 0, "indenture": 1, "operating_agreement": 2}
+    if "document_type" in _bond_docs.columns:
+        _bond_docs["_sort"] = _bond_docs["document_type"].apply(
+            lambda t: _TYPE_ORDER.get(str(t).lower() if pd.notna(t) else "", 99)
+        )
+        _bond_docs = _bond_docs.sort_values("_sort")
+
+    def _coerce_str(val):
+        """Flatten list/dict/str to a display string."""
+        if isinstance(val, list):
+            return " | ".join(str(v) for v in val if v)
+        return str(val).strip() if val and str(val).strip() not in ("nan", "None") else ""
+
+    # ── Priority summary cards ─────────────────────────────────────────────
+    _PRIORITY = ["ground_lease", "indenture", "operating_agreement"]
+    _priority_rows = {}
+    for _pt in _PRIORITY:
+        if "document_type" in _bond_docs.columns:
+            _priority_rows[_pt] = _bond_docs[
+                _bond_docs["document_type"].str.lower().eq(_pt)
+            ]
+        else:
+            _priority_rows[_pt] = pd.DataFrame()
+
+    _populated = [t for t in _PRIORITY if not _priority_rows[t].empty]
+    if _populated:
+        _card_cols = st.columns(len(_populated))
+        for _ci, _dtype in enumerate(_populated):
+            _doc = _priority_rows[_dtype].iloc[0]
+            with _card_cols[_ci]:
+                if _dtype == "ground_lease":
+                    _exp = _doc.get("lease_expiry_date")
+                    _exp_yr = _exp.strftime("%Y") if pd.notna(_exp) else "—"
+                    if pd.notna(_exp):
+                        _yrs = int((_exp - _today_ts).days / 365.25)
+                        _yr_color = GREEN if _yrs > 20 else (YELLOW if _yrs > 10 else RED)
+                        _yr_label = f"{_yrs} years remaining"
+                    else:
+                        _yr_color = VALUE_COLOR
+                        _yr_label = ""
+                    st.markdown(
+                        f'<div style="background:linear-gradient(135deg,{BG_CARD} 0%,{BG_CARD_END} 100%);'
+                        f'border:1px solid {BORDER_COLOR};border-radius:12px;padding:20px;'
+                        f'box-shadow:0 4px 15px rgba(0,0,0,0.2);">'
+                        f'<h4 style="color:{TITLE_COLOR};margin:0 0 14px 0;">Ground Lease</h4>'
+                        f'<p style="color:{FONT_COLOR};font-size:0.78rem;margin:0 0 2px 0;'
+                        f'text-transform:uppercase;letter-spacing:.05em;">Lease Expires</p>'
+                        f'<p style="color:{_yr_color};font-size:2.2rem;font-weight:700;margin:0;">{_exp_yr}</p>'
+                        f'<p style="color:{FONT_COLOR};font-size:0.875rem;margin:6px 0 0 0;">'
+                        f'<b style="color:{_yr_color};">{_yr_label}</b></p>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
+                elif _dtype == "indenture":
+                    _dscr_min = _doc.get("dscr_minimum")
+                    _principal = _doc.get("bond_principal")
+                    _maturity = _doc.get("bond_maturity_date")
+                    _dscr_str = f"{_dscr_min:.2f}x" if pd.notna(_dscr_min) else "—"
+                    _prin_str = f"${_principal:,.0f}" if pd.notna(_principal) else "—"
+                    _mat_str = _maturity.strftime("%Y") if pd.notna(_maturity) else "—"
+                    st.markdown(
+                        f'<div style="background:linear-gradient(135deg,{BG_CARD} 0%,{BG_CARD_END} 100%);'
+                        f'border:1px solid {BORDER_COLOR};border-radius:12px;padding:20px;'
+                        f'box-shadow:0 4px 15px rgba(0,0,0,0.2);">'
+                        f'<h4 style="color:{TITLE_COLOR};margin:0 0 14px 0;">Bond Indenture</h4>'
+                        f'<p style="color:{FONT_COLOR};font-size:0.78rem;margin:0 0 2px 0;'
+                        f'text-transform:uppercase;letter-spacing:.05em;">DSCR Covenant Minimum</p>'
+                        f'<p style="color:{VALUE_COLOR};font-size:2.2rem;font-weight:700;margin:0 0 12px 0;">{_dscr_str}</p>'
+                        f'<div style="display:flex;gap:24px;">'
+                        f'<div><p style="color:{FONT_COLOR};font-size:0.78rem;margin:0;">Principal</p>'
+                        f'<p style="color:{VALUE_COLOR};font-weight:600;font-size:0.95rem;margin:0;">{_prin_str}</p></div>'
+                        f'<div><p style="color:{FONT_COLOR};font-size:0.78rem;margin:0;">Bond Matures</p>'
+                        f'<p style="color:{VALUE_COLOR};font-weight:600;font-size:0.95rem;margin:0;">{_mat_str}</p></div>'
+                        f'</div></div>',
+                        unsafe_allow_html=True,
+                    )
+
+                elif _dtype == "operating_agreement":
+                    _parties = _coerce_str(_doc.get("parties"))
+                    _eff = _doc.get("effective_date")
+                    _eff_str = _eff.strftime("%b %d, %Y") if pd.notna(_eff) else "—"
+                    st.markdown(
+                        f'<div style="background:linear-gradient(135deg,{BG_CARD} 0%,{BG_CARD_END} 100%);'
+                        f'border:1px solid {BORDER_COLOR};border-radius:12px;padding:20px;'
+                        f'box-shadow:0 4px 15px rgba(0,0,0,0.2);">'
+                        f'<h4 style="color:{TITLE_COLOR};margin:0 0 14px 0;">Operating Agreement</h4>'
+                        f'<p style="color:{FONT_COLOR};font-size:0.78rem;margin:0 0 2px 0;'
+                        f'text-transform:uppercase;letter-spacing:.05em;">Effective Date</p>'
+                        f'<p style="color:{VALUE_COLOR};font-size:1.3rem;font-weight:700;margin:0 0 12px 0;">{_eff_str}</p>'
+                        f'<p style="color:{FONT_COLOR};font-size:0.78rem;margin:0 0 2px 0;">Parties</p>'
+                        f'<p style="color:{VALUE_COLOR};font-size:0.85rem;margin:0;">{_parties or "—"}</p>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+
+        st.markdown("")
+
+    # ── Red flags (collapsible) ────────────────────────────────────────────
+    _flagged = []
+    for _, _d in _bond_docs.iterrows():
+        _flag_str = _coerce_str(_d.get("red_flags"))
+        if _flag_str:
+            _dt_label = _coerce_str(_d.get("document_type") or "Unknown").replace("_", " ").title()
+            _flagged.append((_dt_label, _flag_str))
+
+    if _flagged:
+        with st.expander(f"Document Red Flags — {len(_flagged)} document(s)", expanded=False):
+            for _dt_label, _flag_str in _flagged:
+                st.markdown(
+                    f'<div style="background:{RED}22;border:1px solid {RED};border-radius:8px;'
+                    f'padding:10px 14px;margin-bottom:8px;">'
+                    f'<span style="color:{RED};font-weight:700;font-size:0.9rem;">{_dt_label}</span>'
+                    f'<p style="color:{FONT_COLOR};font-size:0.875rem;margin:4px 0 0 0;">{_flag_str}</p>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+    # ── Per-document expanders — key clauses ──────────────────────────────
+    st.markdown("#### Document Detail — Key Clauses")
+
+    def _render_clauses(val):
+        if isinstance(val, list):
+            for item in val:
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        st.markdown(f"- **{k}:** {v}")
+                elif str(item).strip():
+                    st.markdown(f"- {item}")
+        elif isinstance(val, str) and val.strip() and val not in ("nan", "None"):
+            for line in val.split(";"):
+                if line.strip():
+                    st.markdown(f"- {line.strip()}")
+        else:
+            st.caption("No key clauses extracted.")
+
+    for _, _d in _bond_docs.iterrows():
+        _dt_label = _coerce_str(_d.get("document_type") or "Document").replace("_", " ").title()
+        _src = str(_d.get("_source_file") or "")
+        _exp_label = f"{_dt_label}  |  {_src}" if _src and _src not in ("nan", "None") else _dt_label
+        with st.expander(_exp_label, expanded=False):
+            _render_clauses(_d.get("key_clauses"))
 
 from utils import ask_about_this
 ask_about_this("Bond and Debt")

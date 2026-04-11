@@ -5,6 +5,7 @@ and financial health into a comprehensive governance report via AI.
 """
 import streamlit as st
 import sys
+import pandas as pd
 from pathlib import Path
 from datetime import date
 
@@ -67,6 +68,11 @@ from utils.data_loader import (
     load_expense_flow_summary,
     load_monthly_pnl,
     load_contract_receivables,
+    load_vendor_contracts,
+    load_cscg_budget_submissions,
+    load_bond_documents,
+    get_expiring_contracts,
+    get_open_action_items,
 )
 
 st.markdown("---")
@@ -91,6 +97,13 @@ expense_summary = load_expense_flow_summary()
 red_alerts = alerts[alerts["Severity"] == "RED"]
 yellow_alerts = alerts[alerts["Severity"] == "YELLOW"]
 
+# PDF-extracted sources (populated by pdf_extractor.py)
+vendor_contracts = load_vendor_contracts()
+budget_submissions = load_cscg_budget_submissions()
+bond_docs = load_bond_documents()
+expiring = get_expiring_contracts(90)
+open_actions = get_open_action_items()
+
 # Preview cards
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -105,6 +118,31 @@ with col3:
     st.metric("Non-Compliant Items", non_compliant)
 
 st.caption("These metrics will be included in the generated report based on your section selections below.")
+
+# ── PDF-Extracted Data Sources Status ─────────────────────────────────────
+st.markdown("#### PDF-Extracted Data Sources")
+st.caption("Sources populated by PDF extraction. Green indicates data is available for the AI Board Memo.")
+
+_src_status = [
+    ("Vendor Contracts", len(vendor_contracts)),
+    ("Budget Submissions", len(budget_submissions)),
+    ("Bond Documents", len(bond_docs)),
+    ("Expiring (90d)", len(expiring)),
+    ("Action Items", len(open_actions)),
+]
+_status_cols = st.columns(len(_src_status))
+for _ci, (_lbl, _cnt) in enumerate(_src_status):
+    with _status_cols[_ci]:
+        _has = _cnt > 0
+        st.markdown(
+            f'<div class="report-section">'
+            f'<h4>{_lbl}</h4>'
+            f'<p style="font-size:1.5rem;color:{"#00d084" if _has else "#4a5568"};font-weight:700;margin:4px 0;">'
+            f'{"&#10003; " + str(_cnt) if _has else "&mdash;"}</p>'
+            f'<p style="font-size:0.78rem;">{"record" if _cnt == 1 else "records"}</p>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
 st.markdown("---")
 
@@ -307,6 +345,213 @@ if st.button("Generate Board Report", type="primary", use_container_width=True):
             "date": meeting_date.isoformat(),
             "generated": date.today().isoformat(),
             "result": result,
+        })
+
+# ── Generate AI Board Memo ────────────────────────────────────────────────
+st.markdown("---")
+st.markdown("### Generate AI Board Memo")
+st.caption(
+    "Board memo synthesized from PDF-extracted governing documents, vendor contracts, "
+    "and financial submissions — separate from the full Board Report above."
+)
+
+_memo_opt1, _memo_opt2 = st.columns(2)
+with _memo_opt1:
+    memo_sections = st.multiselect(
+        "Memo sections to include",
+        [
+            "Financial Flags (Budget Submissions)",
+            "Expiring Contracts",
+            "Open Action Items",
+            "Bond Covenant Status",
+            "Document Red Flags",
+        ],
+        default=[
+            "Financial Flags (Budget Submissions)",
+            "Expiring Contracts",
+            "Open Action Items",
+            "Bond Covenant Status",
+            "Document Red Flags",
+        ],
+        key="memo_sections",
+    )
+with _memo_opt2:
+    memo_date = st.date_input("Memo Date", value=date.today(), key="memo_date")
+    memo_notes = st.text_area(
+        "Additional context (optional)",
+        placeholder="e.g., 'Focus on the CSCG contract renewal discussion'",
+        height=80,
+        key="memo_notes",
+    )
+
+if st.button("Generate AI Board Memo", type="primary", use_container_width=True, key="memo_btn"):
+
+    _memo_data = []
+    _memo_data.append(f"NSIA BOARD MEMO — {memo_date.strftime('%B %d, %Y')}")
+    _memo_data.append(f"Generated: {date.today().isoformat()}")
+    _memo_data.append("")
+
+    if "Financial Flags (Budget Submissions)" in memo_sections and not budget_submissions.empty:
+        _memo_data.append("=" * 60)
+        _memo_data.append("SECTION: FINANCIAL FLAGS FROM BUDGET SUBMISSIONS")
+        _memo_data.append("=" * 60)
+        _has_ba = "is_budget_or_actual" in budget_submissions.columns
+        for _, _bs in budget_submissions.iterrows():
+            _src = str(_bs.get("_source_file") or "Unknown")
+            _ba = str(_bs.get("is_budget_or_actual") or "") if _has_ba else ""
+            _memo_data.append(f"Document: {_src}" + (f" ({_ba})" if _ba else ""))
+            for _field, _label in [
+                ("revenue_total", "Revenue"),
+                ("expense_total", "Expenses"),
+                ("net_income", "Net Income"),
+            ]:
+                _val = _bs.get(_field)
+                if pd.notna(_val):
+                    _memo_data.append(f"  {_label}: ${_val:,.0f}")
+        _memo_data.append("")
+
+    if "Expiring Contracts" in memo_sections and not expiring.empty:
+        _memo_data.append("=" * 60)
+        _memo_data.append("SECTION: EXPIRING CONTRACTS (WITHIN 90 DAYS)")
+        _memo_data.append("=" * 60)
+        for _, _ec in expiring.iterrows():
+            _vname = str(_ec.get("vendor_name") or "Unknown")
+            _days = int(_ec.get("days_to_expiry", 0))
+            _edate = _ec.get("expiry_date")
+            _edate_str = _edate.strftime("%b %d, %Y") if pd.notna(_edate) else "Unknown"
+            _val = _ec.get("annual_value")
+            _val_str = f" — ${_val:,.0f}/yr" if pd.notna(_val) else ""
+            _memo_data.append(f"  {_vname}: expires {_edate_str} ({_days} days){_val_str}")
+        _memo_data.append("")
+
+    if "Open Action Items" in memo_sections and open_actions:
+        _memo_data.append("=" * 60)
+        _memo_data.append("SECTION: OPEN BOARD ACTION ITEMS")
+        _memo_data.append("=" * 60)
+        for _ai in open_actions:
+            _desc = str(_ai.get("description") or "")
+            _owner = str(_ai.get("owner") or "")
+            _due = str(_ai.get("due_date") or "")
+            _line = f"  - {_desc}"
+            if _owner:
+                _line += f" (Owner: {_owner})"
+            if _due:
+                _line += f" — Due: {_due}"
+            _memo_data.append(_line)
+        _memo_data.append("")
+
+    if "Bond Covenant Status" in memo_sections and not bond_docs.empty:
+        _memo_data.append("=" * 60)
+        _memo_data.append("SECTION: BOND COVENANT STATUS")
+        _memo_data.append("=" * 60)
+        for _, _bd in bond_docs.iterrows():
+            _dtype = str(_bd.get("document_type") or "")
+            if _dtype:
+                _memo_data.append(f"Document type: {_dtype}")
+            _dscr_min = _bd.get("dscr_minimum")
+            if pd.notna(_dscr_min):
+                _memo_data.append(f"  DSCR Covenant Minimum: {_dscr_min:.2f}x")
+            _lease_exp = _bd.get("lease_expiry_date")
+            if pd.notna(_lease_exp):
+                _yrs = int((_lease_exp - pd.Timestamp.now()).days / 365.25)
+                _memo_data.append(f"  Lease Expires: {_lease_exp.strftime('%Y')} ({_yrs} years remaining)")
+            _bond_mat = _bd.get("bond_maturity_date")
+            if pd.notna(_bond_mat):
+                _memo_data.append(f"  Bond Maturity: {_bond_mat.strftime('%Y')}")
+        _memo_data.append("")
+
+    if "Document Red Flags" in memo_sections:
+        _all_doc_flags = []
+        for _flag_src, _flag_label, _name_col in [
+            (vendor_contracts, "Vendor Contract", "vendor_name"),
+            (bond_docs, "Bond Document", "document_type"),
+        ]:
+            if not _flag_src.empty and "red_flags" in _flag_src.columns:
+                for _, _fr in _flag_src.iterrows():
+                    _flag_val = str(_fr.get("red_flags") or "")
+                    if _flag_val and _flag_val not in ("nan", "None"):
+                        _fname = str(_fr.get(_name_col) or "")
+                        _all_doc_flags.append(f"  [{_flag_label}] {_fname}: {_flag_val}")
+        if _all_doc_flags:
+            _memo_data.append("=" * 60)
+            _memo_data.append("SECTION: DOCUMENT RED FLAGS")
+            _memo_data.append("=" * 60)
+            _memo_data.extend(_all_doc_flags)
+            _memo_data.append("")
+
+    if memo_notes:
+        _memo_data.append("=" * 60)
+        _memo_data.append("ADDITIONAL CONTEXT FROM BOARD PRESIDENT")
+        _memo_data.append("=" * 60)
+        _memo_data.append(memo_notes)
+        _memo_data.append("")
+
+    _memo_payload = "\n".join(_memo_data)
+
+    with st.spinner("Generating board memo... This may take 30-60 seconds."):
+        _memo_result = analyze_document(
+            agent_id="report_generator",
+            document_content=_memo_payload,
+            filename="board_memo_data.txt",
+            additional_context=(
+                f"Generate a concise board memo for the NSIA board meeting on "
+                f"{memo_date.strftime('%B %d, %Y')}. "
+                f"Structure it as: (a) Financial Flags — highlight any revenue shortfalls or "
+                f"expense overruns vs budget from submitted financial documents; "
+                f"(b) Expiring Contracts — list each vendor, expiry date, annual value, and "
+                f"recommended board action; "
+                f"(c) Open Action Items — summarize outstanding items from board minutes with "
+                f"accountability and next steps; "
+                f"(d) Bond Covenant Status — flag any DSCR or reserve fund concerns derived "
+                f"from the governing documents; "
+                f"(e) Document Red Flags — any governance or legal concerns extracted from "
+                f"governing documents and vendor contracts. "
+                f"Use plain language suitable for a volunteer nonprofit board. "
+                f"Lead with the 2-3 items that need a board vote or immediate decision."
+            ),
+        )
+
+    if _memo_result:
+        st.markdown("---")
+        st.markdown("### Generated Board Memo")
+
+        _red_ct = _memo_result.count("🔴")
+        _yel_ct = _memo_result.count("🟡")
+        if _red_ct > 0:
+            st.error(f"**{_red_ct} critical item(s)** identified for board attention")
+        if _yel_ct > 0:
+            st.warning(f"**{_yel_ct} caution item(s)** flagged for review")
+
+        st.markdown(_memo_result)
+
+        st.markdown("---")
+        st.markdown("### Download Memo")
+        _dl1, _dl2 = st.columns(2)
+        with _dl1:
+            st.download_button(
+                label="Download as Markdown",
+                data=_memo_result,
+                file_name=f"nsia_board_memo_{memo_date.isoformat()}.md",
+                mime="text/markdown",
+                use_container_width=True,
+                key="memo_dl_md",
+            )
+        with _dl2:
+            st.download_button(
+                label="Download as Plain Text",
+                data=_memo_result,
+                file_name=f"nsia_board_memo_{memo_date.isoformat()}.txt",
+                mime="text/plain",
+                use_container_width=True,
+                key="memo_dl_txt",
+            )
+
+        if "board_memos" not in st.session_state:
+            st.session_state.board_memos = []
+        st.session_state.board_memos.append({
+            "date": memo_date.isoformat(),
+            "generated": date.today().isoformat(),
+            "result": _memo_result,
         })
 
 # ── Previous Reports (session) ────────────────────────────────────────────

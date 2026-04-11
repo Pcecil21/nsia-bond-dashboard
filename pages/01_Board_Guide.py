@@ -3,9 +3,11 @@ Page 19: New Board Member Guide
 Orientation guide for incoming NSIA board members — what NSIA is, how the
 finances work, key metrics to watch, glossary of terms, and page directory.
 """
+import pandas as pd
 import streamlit as st
-from utils.theme import inject_css, FONT_COLOR, TITLE_COLOR, VALUE_COLOR
+from utils.theme import inject_css, FONT_COLOR, TITLE_COLOR, VALUE_COLOR, RED, YELLOW
 from utils.auth import require_auth
+from utils.data_loader import get_expiring_contracts
 
 st.set_page_config(page_title="Board Guide | NSIA", layout="wide", page_icon=":ice_hockey:")
 
@@ -158,24 +160,53 @@ page_guide = [
     ("Ask a question in plain English", "Ask NSIA"),
 ]
 
-header_row = f"""
-<div style="display:flex; border-bottom:2px solid #0f3460; padding:0.5rem 0; margin-bottom:0.25rem;">
-    <div style="flex:1; color:{TITLE_COLOR}; font-weight:700;">If you want to know...</div>
-    <div style="flex:1; color:{TITLE_COLOR}; font-weight:700;">Go to...</div>
-</div>
-"""
-rows = ""
+_hcol1, _hcol2 = st.columns([3, 2])
+_hcol1.markdown("**If you want to know...**")
+_hcol2.markdown("**Go to...**")
+st.divider()
+
 for question, destination in page_guide:
-    rows += f"""
-    <div style="display:flex; border-bottom:1px solid #0f3460; padding:0.5rem 0;">
-        <div style="flex:1; color:{FONT_COLOR};">{question}</div>
-        <div style="flex:1; color:{VALUE_COLOR}; font-weight:600;">{destination}</div>
-    </div>
-    """
+    _col1, _col2 = st.columns([3, 2])
+    _col1.caption(question)
+    _col2.markdown(f"**{destination}**")
 
-st.markdown(header_row + rows, unsafe_allow_html=True)
+st.markdown("")
 
-st.markdown("<br>", unsafe_allow_html=True)
+# ── Contract Alerts ───────────────────────────────────────────────────────
+
+_expiring = get_expiring_contracts(90)
+if not _expiring.empty:
+    st.header("Contract Alerts")
+    for _, _row in _expiring.iterrows():
+        _days = int(_row.get("days_to_expiry", 0))
+        _color = RED if _days <= 30 else YELLOW
+        _label = "CRITICAL" if _days <= 30 else "EXPIRING SOON"
+        _vendor = _row.get("vendor_name", "Unknown vendor")
+        _expiry = _row.get("expiry_date")
+        _expiry_str = _expiry.strftime("%b %d, %Y") if pd.notna(_expiry) else "Unknown"
+        _value = _row.get("annual_value")
+        _value_str = f"  |  ${_value:,.0f}/yr" if pd.notna(_value) else ""
+        st.markdown(
+            f"""
+            <div style="
+                background:{_color}22;
+                border:1px solid {_color};
+                border-radius:10px;
+                padding:1.2rem;
+                margin-bottom:0.75rem;
+            ">
+                <p style="color:{_color};font-weight:700;font-size:1rem;margin-bottom:0.4rem;">
+                    {_label}: {_vendor}
+                </p>
+                <p style="color:{FONT_COLOR};font-size:0.875rem;margin:0;">
+                    Contract ends <b style="color:{VALUE_COLOR};">{_expiry_str}</b>
+                    — <b style="color:{VALUE_COLOR};">{_days} days</b> remaining{_value_str}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("<br>", unsafe_allow_html=True)
 
 # ── Questions? ─────────────────────────────────────────────────────────────
 

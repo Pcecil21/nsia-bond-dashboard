@@ -25,6 +25,7 @@ from utils.vendor_extractor import (
     merge_with_existing,
     MANUAL_FIELDS,
 )
+from utils.data_loader import load_vendor_contracts
 
 st.set_page_config(page_title="Vendor Master | NSIA", layout="wide", page_icon=":ice_hockey:")
 inject_css()
@@ -318,6 +319,79 @@ if VENDOR_MASTER_PATH.exists():
         edited.to_csv(VENDOR_MASTER_PATH, index=False)
         st.success("Vendor master saved successfully")
         st.rerun()
+
+    # ── Extracted Contract Detail ────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("### Contract Detail (PDF-Extracted)")
+
+    _contracts = load_vendor_contracts()
+    if _contracts.empty:
+        st.info("No extracted contract data available. Run PDF extraction to populate this section.")
+    else:
+        for _, _c in _contracts.iterrows():
+            _cname = _c.get("vendor_name", "Unknown vendor")
+            _expiry = _c.get("expiry_date")
+            _expiry_str = _expiry.strftime("%b %d, %Y") if pd.notna(_expiry) else "N/A"
+            _days = _c.get("days_to_expiry")
+            _alert = _c.get("expiry_alert", "green")
+            _days_label = (
+                f" — {int(_days)}d remaining" if pd.notna(_days) and _days >= 0 else ""
+            )
+            _badge_color = RED if _alert == "red" else (YELLOW if _alert == "yellow" else GREEN)
+
+            with st.expander(f"{_cname}  |  Expires: {_expiry_str}{_days_label}", expanded=False):
+                st.markdown(
+                    f"""
+                    <div style="
+                        background:linear-gradient(135deg,{BG_CARD} 0%,{BG_CARD_END} 100%);
+                        border:1px solid {BORDER_COLOR};
+                        border-radius:12px;
+                        padding:20px;
+                        box-shadow:0 4px 15px rgba(0,0,0,0.2);
+                    ">
+                        <div style="display:flex;gap:32px;flex-wrap:wrap;margin-bottom:16px;">
+                            <div>
+                                <span style="color:{FONT_COLOR};font-size:0.8rem;">Annual Value</span><br>
+                                <span style="color:{VALUE_COLOR};font-size:1.3rem;font-weight:600;">
+                                    {"${:,.0f}".format(_c["annual_value"]) if pd.notna(_c.get("annual_value")) else "N/A"}
+                                </span>
+                            </div>
+                            <div>
+                                <span style="color:{FONT_COLOR};font-size:0.8rem;">Expiry Date</span><br>
+                                <span style="color:{_badge_color};font-size:1.3rem;font-weight:600;">
+                                    {_expiry_str}
+                                </span>
+                            </div>
+                            <div>
+                                <span style="color:{FONT_COLOR};font-size:0.8rem;">Auto-Renewal</span><br>
+                                <span style="color:{VALUE_COLOR};font-size:1.3rem;font-weight:600;">
+                                    {"Yes" if _c.get("auto_renewal") else "No"}
+                                </span>
+                            </div>
+                            <div>
+                                <span style="color:{FONT_COLOR};font-size:0.8rem;">Notice Required</span><br>
+                                <span style="color:{VALUE_COLOR};font-size:1.3rem;font-weight:600;">
+                                    {str(int(_c["renewal_notice_days"])) + " days" if pd.notna(_c.get("renewal_notice_days")) else "N/A"}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <span style="color:{FONT_COLOR};font-size:0.8rem;text-transform:uppercase;
+                                letter-spacing:0.05em;">Scope</span>
+                            <p style="color:{VALUE_COLOR};font-size:0.9rem;margin:4px 0 0 0;">
+                                {_c.get("scope_summary") or "<em style='color:{FONT_COLOR};opacity:0.5'>Not extracted</em>"}
+                            </p>
+                        </div>
+                        {"" if not _c.get("red_flags") else f'''
+                        <div style="background:{RED}22;border:1px solid {RED};border-radius:8px;padding:10px 14px;">
+                            <span style="color:{RED};font-weight:700;font-size:0.85rem;">Red Flags</span>
+                            <p style="color:{FONT_COLOR};font-size:0.875rem;margin:4px 0 0 0;">{_c.get("red_flags")}</p>
+                        </div>
+                        '''}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
 else:
     st.info(

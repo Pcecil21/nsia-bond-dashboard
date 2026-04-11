@@ -33,6 +33,7 @@ st.info(
 from utils.data_loader import (
     compute_board_demands,
     compute_cscg_scorecard,
+    load_cscg_budget_submissions,
     load_cscg_relationship,
     load_expense_flow_summary,
     load_unauthorized_modifications,
@@ -462,6 +463,190 @@ st.markdown("""
 *These recommendations are based on the analysis of actual financial data and the CSCG management agreement.
 Implementing even items 1, 2, and 8 would significantly improve board oversight.*
 """)
+
+# ── Source Documents ───────────────────────────────────────────────────────
+st.markdown("---")
+st.header("Source Documents (PDF-Extracted)")
+st.caption("Financial data extracted from CSCG budget submissions and periodic reports.")
+
+_docs = load_cscg_budget_submissions()
+if _docs.empty:
+    st.info(
+        "No extracted budget submission data found. "
+        "Run PDF extraction to populate this section."
+    )
+else:
+    # Budget baseline: mean revenue/expense across all budget-type rows
+    _has_ba_col = "is_budget_or_actual" in _docs.columns
+    _budget_mask = _docs["is_budget_or_actual"].str.lower().eq("budget") if _has_ba_col else pd.Series(False, index=_docs.index)
+    _budget_rows = _docs[_budget_mask]
+    _budget_rev = (
+        _budget_rows["revenue_total"].dropna().mean()
+        if not _budget_rows.empty and "revenue_total" in _budget_rows.columns
+        else None
+    )
+    _budget_exp = (
+        _budget_rows["expense_total"].dropna().mean()
+        if not _budget_rows.empty and "expense_total" in _budget_rows.columns
+        else None
+    )
+
+    def _pill(label, color):
+        return (
+            f'<span style="background:{color}33;color:{color};padding:2px 10px;'
+            f'border-radius:10px;font-weight:bold;font-size:0.85rem;">{label}</span>'
+        )
+
+    def _variance_pill(actual, budget, is_revenue=True):
+        """Return a colored pill showing % variance vs budget, or '' if not computable."""
+        if budget is None or not pd.notna(actual) or not pd.notna(budget) or budget == 0:
+            return ""
+        pct = (actual - budget) / abs(budget) * 100
+        if is_revenue:
+            color = "#00d084" if pct >= -5 else ("#fcb900" if pct >= -15 else "#eb144c")
+        else:
+            color = "#00d084" if pct <= 5 else ("#fcb900" if pct <= 15 else "#eb144c")
+        return _pill(f"{pct:+.1f}%", color)
+
+    # ── Summary table ─────────────────────────────────────────────────────
+    _rows_html = ""
+    for _, _d in _docs.iterrows():
+        _file = str(_d.get("_source_file") or "Unknown")
+        _dtype = str(_d.get("document_type") or "—")
+
+        _ps, _pe = _d.get("period_start"), _d.get("period_end")
+        _period = (
+            f"{_ps.strftime('%b %Y')} \u2013 {_pe.strftime('%b %Y')}"
+            if pd.notna(_ps) and pd.notna(_pe)
+            else (_ps.strftime("%b %Y") if pd.notna(_ps) else "—")
+        )
+
+        _ba_raw = str(_d.get("is_budget_or_actual") or "—")
+        _is_actual = _ba_raw.lower() == "actual"
+        _ba_color = "#0984e3" if _is_actual else "#6c5ce7"
+        _ba_cell = _pill(_ba_raw.capitalize(), _ba_color)
+
+        _net = _d.get("net_income")
+        _net_str = f"${_net:,.0f}" if pd.notna(_net) else "—"
+        _net_color = "#00d084" if (pd.notna(_net) and _net >= 0) else "#eb144c"
+
+        _conf = _d.get("extraction_confidence")
+        _conf_map = {"high": "High", "medium": "Medium", "low": "Low"}
+        _conf_str = _conf_map.get(str(_conf).lower(), str(_conf)) if pd.notna(_conf) else "—"
+        _conf_color = (
+            "#00d084" if _conf_str == "High"
+            else ("#fcb900" if _conf_str == "Medium" else "#eb144c")
+        )
+
+        _rev_pill = _variance_pill(_d.get("revenue_total"), _budget_rev, is_revenue=True) if _is_actual else ""
+        _exp_pill = _variance_pill(_d.get("expense_total"), _budget_exp, is_revenue=False) if _is_actual else ""
+
+        _rows_html += (
+            f'<tr style="border-bottom:1px solid rgba(168,178,209,0.15);">'
+            f'<td style="padding:8px 12px;color:#a8b2d1;font-size:0.8rem;">{_file}</td>'
+            f'<td style="padding:8px 12px;color:#e6f1ff;">{_dtype}</td>'
+            f'<td style="padding:8px 12px;color:#a8b2d1;font-size:0.85rem;">{_period}</td>'
+            f'<td style="padding:8px 12px;text-align:center;">{_ba_cell}</td>'
+            f'<td style="padding:8px 12px;color:{_net_color};font-weight:600;">{_net_str}</td>'
+            f'<td style="padding:8px 12px;text-align:center;">{_rev_pill or "—"}</td>'
+            f'<td style="padding:8px 12px;text-align:center;">{_exp_pill or "—"}</td>'
+            f'<td style="padding:8px 12px;color:{_conf_color};text-align:center;">{_conf_str}</td>'
+            f'</tr>'
+        )
+
+    st.markdown(
+        f'''
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;background:rgba(10,25,47,0.5);border-radius:8px;">
+<thead>
+<tr style="border-bottom:2px solid rgba(168,178,209,0.3);">
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Source File</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Type</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Period</th>
+    <th style="padding:10px 12px;text-align:center;color:#64ffda;font-size:0.85rem;">Budget / Actual</th>
+    <th style="padding:10px 12px;text-align:left;color:#64ffda;font-size:0.85rem;">Net Income</th>
+    <th style="padding:10px 12px;text-align:center;color:#64ffda;font-size:0.85rem;">Revenue vs Budget</th>
+    <th style="padding:10px 12px;text-align:center;color:#64ffda;font-size:0.85rem;">Expense vs Budget</th>
+    <th style="padding:10px 12px;text-align:center;color:#64ffda;font-size:0.85rem;">Confidence</th>
+</tr>
+</thead>
+<tbody>
+{_rows_html}
+</tbody>
+</table>
+</div>
+''',
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
+
+    # ── Per-document line-item expanders ───────────────────────────────────
+    st.markdown("#### Document Detail")
+
+    _all_rev_cols = [c for c in _docs.columns if c.startswith("revenue_")]
+    _all_exp_cols = [c for c in _docs.columns if c.startswith("expense_")]
+
+    def _line_items_html(items, accent_color):
+        if not items:
+            return '<p style="color:#a8b2d1;font-size:0.85rem;">No data extracted</p>'
+        html = ""
+        for _lbl, _val in items:
+            _is_total = "Total" in _lbl
+            _vc = accent_color if _is_total else "#e6f1ff"
+            _fw = "bold" if _is_total else "normal"
+            html += (
+                f'<div style="display:flex;justify-content:space-between;'
+                f'padding:4px 0;border-bottom:1px solid rgba(168,178,209,0.1);">'
+                f'<span style="color:#a8b2d1;font-size:0.85rem;">{_lbl}</span>'
+                f'<span style="color:{_vc};font-weight:{_fw};font-size:0.85rem;">${_val:,.0f}</span>'
+                f'</div>'
+            )
+        return html
+
+    for _i, (_, _d) in enumerate(_docs.iterrows()):
+        _file = str(_d.get("_source_file") or f"Document {_i + 1}")
+        _dtype = str(_d.get("document_type") or "")
+        _ba = str(_d.get("is_budget_or_actual") or "").capitalize()
+        _exp_label = "  |  ".join(p for p in [_file, _dtype, _ba] if p)
+
+        with st.expander(_exp_label, expanded=False):
+            _rev_data = [
+                (c.replace("revenue_", "").replace("_", " ").title(), _d[c])
+                for c in _all_rev_cols
+                if c in _d.index and pd.notna(_d[c])
+            ]
+            _exp_data = [
+                (c.replace("expense_", "").replace("_", " ").title(), _d[c])
+                for c in _all_exp_cols
+                if c in _d.index and pd.notna(_d[c])
+            ]
+
+            _col_l, _col_r = st.columns(2)
+            with _col_l:
+                st.markdown(
+                    '<p style="color:#64ffda;font-weight:700;font-size:0.9rem;margin-bottom:8px;">Revenue</p>'
+                    + _line_items_html(_rev_data, "#64ffda"),
+                    unsafe_allow_html=True,
+                )
+            with _col_r:
+                st.markdown(
+                    '<p style="color:#eb144c;font-weight:700;font-size:0.9rem;margin-bottom:8px;">Expenses</p>'
+                    + _line_items_html(_exp_data, "#eb144c"),
+                    unsafe_allow_html=True,
+                )
+
+            _net = _d.get("net_income")
+            if pd.notna(_net):
+                _nc = "#00d084" if _net >= 0 else "#eb144c"
+                st.markdown(
+                    f'<div style="margin-top:12px;padding:10px 14px;'
+                    f'background:rgba(10,25,47,0.5);border-radius:8px;'
+                    f'display:flex;justify-content:space-between;">'
+                    f'<span style="color:#e6f1ff;font-weight:700;">Net Income</span>'
+                    f'<span style="color:{_nc};font-weight:700;font-size:1.1rem;">${_net:,.0f}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
 from utils import ask_about_this
 ask_about_this("CSCG Scorecard")

@@ -1,0 +1,1554 @@
+[
+  {
+    "file": "2026-01-01 - North Shore Ice Arena January 2026 General Ledger.pdf",
+    "folder": "General Ledgers",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:21:03.282632+00:00"
+  },
+  {
+    "file": "2026-01-31 - North Shore Ice Arena January General Ledger.pdf",
+    "folder": "General Ledgers",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:21:55.143623+00:00"
+  },
+  {
+    "file": "2026-01-31 - North Shore Ice Arena January 2026 Financial Overview.pdf",
+    "folder": "Monthly financials",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:22:46.565038+00:00"
+  },
+  {
+    "file": "2026-01-31 - North Shore Ice Arena January Financial Overview.pdf",
+    "folder": "Monthly financials",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:23:30.207266+00:00"
+  },
+  {
+    "file": "2026-06-30 - Fiscal 2026 Budget Proposal for Ice Facility.pdf",
+    "folder": "Budgets",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:24:25.264531+00:00"
+  },
+  {
+    "file": "2026-06-30 - Fiscal 2026 Ice Arena Budget Proposal.7.pdf",
+    "folder": "Budgets",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:24:59.849789+00:00"
+  },
+  {
+    "file": "2025-06-30 - North Shore Ice Arena Audited Financial Statements.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:25:35.187397+00:00"
+  },
+  {
+    "file": "2025-06-30 - North Shore Ice Arena Financial Audit Representation Letter.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:25:41.061781+00:00"
+  },
+  {
+    "file": "2025-10-10 - Final Audit Report October 2025.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:25:48.489893+00:00"
+  },
+  {
+    "file": "2025-10-15 - North Shore Ice Arena LLC Tax Exempt Form 990.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:31:38.180356+00:00"
+  },
+  {
+    "file": "2025-10-15 - Youth Ice Hockey Arena Organization Tax Return.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:32:26.320747+00:00"
+  },
+  {
+    "file": "NORTHSHOR North Shore Ice Arena, LLC NSIA Form 8879-TE E-Signed.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:32:32.264162+00:00"
+  },
+  {
+    "file": "NSIA Draft Financial Statements 6-30-2025.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:32:32.332776+00:00"
+  },
+  {
+    "file": "NSIA Draft Financial Statements 6-30-2025.pdf",
+    "folder": "NSIA Audit Docs",
+    "doc_type": "cscg_budget",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:32:32.370995+00:00"
+  },
+  {
+    "file": "2026-02-23 - Ice Arena Professional Management Services Agreement.pdf",
+    "folder": "Club Sports Consulting Group Contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:33:14.462663+00:00"
+  },
+  {
+    "file": "Club Sports Contract.pdf",
+    "folder": "Club Sports Consulting Group Contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.498237+00:00"
+  },
+  {
+    "file": "Club Sports Contract.pdf",
+    "folder": "Club Sports Consulting Group Contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.522854+00:00"
+  },
+  {
+    "file": "1316 - Northbrook Payment Application 3 Mrch 25 copy.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.550667+00:00"
+  },
+  {
+    "file": "1316 - Northbrook Payment Application 3 Mrch 25 copy.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.563480+00:00"
+  },
+  {
+    "file": "1316 Northbrook Payment Application 4 Apr 25.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.586202+00:00"
+  },
+  {
+    "file": "1316 Northbrook Payment Application 4 Apr 25.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:33:14.598802+00:00"
+  },
+  {
+    "file": "2024-09-24 - North Shore Ice Arena Chiller Replacement Invoice.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:33:30.053808+00:00"
+  },
+  {
+    "file": "2025-01-16 - Trane Equipment Rental Invoice North Shore Ice Arena.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:33:50.235966+00:00"
+  },
+  {
+    "file": "2025-01-16 - Trane HVAC Equipment Monthly Rental Invoice.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:34:09.442419+00:00"
+  },
+  {
+    "file": "2025-01-16 - Trane HVAC Equipment Rental Invoice North Shore.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:34:27.699487+00:00"
+  },
+  {
+    "file": "2025-01-20 - Lowe's Invoice North Shore Ice Arena.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:34:37.221661+00:00"
+  },
+  {
+    "file": "2025-02-04 - Lowe's Invoice for North Shore Ice Arena.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:34:46.897596+00:00"
+  },
+  {
+    "file": "2026-02-05 - Electrical Work Invoice North Shore Ice Arena.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:34:58.297421+00:00"
+  },
+  {
+    "file": "Northbrook Payment Application Feb 2025.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:34:58.322917+00:00"
+  },
+  {
+    "file": "Northbrook Payment Application Feb 2025.pdf",
+    "folder": "Chiller contract",
+    "doc_type": "vendor_contract",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T16:34:58.334123+00:00"
+  },
+  {
+    "file": "11_19_2025-12_18_2025 Engie Energy Bill.pdf",
+    "folder": "Energy contracts",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:35:19.187792+00:00"
+  },
+  {
+    "file": "2024-05-28 - Commercial Lines Policy Declaration Ice Arena.pdf",
+    "folder": "NSIA Insurance contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:36:06.050591+00:00"
+  },
+  {
+    "file": "2024-05-28 - North Shore Ice Arena Commercial Policy Declaration.pdf",
+    "folder": "NSIA Insurance contract",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:36:47.894434+00:00"
+  },
+  {
+    "file": "2026-01-30 - AIA Standard Contractor Agreement Form Template.pdf",
+    "folder": "2024 Chiller Contract and related matters",
+    "doc_type": "vendor_contract",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:37:46.089482+00:00"
+  },
+  {
+    "file": "1994-01-14 - Federal Tax Exempt Status Confirmation Letter.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:38:10.980179+00:00"
+  },
+  {
+    "file": "2007-01-05 - Auditor Consent for Sports Facility Revenue Bond Offering.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:38:23.981998+00:00"
+  },
+  {
+    "file": "2007-03-05 - Environmental Consultant Consent for Sports Facility Bonds.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:38:34.948476+00:00"
+  },
+  {
+    "file": "2007-09-03 - Auditor Consent for Sports Facility Revenue Bonds.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:38:48.010552+00:00"
+  },
+  {
+    "file": "2007-11-08 - Northbrook Sports Center Design Build Construction Contract.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:39:45.171581+00:00"
+  },
+  {
+    "file": "2007-12-01 - Short Form Memorandum of Ground Lease Agreement.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:40:26.977768+00:00"
+  },
+  {
+    "file": "2007-12-19 - Ground Lease Guaranty by Hockey Associations.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:41:20.625975+00:00"
+  },
+  {
+    "file": "2008-01-01 - Chicago Title Insurance Loan Policy North Shore Ice Arena.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:42:20.739236+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Ice Arena Revenue Bonds Guarantor Certificate.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:43:17.310427+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Ice Arena Revenue Bonds Guarantor Certificate__1lT4GeSt.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:43:59.746906+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bond.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:44:47.538158+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Certificate.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:45:06.052746+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Certificate__13WWDCpT.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:45:44.081422+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Certificate__1nT0Zowq.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:46:19.158152+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Closing.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:46:52.268139+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Closing__18Nsl9yQ.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:47:21.326013+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Legal Opinion.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:47:44.586161+00:00"
+  },
+  {
+    "file": "2008-01-01 - Illinois Finance Authority Sports Facility Revenue Bonds Receipt.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:47:57.606127+00:00"
+  },
+  {
+    "file": "2008-01-01 - Joint Guaranty Agreement for Ice Arena Loan.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:48:38.287328+00:00"
+  },
+  {
+    "file": "2008-01-01 - Leasehold Mortgage Notice for Northbrook Property.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:48:53.142175+00:00"
+  },
+  {
+    "file": "2008-01-01 - North Shore Ice Arena Sports Facility Loan Agreement.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:50:06.167648+00:00"
+  },
+  {
+    "file": "2008-01-01 - North Shore Ice Arena Sports Facility Revenue Bonds Disclosure.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:50:44.516372+00:00"
+  },
+  {
+    "file": "2008-01-01 - UCC Financing Statement for Ice Arena Loan.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:51:02.036406+00:00"
+  },
+  {
+    "file": "2008-01-08 - Illinois Finance Authority Sports Facility Bond Consent.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:51:13.975802+00:00"
+  },
+  {
+    "file": "2008-01-09 - Illinois Finance Authority Sports Facility Revenue Bonds Supplement.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:51:31.578468+00:00"
+  },
+  {
+    "file": "2008-01-09 - Illinois Finance Authority Sports Facility Revenue Bonds Survey.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:51:49.341604+00:00"
+  },
+  {
+    "file": "2008-01-15 - Governor Approval North Shore Ice Arena Project Bonds.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:52:09.578925+00:00"
+  },
+  {
+    "file": "2008-01-17 - Illinois Finance Authority Sports Facility Revenue Bonds Agreement.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:53:09.492192+00:00"
+  },
+  {
+    "file": "2008-01-17 - Illinois Finance Authority Sports Facility Revenue Bonds Opinion.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:53:26.451515+00:00"
+  },
+  {
+    "file": "2008-01-18 - North Shore Ice Arena Finance Authority Consent.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:53:38.987255+00:00"
+  },
+  {
+    "file": "2008-01-24 - Northbrook Ice Rink Project Completion Report.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:53:46.764505+00:00"
+  },
+  {
+    "file": "2008-01-24 - Winnetka Hockey Club GuideStar Nonprofit Report.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:54:03.863302+00:00"
+  },
+  {
+    "file": "2008-01-24 - Winnetka Hockey Club Nonprofit Organization Profile.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:54:17.871666+00:00"
+  },
+  {
+    "file": "2008-01-25 - Illinois Finance Authority North Shore Ice Arena Bonds.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:54:35.495220+00:00"
+  },
+  {
+    "file": "2008-01-25 - Illinois Finance Authority Sports Facility Revenue Bonds Agreement.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:55:46.102082+00:00"
+  },
+  {
+    "file": "2008-01-25 - Illinois Finance Authority Sports Facility Revenue Bonds Authentication Request.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:55:59.528674+00:00"
+  },
+  {
+    "file": "2008-01-25 - Illinois Finance Authority Sports Facility Revenue Bonds Certificate.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:56:49.757512+00:00"
+  },
+  {
+    "file": "2008-01-25 - Illinois Finance Authority Sports Facility Revenue Bonds Opinion.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:57:10.659958+00:00"
+  },
+  {
+    "file": "2008-01-25 - North Shore Ice Arena Sports Facility Revenue Bonds Opinion.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:57:36.122968+00:00"
+  },
+  {
+    "file": "2008-01-31 - Leasehold Mortgage and Security Agreement for Ice Arena.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:58:39.608292+00:00"
+  },
+  {
+    "file": "2008-01-31 - UCC Financing Statement North Shore Ice Arena.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:59:13.124402+00:00"
+  },
+  {
+    "file": "2008-02-26 - Illinois Finance Authority Sports Facility Revenue Bonds Filing.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T16:59:47.798310+00:00"
+  },
+  {
+    "file": "2008-12-01 - Illinois Finance Authority Sports Facility Revenue Bonds Legal Opinion.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:00:18.514273+00:00"
+  },
+  {
+    "file": "2026-02-23 - Blanket Issuer Letter of Representations for DTC.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:02:02.406609+00:00"
+  },
+  {
+    "file": "Tab 1.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.454091+00:00"
+  },
+  {
+    "file": "Tab 1.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.482827+00:00"
+  },
+  {
+    "file": "Tab 10.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.511834+00:00"
+  },
+  {
+    "file": "Tab 10.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.523558+00:00"
+  },
+  {
+    "file": "Tab 11.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.544724+00:00"
+  },
+  {
+    "file": "Tab 11.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.555485+00:00"
+  },
+  {
+    "file": "Tab 12.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.593212+00:00"
+  },
+  {
+    "file": "Tab 12.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.616624+00:00"
+  },
+  {
+    "file": "Tab 13.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.636714+00:00"
+  },
+  {
+    "file": "Tab 13.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.646835+00:00"
+  },
+  {
+    "file": "Tab 14.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.668245+00:00"
+  },
+  {
+    "file": "Tab 14.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.678918+00:00"
+  },
+  {
+    "file": "Tab 15.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.724722+00:00"
+  },
+  {
+    "file": "Tab 15.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.735089+00:00"
+  },
+  {
+    "file": "Tab 16.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.755459+00:00"
+  },
+  {
+    "file": "Tab 16.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.765412+00:00"
+  },
+  {
+    "file": "Tab 17.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.789293+00:00"
+  },
+  {
+    "file": "Tab 17.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.802305+00:00"
+  },
+  {
+    "file": "Tab 18.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.834262+00:00"
+  },
+  {
+    "file": "Tab 18.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.852719+00:00"
+  },
+  {
+    "file": "Tab 19.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.884021+00:00"
+  },
+  {
+    "file": "Tab 19.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.901363+00:00"
+  },
+  {
+    "file": "Tab 1__1eBHLpdg.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.960651+00:00"
+  },
+  {
+    "file": "Tab 1__1eBHLpdg.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:02.994197+00:00"
+  },
+  {
+    "file": "Tab 2.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.034349+00:00"
+  },
+  {
+    "file": "Tab 2.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.054664+00:00"
+  },
+  {
+    "file": "Tab 20.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.097281+00:00"
+  },
+  {
+    "file": "Tab 20.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.126294+00:00"
+  },
+  {
+    "file": "Tab 20__1VnlNBAt.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.330599+00:00"
+  },
+  {
+    "file": "Tab 20__1VnlNBAt.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.411710+00:00"
+  },
+  {
+    "file": "Tab 21.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.439882+00:00"
+  },
+  {
+    "file": "Tab 21.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.452006+00:00"
+  },
+  {
+    "file": "Tab 22.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.478594+00:00"
+  },
+  {
+    "file": "Tab 22.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.492410+00:00"
+  },
+  {
+    "file": "Tab 23.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.526091+00:00"
+  },
+  {
+    "file": "Tab 23.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.545224+00:00"
+  },
+  {
+    "file": "Tab 24.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.564628+00:00"
+  },
+  {
+    "file": "Tab 24.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.574704+00:00"
+  },
+  {
+    "file": "Tab 25.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.598373+00:00"
+  },
+  {
+    "file": "Tab 25.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.610433+00:00"
+  },
+  {
+    "file": "Tab 26.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.636535+00:00"
+  },
+  {
+    "file": "Tab 26.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.650105+00:00"
+  },
+  {
+    "file": "Tab 27.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.685100+00:00"
+  },
+  {
+    "file": "Tab 27.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.708210+00:00"
+  },
+  {
+    "file": "Tab 28.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.729171+00:00"
+  },
+  {
+    "file": "Tab 28.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.739776+00:00"
+  },
+  {
+    "file": "Tab 29.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.759460+00:00"
+  },
+  {
+    "file": "Tab 29.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.771326+00:00"
+  },
+  {
+    "file": "Tab 3.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.818337+00:00"
+  },
+  {
+    "file": "Tab 3.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.844506+00:00"
+  },
+  {
+    "file": "Tab 30.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.880862+00:00"
+  },
+  {
+    "file": "Tab 30.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.898901+00:00"
+  },
+  {
+    "file": "Tab 31.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.918011+00:00"
+  },
+  {
+    "file": "Tab 31.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.928009+00:00"
+  },
+  {
+    "file": "Tab 32.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.946869+00:00"
+  },
+  {
+    "file": "Tab 32.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.956822+00:00"
+  },
+  {
+    "file": "Tab 33.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.976437+00:00"
+  },
+  {
+    "file": "Tab 33.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:03.986336+00:00"
+  },
+  {
+    "file": "Tab 34.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.006191+00:00"
+  },
+  {
+    "file": "Tab 34.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.015632+00:00"
+  },
+  {
+    "file": "Tab 35.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.035156+00:00"
+  },
+  {
+    "file": "Tab 35.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.045085+00:00"
+  },
+  {
+    "file": "Tab 36.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.063932+00:00"
+  },
+  {
+    "file": "Tab 36.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.074551+00:00"
+  },
+  {
+    "file": "Tab 37.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.093867+00:00"
+  },
+  {
+    "file": "Tab 37.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.104534+00:00"
+  },
+  {
+    "file": "Tab 38.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.132799+00:00"
+  },
+  {
+    "file": "Tab 38.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.147928+00:00"
+  },
+  {
+    "file": "Tab 39.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.167437+00:00"
+  },
+  {
+    "file": "Tab 39.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.177917+00:00"
+  },
+  {
+    "file": "Tab 4.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.224436+00:00"
+  },
+  {
+    "file": "Tab 4.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.255440+00:00"
+  },
+  {
+    "file": "Tab 40.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.276424+00:00"
+  },
+  {
+    "file": "Tab 40.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.287451+00:00"
+  },
+  {
+    "file": "Tab 41.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.308285+00:00"
+  },
+  {
+    "file": "Tab 41.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.318845+00:00"
+  },
+  {
+    "file": "Tab 42.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.338461+00:00"
+  },
+  {
+    "file": "Tab 42.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.348333+00:00"
+  },
+  {
+    "file": "Tab 43.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.367958+00:00"
+  },
+  {
+    "file": "Tab 43.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.378852+00:00"
+  },
+  {
+    "file": "Tab 44.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.399710+00:00"
+  },
+  {
+    "file": "Tab 44.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.411103+00:00"
+  },
+  {
+    "file": "Tab 4__1ErbLayp.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.611798+00:00"
+  },
+  {
+    "file": "Tab 4__1ErbLayp.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.702946+00:00"
+  },
+  {
+    "file": "Tab 5.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.726733+00:00"
+  },
+  {
+    "file": "Tab 5.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.736591+00:00"
+  },
+  {
+    "file": "Tab 6.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.783585+00:00"
+  },
+  {
+    "file": "Tab 6.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:04.816477+00:00"
+  },
+  {
+    "file": "Tab 6__10xYUIuE.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.058844+00:00"
+  },
+  {
+    "file": "Tab 6__10xYUIuE.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.154667+00:00"
+  },
+  {
+    "file": "Tab 7.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.216798+00:00"
+  },
+  {
+    "file": "Tab 7.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.247945+00:00"
+  },
+  {
+    "file": "Tab 8.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.272003+00:00"
+  },
+  {
+    "file": "Tab 8.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.282142+00:00"
+  },
+  {
+    "file": "Tab 9.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.313341+00:00"
+  },
+  {
+    "file": "Tab 9.pdf",
+    "folder": "NSIA Bond Documents",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.330911+00:00"
+  },
+  {
+    "file": "1st Amendment Ground Land Lease.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.357096+00:00"
+  },
+  {
+    "file": "1st Amendment Ground Land Lease.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:02:05.368864+00:00"
+  },
+  {
+    "file": "2007-12-01 - First Amendment to Ground Lease Agreement.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:02:41.690576+00:00"
+  },
+  {
+    "file": "2007-12-01 - Fourth Amendment to Ground Lease for Real Estate Parcel.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:03:34.267583+00:00"
+  },
+  {
+    "file": "2007-12-01 - Ground Lease Agreement North Shore Ice Arena.1) (1).pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:04:56.174953+00:00"
+  },
+  {
+    "file": "2007-12-01 - Ground Lease Agreement North Shore Ice Arena.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:06:16.010733+00:00"
+  },
+  {
+    "file": "2007-12-01 - Second Amendment to Ground Lease for Ice Arena.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:07:24.823874+00:00"
+  },
+  {
+    "file": "2007-12-01 - Third Amendment Ground Lease Real Estate Parcel.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:08:06.436516+00:00"
+  },
+  {
+    "file": "2020-04-01 - Fourth Amendment to Ground Lease Agreement North Shore.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:09:11.933156+00:00"
+  },
+  {
+    "file": "2024-08-31 - Fifth Amendment Ground Lease Real Estate Parcel EC-2C.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:10:17.836297+00:00"
+  },
+  {
+    "file": "2024-08-31 - Fifth Amendment to Ground Lease EC-2C.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:11:16.225206+00:00"
+  },
+  {
+    "file": "2040-09-01 - Ground Lease Financial Obligations and Strategic Timeline.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:11:40.221170+00:00"
+  },
+  {
+    "file": "2040-09-01 - Ground Lease Overview Rent Projections Through 2088.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:12:06.961197+00:00"
+  },
+  {
+    "file": "2nd Amendment to Ground Lease001.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.011709+00:00"
+  },
+  {
+    "file": "2nd Amendment to Ground Lease001.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.042265+00:00"
+  },
+  {
+    "file": "3rd Amendment for the ground Lease Signed by Wilmette.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.064314+00:00"
+  },
+  {
+    "file": "3rd Amendment for the ground Lease Signed by Wilmette.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.076860+00:00"
+  },
+  {
+    "file": "5th Amendment to the ground Lease.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.102281+00:00"
+  },
+  {
+    "file": "5th Amendment to the ground Lease.pdf",
+    "folder": "NSIA Ground Leases",
+    "doc_type": "bond",
+    "status": "skipped",
+    "error": "No text — likely scanned PDF",
+    "extracted_at": "2026-04-11T17:12:07.118800+00:00"
+  },
+  {
+    "file": "2026-01-29 - North Shore Ice Arena LLC Operating Agreement.pdf",
+    "folder": "NSIA Operating Agreement",
+    "doc_type": "bond",
+    "status": "success",
+    "error": null,
+    "extracted_at": "2026-04-11T17:13:15.641315+00:00"
+  }
+]
