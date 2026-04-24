@@ -80,7 +80,6 @@ ARCHIVE_ONLY_TARGETS = [
     "Website",
     "Scoreboard Contract",
     "Current Ice contracts",
-    "Chiller contract",
 ]
 
 
@@ -290,7 +289,15 @@ def is_signature_image(path: Path) -> bool:
         return False
 
 
-a_col1, a_col2, a_col3, _ = st.columns([1, 1.5, 1.2, 2.3])
+# Count files where AI has already proposed a folder (from session state).
+# Used by the "Archive all AI-proposed" button below — only ever triggers on
+# files where Claude picked something, so the action can't invent a folder.
+ai_ready_files = [
+    p for p in unsorted_files
+    if st.session_state.get(f"ai_folder_{p.name}")
+]
+
+a_col1, a_col2, a_col3, a_col4, _ = st.columns([1, 1.5, 1.4, 1.5, 0.6])
 with a_col1:
     if st.button("Run auto-router", help="Classify Unsorted files using filename rules (no AI)"):
         with st.spinner("Running router..."):
@@ -379,15 +386,120 @@ with a_col3:
             st.success(f"Deleted {len(deleted)} signature image(s).")
         st.rerun()
 
+# Batch archive — commits everything the AI already classified. Only operates
+# on files where ai_folder_{name} is populated; anything the AI wasn't sure
+# about stays in Unsorted for manual review.
+with a_col4:
+    if st.button(
+        f"Archive all AI-proposed ({len(ai_ready_files)})",
+        help="For every Unsorted file where Claude already picked a folder, "
+             "apply the proposed name + move to that folder + extract to brain. "
+             "Files without a folder pick stay in Unsorted.",
+        disabled=(len(ai_ready_files) == 0),
+        type="primary",
+    ):
+        progress = st.progress(0.0, text="Archiving in batch…")
+        batch_summary = []
+        total = len(ai_ready_files)
+
+        for i, f in enumerate(ai_ready_files):
+            progress.progress((i + 0.1) / total, text=f"Archiving {f.name}…")
+            original_name = f.name
+            folder_name = st.session_state.get(f"ai_folder_{original_name}")
+            proposed_name = st.session_state.get(f"ai_name_{original_name}") or original_name
+
+            # Defensive: folder disappeared from session state? Skip.
+            if not folder_name:
+                batch_summary.append({"file": original_name, "status": "skipped", "reason": "no ai_folder"})
+                continue
+
+            try:
+                # Apply the renamed name if it differs. Preserve original on failure.
+                src = f
+                if proposed_name and proposed_name != original_name:
+                    try:
+                        renamed = f.with_name(proposed_name)
+                        f.rename(renamed)
+                        src = renamed
+                    except Exception as rn_err:
+                        # Keep going with original name — archive is more important
+                        batch_summary.append({
+                            "file": original_name, "status": "rename_failed",
+                            "reason": str(rn_err),
+                        })
+
+                archived = archive_to_permanent(src, folder_name)
+
+                if folder_name in EXTRACTION_TARGETS:
+                    status, detail = try_extract(archived, folder_name)
+                else:
+                    status, detail = "skipped_no_mapping", "Archive-only destination"
+
+                append_log({
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "file": archived.name,
+                    "original_name": original_name,
+                    "decision": f"archived_to:{folder_name}",
+                    "ai_suggested_folder": folder_name,
+                    "ai_suggested_name": proposed_name,
+                    "folder_override": False,
+                    "name_override": False,
+                    "extract_status": status,
+                    "extract_detail": detail,
+                    "batch": True,
+                    "scores": {},
+                })
+
+                batch_summary.append({
+                    "file": original_name,
+                    "archived_as": archived.name,
+                    "folder": folder_name,
+                    "extract": status,
+                    "status": "ok",
+                })
+
+                # Clean up session state for this file so it doesn't linger
+                st.session_state.pop(f"ai_folder_{original_name}", None)
+                st.session_state.pop(f"ai_name_{original_name}", None)
+                st.session_state.pop(f"arch_{original_name}", None)
+                st.session_state.pop(f"rename_{original_name}", None)
+
+            except Exception as err:
+                batch_summary.append({"file": original_name, "status": "error", "reason": str(err)})
+
+            progress.progress((i + 1) / total, text=f"Done {i + 1}/{total}")
+
+        progress.empty()
+        ok_count = sum(1 for s in batch_summary if s.get("status") == "ok")
+        extracted_count = sum(
+            1 for s in batch_summary
+            if s.get("status") == "ok" and s.get("extract") == "extracted"
+        )
+        err_count = sum(1 for s in batch_summary if s.get("status") == "error")
+        st.success(
+            f"Archived {ok_count}/{total} files. "
+            f"Brain updated on {extracted_count}. {err_count} errors."
+        )
+        with st.expander("Batch archive summary", expanded=(err_count > 0)):
+            for s in batch_summary:
+                if s.get("status") == "ok":
+                    st.markdown(f"✓ **{s['file']}** → `{s['folder']}` as `{s['archived_as']}` _(extract: {s['extract']})_")
+                elif s.get("status") == "error":
+                    st.markdown(f"✗ **{s['file']}** — {s['reason']}")
+                else:
+                    st.caption(f"⚠ {s['file']} — {s.get('reason', s.get('status'))}")
+        st.rerun()
+
 if not unsorted_files:
     st.info("Nothing waiting. Either the router classified everything or nothing has arrived yet.")
 else:
-    # Build the "Archive to" dropdown options. Extraction-capable folders
-    # first (they teach the brain); plain archive folders second.
-    archive_options = ["— pick —"]
-    if EXTRACTION_TARGETS:
-        archive_options += [f"{name}  (extracts → brain)" for name in EXTRACTION_TARGETS]
-    archive_options += [f"{name}  (archive only)" for name in ARCHIVE_ONLY_TARGETS]
+    # Build the "Archive to" dropdown options. One alphabetical list so it's
+    # easy to scan; the (extracts → brain) vs (archive only) suffix makes it
+    # obvious which destinations feed the brain.
+    _labeled = [(n, f"{n}  (extracts → brain)") for n in EXTRACTION_TARGETS]
+    _labeled += [(n, f"{n}  (archive only)") for n in ARCHIVE_ONLY_TARGETS]
+    _labeled.sort(key=lambda t: t[0].lower())
+    archive_options = ["— pick —"] + [label for _, label in _labeled]
 
     for f in unsorted_files:
         with st.container(border=True):
