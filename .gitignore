@@ -41,6 +41,14 @@ data/analysis_history.db
 # Streamlit secrets (contains tokens)
 .streamlit/secrets.toml
 
+# Security scan reports — often contain API keys in evidence fields
+.security-report*.json
+.security-report*.txt
+
+# Claude Code session state
+.claude/session-log.txt
+.claude/
+
 # === Two-computer handoff rules (auto-added) ===
 
 node_modules/
