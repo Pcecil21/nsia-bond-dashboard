@@ -63,3 +63,4 @@ Thumbs.db
 .mypy_cache/
 data/board-packages/
 data/*.json
+data/Ingestion/

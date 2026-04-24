@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import re
+import sys
 import time
 from pathlib import Path
 from typing import Dict, Tuple
@@ -243,6 +244,7 @@ def parse_args():
     sync_parser.add_argument("--folder-id", default=DEFAULT_FOLDER_ID, help="Google Drive folder ID")
     sync_parser.add_argument("--dest", default=DEFAULT_DEST, help="Local destination folder")
     sync_parser.add_argument("--interval", type=int, default=30, help="Polling interval in seconds")
+    sync_parser.add_argument("--once", action="store_true", help="Run a single sync pass and exit (for scheduled tasks)")
 
     # Upload: push local files to Drive
     upload_parser = sub.add_parser("upload", help="Upload local files to Google Drive")
@@ -263,6 +265,7 @@ def parse_args():
         args.folder_id = DEFAULT_FOLDER_ID
         args.dest = DEFAULT_DEST
         args.interval = 30
+        args.once = False
     return args
 
 
@@ -308,6 +311,20 @@ def main():
 
     logging.info("Watching Google Drive folder %s", args.folder_id)
     logging.info("Mirroring to %s", dest_dir)
+
+    # One-shot mode for scheduled tasks. Exits after a single pass so the
+    # scheduler can chain follow-up steps (route_inbox.py, etc).
+    if getattr(args, "once", False):
+        try:
+            sync_once(service, args.folder_id, dest_dir, state_path)
+            logging.info("One-shot sync complete.")
+        except HttpError as err:
+            logging.error("Google Drive API error: %s", err)
+            sys.exit(1)
+        except Exception as err:
+            logging.error("Unexpected error: %s", err)
+            sys.exit(1)
+        return
 
     while True:
         try:
