@@ -44,18 +44,19 @@ DATA_DIR = PROJECT_ROOT / "data"
 # Map document folder names → extractor type
 # These match the actual folder names in the project root
 FOLDER_TYPE_MAP = {
-    "NSIA Bond Documents": "bond",
-    "NSIA Financials and Budgets": "cscg_budget",
+    "Bond Documents": "bond",
+    "Financials and Budgets": "cscg_budget",
     "Budgets": "cscg_budget",
     "Bank Statements": "bank",
     "Board Meetings": "board_minutes",
     "Club Sports Consulting Group Contract": "vendor_contract",
     "Chiller contract": "vendor_contract",
     "Energy contracts": "vendor_contract",
-    "NSIA Insurance contract": "vendor_contract",
-    "NSIA Ground Leases": "bond",  # treat ground lease as bond doc
-    "NSIA Operating Agreement": "bond",
-    "NSIA Audit Docs": "cscg_budget",
+    "Insurance contract": "vendor_contract",
+    "Ground Leases": "bond",  # treat ground lease as bond doc
+    "Operating Agreement": "bond",
+    "Audit Docs": "cscg_budget",
+    "NSIA Corporate Records": "bond",  # Articles, 501C3 letter, bylaws, EIN — legal formation docs
     "Ice utilization": "ice_util",
     "2024 Chiller Contract and related matters": "vendor_contract",
 }

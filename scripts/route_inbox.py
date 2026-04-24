@@ -56,11 +56,21 @@ BUCKETS = ["Statements", "Bonds", "Invoices", "BoardPackets", "Contracts"]
 # A filename that matches multiple strong signals in one bucket is high-confidence.
 CATEGORY_RULES = {
     "Statements": [
+        # Bank statements — direct signals
         (r"\bstatement\b", 3),
         (r"\bbank\b", 2),
-        (r"\bmonthly\b", 1),
-        (r"first[_\s-]?bank", 2),
+        (r"\bchase\b", 2),            # common bank in NSIA ops
+        (r"first[ ]?bank", 2),
         (r"northshore", 2),
+        # Reconciliations (recurring NSIA file pattern: "Chase Operating Acct Rec")
+        (r"\bacct rec\b", 3),
+        (r"\baccount rec(onciliation)?\b", 3),
+        (r"\breconciliation\b", 2),
+        # Accounting / bookkeeping outputs
+        (r"\bgeneral ledger\b", 3),
+        (r"\bledger\b", 2),
+        (r"\bfinancial summary\b", 3),
+        (r"\bmonthly\b", 1),
         (r"\baccount\b.*\bactivity\b", 2),
     ],
     "Bonds": [
@@ -68,32 +78,33 @@ CATEGORY_RULES = {
         (r"\bumb\b", 3),
         (r"\bdsrf\b", 3),
         (r"\bbond\b", 2),
-        (r"\bdebt[_\s-]?service\b", 2),
-        (r"series[_\s-]?20\d{2}", 2),
+        (r"\bdebt service\b", 2),
+        (r"series 20\d{2}", 2),
     ],
     "Invoices": [
         (r"\binvoice\b", 3),
         (r"\bbill\b", 2),
         (r"\bremittance\b", 2),
-        (r"\bamount[_\s-]?due\b", 2),
-        (r"inv[_\s-]?\d{3,}", 2),  # inv-12345, inv_987
+        (r"\bamount due\b", 2),
+        (r"inv[ ]?\d{3,}", 2),  # inv-12345, inv_987
     ],
     "BoardPackets": [
-        (r"\bboard[_\s-]?packet\b", 3),
-        (r"\bboard[_\s-]?meeting\b", 3),
+        (r"\bboard packet\b", 3),
+        (r"\bboard meeting\b", 3),
         (r"\bagenda\b", 2),
         (r"\bminutes\b", 2),
         (r"\bresolution\b", 2),
-        (r"board[_\s-]?memo", 2),
+        (r"board memo", 2),
     ],
     "Contracts": [
         (r"\bcontract\b", 3),
         (r"\bagreement\b", 2),
+        (r"\bterm sheet\b", 3),       # common for deals like Ice Shack
         (r"\bmsa\b", 2),
         (r"\bsow\b", 2),
         (r"\blease\b", 2),
-        (r"executed", 1),
-        (r"amendment", 2),
+        (r"\bexecuted\b", 1),
+        (r"\bamendment\b", 2),
     ],
 }
 

@@ -222,6 +222,24 @@ def build_data_summary() -> str:
     except Exception as e:
         logger.warning("data_context: KPIs failed: %s", e)
 
+    # -- Active Initiatives --
+    # Hand-curated project context that lives outside the structured data
+    # (term sheets in review, concession deals, capital projects in flight).
+    # Edit data/active_initiatives.md directly to update.
+    try:
+        import os
+        initiatives_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            "data", "active_initiatives.md",
+        )
+        if os.path.exists(initiatives_path):
+            with open(initiatives_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+            if content:
+                sections.append(content)
+    except Exception as e:
+        logger.warning("data_context: Active Initiatives failed: %s", e)
+
     return "\n\n".join(sections)
 
 
